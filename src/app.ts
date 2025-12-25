@@ -126,7 +126,7 @@ const App = () => {
         case "CHECK_URL": {
           const { URL }: GetURLMessageType["payload"] = payload;
 
-          const _URL_TIENICHSV_DIEM = _TIENICHSV_URL + "/#/diem";
+          const _URL_TIENICHSV_DIEM = _TIENICHSV_URL + "/public/#/diem";
           const _URL_TIENICHSDH_DIEM = _TIENICHSDH_URL + "/#/diem";
           const availableURL = [_URL_TIENICHSV_DIEM, _URL_TIENICHSDH_DIEM];
 
