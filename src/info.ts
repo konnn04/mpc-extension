@@ -124,7 +124,7 @@ const Info = () => {
         case "CHECK_URL": {
           const { URL }: GetURLMessageType["payload"] = payload;
 
-          const _URL_TIENICHSV_INFO = _TIENICHSV_URL + "/#/home?mode=userinfo";
+          const _URL_TIENICHSV_INFO = _TIENICHSV_URL + "/public/#/home?mode=userinfo";
           const _URL_TIENICHSDH_INFO = _TIENICHSDH_URL + "/#/userinfo";
           const availableURL = [_URL_TIENICHSV_INFO, _URL_TIENICHSDH_INFO];
 
