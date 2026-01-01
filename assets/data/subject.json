@@ -1,0 +1,1097 @@
+[
+  {
+    "code": "SWOR1302",
+    "name": "An sinh xã hội",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4406",
+    "name": "An toàn bảo mật thông tin",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3412",
+    "name": "An toàn hệ thống thông tin",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC6312",
+    "name": "An toàn hệ thống thông tin (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "AIIT2316",
+    "name": "Biểu diễn tri thức",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3421",
+    "name": "Các công nghệ lập trình hiện đại",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2501",
+    "name": "Cấu trúc dữ liệu",
+    "credit": "4"
+  },
+  {
+    "code": "MISY2501",
+    "name": "Cấu trúc dữ liệu và thuật giải",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC1427",
+    "name": "Cấu trúc dữ liệu và thuật giải 1",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC1328",
+    "name": "Cấu trúc dữ liệu và thuật giải 2",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3411",
+    "name": "Công cụ thiết kế đồ họa",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3407",
+    "name": "Công cụ thiết kế hệ thống thông tin",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4410",
+    "name": "Công nghệ mã nguồn mở",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4409",
+    "name": "Công nghệ phần mềm",
+    "credit": "3"
+  },
+  {
+    "code": "DEDU0202",
+    "name": "Công tác quốc phòng và an ninh",
+    "credit": "2"
+  },
+  {
+    "code": "ITEC2502",
+    "name": "Cơ sở dữ liệu",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC3402",
+    "name": "Cơ sở dữ liệu nâng cao",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3418",
+    "name": "Cơ sở dữ liệu phân tán",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC1505",
+    "name": "Cơ sở lập trình",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC6401",
+    "name": "Cơ sở lập trình (CLC)",
+    "credit": "4"
+  },
+  {
+    "code": "POLI1206",
+    "name": "Chủ nghĩa Xã hội khoa học",
+    "credit": "2"
+  },
+  {
+    "code": "ITEC4418",
+    "name": "Chuyên đề",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC6319",
+    "name": "Chuyên đề (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "MISY3401",
+    "name": "Chuyên đề 1",
+    "credit": "3"
+  },
+  {
+    "code": "BADM2372",
+    "name": "Dự báo trong kinh doanh",
+    "credit": "3"
+  },
+  {
+    "code": "VIET1305",
+    "name": "Đại cương văn hóa Việt Nam",
+    "credit": "3"
+  },
+  {
+    "code": "MATH1313",
+    "name": "Đại số tuyến tính",
+    "credit": "3"
+  },
+  {
+    "code": "MATH6302",
+    "name": "Đại số tuyến tính (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4416",
+    "name": "Điện toán đám mây",
+    "credit": "3"
+  },
+  {
+    "code": "EDUC6301",
+    "name": "Định hướng nghề nghiệp và kỹ năng học tập",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4401",
+    "name": "Đồ án ngành",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC3410",
+    "name": "Đồ họa máy tính",
+    "credit": "3"
+  },
+  {
+    "code": "POLI2301",
+    "name": "Đường lối CM của Đảng CSVN",
+    "credit": "3"
+  },
+  {
+    "code": "DEDU0301",
+    "name": "Đường lối QP và AN của ĐCSVN",
+    "credit": "3"
+  },
+  {
+    "code": "PEDU0206",
+    "name": "GDTC2 - Bóng bàn",
+    "credit": "1.5"
+  },
+  {
+    "code": "PEDU0202",
+    "name": "GDTC2 - Bóng chuyền",
+    "credit": "1.5"
+  },
+  {
+    "code": "PEDU0203",
+    "name": "GDTC2 - Bóng đá",
+    "credit": "1.5"
+  },
+  {
+    "code": "PEDU0208",
+    "name": "GDTC2 - Bóng rổ",
+    "credit": "1.5"
+  },
+  {
+    "code": "PEDU0207",
+    "name": "GDTC2 - Bơi lội",
+    "credit": "1.5"
+  },
+  {
+    "code": "PEDU0204",
+    "name": "GDTC2 - Cầu lông",
+    "credit": "1.5"
+  },
+  {
+    "code": "PEDU0205",
+    "name": "GDTC2 - Võ thuật",
+    "credit": "1.5"
+  },
+  {
+    "code": "MATH1314",
+    "name": "Giải tích",
+    "credit": "3"
+  },
+  {
+    "code": "MATH6301",
+    "name": "Giải tích (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "DEDU1801",
+    "name": "Giáo dục Quốc phòng",
+    "credit": "8"
+  },
+  {
+    "code": "PEDU0201",
+    "name": "Giáo dục thể chất 1",
+    "credit": "1.5"
+  },
+  {
+    "code": "ITEC2301",
+    "name": "Hệ điều hành",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC1310",
+    "name": "Hệ điều hành và kiến trúc máy tính",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC5315",
+    "name": "Hệ điều hành và kiến trúc máy tính (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "AIT2312",
+    "name": "Hệ hỗ trợ ra quyết định",
+    "credit": "3"
+  },
+  {
+    "code": "ACCO1355",
+    "name": "Hệ thống hoạch định nguồn lực doanh nghiệp",
+    "credit": "3"
+  },
+  {
+    "code": "MISY4403",
+    "name": "Hệ thống quản lý nguồn lực doanh nghiệp",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3420",
+    "name": "Hệ thống thông tin địa lý",
+    "credit": "3"
+  },
+  {
+    "code": "MISY3301",
+    "name": "Hệ thống thông tin quản lý",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2315",
+    "name": "IoT ứng dụng",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC6330",
+    "name": "IoT ứng dụng (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4415",
+    "name": "Kiểm thử phần mềm",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC1201",
+    "name": "Kiến trúc máy tính",
+    "credit": "2"
+  },
+  {
+    "code": "ITEC1303",
+    "name": "Kiến trúc máy tính",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2313",
+    "name": "Kiến trúc phần mềm",
+    "credit": "3"
+  },
+  {
+    "code": "POLI1205",
+    "name": "Kinh tế chính trị Mác – Lênin",
+    "credit": "2"
+  },
+  {
+    "code": "SEAS2301",
+    "name": "Kinh tế học đại cương",
+    "credit": "3"
+  },
+  {
+    "code": "BADM2323",
+    "name": "Kinh tế lượng",
+    "credit": "3"
+  },
+  {
+    "code": "ECON1316",
+    "name": "Kinh tế lượng",
+    "credit": "3"
+  },
+  {
+    "code": "ECON1301",
+    "name": "Kinh tế Vi mô 1",
+    "credit": "3"
+  },
+  {
+    "code": "ECON1302",
+    "name": "Kinh tế Vĩ mô 1",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3201",
+    "name": "Kỹ năng nghề nghiệp",
+    "credit": "2"
+  },
+  {
+    "code": "DEDU0204",
+    "name": "Kỹ thuật chiến đấu bộ binh",
+    "credit": "2"
+  },
+  {
+    "code": "ITEC3416",
+    "name": "Kỹ thuật điện tử số",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC1504",
+    "name": "Kỹ thuật lập trình",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC6402",
+    "name": "Kỹ thuật lập trình (CLC)",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC3417",
+    "name": "Khai phá dữ liệu",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4699",
+    "name": "Khóa luận tốt nghiệp",
+    "credit": "6"
+  },
+  {
+    "code": "MISY4699",
+    "name": "Khóa luận tốt nghiệp (HTTTQL)",
+    "credit": "6"
+  },
+  {
+    "code": "BADM1390",
+    "name": "Khởi nghiệp",
+    "credit": "3"
+  },
+  {
+    "code": "BADM2304",
+    "name": "Lập kế hoạch kinh doanh",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3406",
+    "name": "Lập trình cơ sở dữ liệu",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4404",
+    "name": "Lập trình đồ họa",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2401",
+    "name": "Lập trình giao diện",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2504",
+    "name": "Lập trình hướng đối tượng",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC6403",
+    "name": "Lập trình hướng đối tượng (CLC)",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC4407",
+    "name": "Lập trình Java",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3408",
+    "name": "Lập trình mạng",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4417",
+    "name": "Lập trình trên thiết bị di động",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3415",
+    "name": "Lập trình ứng dụng",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3403",
+    "name": "Lập trình Web",
+    "credit": "3"
+  },
+  {
+    "code": "POLI1207",
+    "name": "Lịch sử Đảng Cộng sản Việt Nam",
+    "credit": "2"
+  },
+  {
+    "code": "BLAW1301",
+    "name": "Lý luận nhà nước và pháp luật",
+    "credit": "3"
+  },
+  {
+    "code": "BLAW6301",
+    "name": "Lý luận nhà nước và pháp luật (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "MATH1304",
+    "name": "Lý thuyết xác suất và thống kê",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2503",
+    "name": "Mạng máy tính",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC3409",
+    "name": "Mạng máy tính nâng cao",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2314",
+    "name": "Máy học",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC5321",
+    "name": "Máy học (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC1311",
+    "name": "Mẫu thiết kế hướng đối tượng",
+    "credit": "3"
+  },
+  {
+    "code": "ACCO1325",
+    "name": "Nguyên lý kế toán",
+    "credit": "3"
+  },
+  {
+    "code": "ACCO2301",
+    "name": "Nguyên lý kế toán",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC1401",
+    "name": "Nhập môn tin học",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC6301",
+    "name": "Nhập môn tin học (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4405",
+    "name": "Nhập môn trí tuệ nhân tạo",
+    "credit": "3"
+  },
+  {
+    "code": "POLI1201",
+    "name": "Những NLCB CN Mac - Lênin (P1)",
+    "credit": "2"
+  },
+  {
+    "code": "POLI2302",
+    "name": "Những NLCB CN Mac - Lênin (P2)",
+    "credit": "3"
+  },
+  {
+    "code": "GLAW1201",
+    "name": "Pháp luật đại cương",
+    "credit": "2"
+  },
+  {
+    "code": "GLAW1315",
+    "name": "Pháp luật đại cương",
+    "credit": "3"
+  },
+  {
+    "code": "GLAW6301",
+    "name": "Pháp luật đại cương (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "MISY3303",
+    "name": "Phát triển hệ thống thông tin quản lý",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2302",
+    "name": "Phát triển hệ thống Web",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2312",
+    "name": "Phát triển ứng dụng đa nền tảng",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC6329",
+    "name": "Phát triển ứng dụng đa nền tảng (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2303",
+    "name": "Phân tích dữ liệu",
+    "credit": "3"
+  },
+  {
+    "code": "AIT2313",
+    "name": "Phân tích dữ liệu chuỗi thời gian",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3401",
+    "name": "Phân tích thiết kế hệ thống",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC4408",
+    "name": "Quản lý dự án phần mềm",
+    "credit": "3"
+  },
+  {
+    "code": "BADM1380",
+    "name": "Quản trị chiến lược",
+    "credit": "3"
+  },
+  {
+    "code": "BADM2303",
+    "name": "Quản trị chuỗi cung ứng",
+    "credit": "3"
+  },
+  {
+    "code": "BADM1379",
+    "name": "Quản trị dự án",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4402",
+    "name": "Quản trị hệ cơ sở dữ liệu",
+    "credit": "3"
+  },
+  {
+    "code": "BADM1301",
+    "name": "Quản trị học",
+    "credit": "3"
+  },
+  {
+    "code": "BADM1364",
+    "name": "Quản trị học",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4403",
+    "name": "Quản trị mạng",
+    "credit": "3"
+  },
+  {
+    "code": "BADM1367",
+    "name": "Quản trị Marketing",
+    "credit": "3"
+  },
+  {
+    "code": "BADM1387",
+    "name": "Quản trị Marketing",
+    "credit": "3"
+  },
+  {
+    "code": "ACCO2310",
+    "name": "Quản trị nhân lực",
+    "credit": "3"
+  },
+  {
+    "code": "BADM1366",
+    "name": "Quản trị nhân lực",
+    "credit": "3"
+  },
+  {
+    "code": "BADM2371",
+    "name": "Quản trị rủi ro",
+    "credit": "3"
+  },
+  {
+    "code": "FINA1328",
+    "name": "Quản trị tài chính",
+    "credit": "3"
+  },
+  {
+    "code": "DEDU0103",
+    "name": "Quân sự chung",
+    "credit": "1"
+  },
+  {
+    "code": "SOCI1317",
+    "name": "Tâm lý học đại cương",
+    "credit": "3"
+  },
+  {
+    "code": "GENG0405",
+    "name": "Tiếng Anh nâng cao 1",
+    "credit": "4"
+  },
+  {
+    "code": "GENG1311",
+    "name": "Tiếng Anh nâng cao 1",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1339",
+    "name": "Tiếng Anh nâng cao 1",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1320",
+    "name": "Tiếng Anh nâng cao 10",
+    "credit": "3"
+  },
+  {
+    "code": "GENG0406",
+    "name": "Tiếng Anh nâng cao 2",
+    "credit": "4"
+  },
+  {
+    "code": "GENG1312",
+    "name": "Tiếng Anh nâng cao 2",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1340",
+    "name": "Tiếng Anh nâng cao 2",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1313",
+    "name": "Tiếng Anh nâng cao 3",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1341",
+    "name": "Tiếng Anh nâng cao 3",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1314",
+    "name": "Tiếng Anh nâng cao 4",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1342",
+    "name": "Tiếng Anh nâng cao 4",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1315",
+    "name": "Tiếng Anh nâng cao 5",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1343",
+    "name": "Tiếng Anh nâng cao 5",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1316",
+    "name": "Tiếng Anh nâng cao 6",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1317",
+    "name": "Tiếng Anh nâng cao 7",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1318",
+    "name": "Tiếng Anh nâng cao 8",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1319",
+    "name": "Tiếng Anh nâng cao 9",
+    "credit": "3"
+  },
+  {
+    "code": "JAPA0311",
+    "name": "Tiếng Nhật 1",
+    "credit": "3"
+  },
+  {
+    "code": "JAPA0312",
+    "name": "Tiếng Nhật 2",
+    "credit": "3"
+  },
+  {
+    "code": "JAPA0313",
+    "name": "Tiếng Nhật 3",
+    "credit": "3"
+  },
+  {
+    "code": "JAPA0411",
+    "name": "Tiếng Nhật 4",
+    "credit": "4"
+  },
+  {
+    "code": "JAPA0412",
+    "name": "Tiếng Nhật 5",
+    "credit": "4"
+  },
+  {
+    "code": "MATH1401",
+    "name": "Toán cao cấp A1",
+    "credit": "4"
+  },
+  {
+    "code": "MATH1403",
+    "name": "Toán cao cấp A2",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC2305",
+    "name": "Toán cho máy học",
+    "credit": "3"
+  },
+  {
+    "code": "MATH2402",
+    "name": "Toán rời rạc",
+    "credit": "3"
+  },
+  {
+    "code": "MATH5401",
+    "name": "Toán rời rạc (CLC)",
+    "credit": "4"
+  },
+  {
+    "code": "MATH3401",
+    "name": "Toán tin học",
+    "credit": "4"
+  },
+  {
+    "code": "POLI1208",
+    "name": "Tư tưởng Hồ Chí Minh",
+    "credit": "2"
+  },
+  {
+    "code": "POLI2201",
+    "name": "Tư tưởng Hồ Chí Minh",
+    "credit": "2"
+  },
+  {
+    "code": "ITEC3319",
+    "name": "Thị giác máy tính",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3419",
+    "name": "Thị giác máy tính",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC1406",
+    "name": "Thiết kế Web",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2402",
+    "name": "Thuật giải",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2311",
+    "name": "Thuật toán ứng dụng",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC4899",
+    "name": "Thực tập tốt nghiệp",
+    "credit": "4"
+  },
+  {
+    "code": "ITEC6408",
+    "name": "Thực tập tốt nghiệp (CLC)",
+    "credit": "4"
+  },
+  {
+    "code": "MISY4899",
+    "name": "Thực tập tốt nghiệp (HTTTQL)",
+    "credit": "4"
+  },
+  {
+    "code": "BADM1373",
+    "name": "Thương mại điện tử",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3414",
+    "name": "Thương mại điện tử",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3413",
+    "name": "Trí tuệ nhân tạo",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC5320",
+    "name": "Trí tuệ nhân tạo (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC2310",
+    "name": "Trí tuệ nhân tạo nâng cao",
+    "credit": "3"
+  },
+  {
+    "code": "POLI1304",
+    "name": "Triết học Mác - Lênin",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC1404",
+    "name": "Ứng dụng web",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC5305",
+    "name": "Ứng dụng web (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "JAPA3310",
+    "name": "Văn hóa ứng xử Nhật Bản",
+    "credit": "3"
+  },
+  {
+    "code": "SOCI1301",
+    "name": "Xã hội học đại cương",
+    "credit": "3"
+  },
+  {
+    "code": "MATH1315",
+    "name": "Xác suất và thống kê",
+    "credit": "3"
+  },
+  {
+    "code": "MATH6303",
+    "name": "Xác suất và thống kê (CLC)",
+    "credit": "3"
+  },
+  {
+    "code": "ITEC3404",
+    "name": "Xử lý ảnh",
+    "credit": "3"
+  },
+  {
+    "code": "AIIT2314",
+    "name": "Xử lý ảnh viễn thám",
+    "credit": "3"
+  },
+  {
+    "code": "AIIT2315",
+    "name": "Xử lý dữ liệu lớn",
+    "credit": "3"
+  },
+  {
+    "code": "CON501",
+    "name": "Triết học (Cao học)",
+    "credit": "3"
+  },
+  {
+    "code": "21COM601",
+    "name": "Phương pháp nghiên cứu khoa học",
+    "credit": "4"
+  },
+  {
+    "code": "COM602",
+    "name": "Phương pháp toán cho công nghệ thông tin",
+    "credit": "3"
+  },
+  {
+    "code": "COM603",
+    "name": "Cơ sở dữ liệu nâng cao (Thạc sĩ)",
+    "credit": "3"
+  },
+  {
+    "code": "COM604",
+    "name": "Phân tích và thiết kế thuật toán nâng cao",
+    "credit": "3"
+  },
+  {
+    "code": "COM605",
+    "name": "Mạng và truyền dữ liệu nâng cao",
+    "credit": "3"
+  },
+  {
+    "code": "22COM606",
+    "name": "Cơ sở tri thức",
+    "credit": "4"
+  },
+  {
+    "code": "COM624",
+    "name": "Dự án lập trình trí tuệ nhân tạo",
+    "credit": "4"
+  },
+  {
+    "code": "COM609",
+    "name": "Xử lý ảnh (Nâng cao)",
+    "credit": "3"
+  },
+  {
+    "code": "COM610",
+    "name": "Thị giác máy tính (Nâng cao)",
+    "credit": "3"
+  },
+  {
+    "code": "COM611",
+    "name": "Nhận dạng sinh trắc học",
+    "credit": "3"
+  },
+  {
+    "code": "COM612",
+    "name": "Khai phá dữ liệu (Nâng cao)",
+    "credit": "3"
+  },
+  {
+    "code": "COM613",
+    "name": "Web ngữ nghĩa",
+    "credit": "3"
+  },
+  {
+    "code": "COM614",
+    "name": "Xử lý dữ liệu lớn (Nâng cao)",
+    "credit": "3"
+  },
+  {
+    "code": "COM615",
+    "name": "Các hệ thống phân tán",
+    "credit": "3"
+  },
+  {
+    "code": "COM616",
+    "name": "Phân tích và quản lý rủi ro trong HTTT",
+    "credit": "3"
+  },
+  {
+    "code": "COM617",
+    "name": "Hệ hỗ trợ ra quyết định (Nâng cao)",
+    "credit": "3"
+  },
+  {
+    "code": "COM608",
+    "name": "Mã hóa thông tin nâng cao",
+    "credit": "3"
+  },
+  {
+    "code": "COM607",
+    "name": "Điện toán đám mây (Nâng cao)",
+    "credit": "3"
+  },
+  {
+    "code": "COM618",
+    "name": "Xử lý ngôn ngữ tự nhiên",
+    "credit": "3"
+  },
+  {
+    "code": "COM619",
+    "name": "Xử lý tiếng nói",
+    "credit": "3"
+  },
+  {
+    "code": "COM620",
+    "name": "Máy học nâng cao",
+    "credit": "3"
+  },
+  {
+    "code": "COM621",
+    "name": "Học sâu và ứng dụng",
+    "credit": "3"
+  },
+  {
+    "code": "COM622",
+    "name": "Quản trị và xử lý dữ liệu văn bản",
+    "credit": "3"
+  },
+  {
+    "code": "COM623",
+    "name": "Lập trình Robot công nghiệp",
+    "credit": "3"
+  },
+  {
+    "code": "COM703",
+    "name": "Luận văn tốt nghiệp (Thạc sĩ)",
+    "credit": "15"
+  },
+  {
+    "code": "COM704",
+    "name": "Thực tập (Thạc sĩ)",
+    "credit": "6"
+  },
+  {
+    "code": "COM705",
+    "name": "Đồ án tốt nghiệp (Thạc sĩ)",
+    "credit": "9"
+  },
+  {
+    "code": "PEDU1201",
+    "name": "Giáo dục Thể chất 1",
+    "credit": "2"
+  },
+  {
+    "code": "PEDU1302",
+    "name": "Bóng chuyền (Mã cũ)",
+    "credit": "3"
+  },
+  {
+    "code": "PEDU1303",
+    "name": "Bóng ném",
+    "credit": "3"
+  },
+  {
+    "code": "PEDU1304",
+    "name": "Bóng đá (Mã cũ)",
+    "credit": "3"
+  },
+  {
+    "code": "PEDU1305",
+    "name": "Bơi lội (Mã cũ)",
+    "credit": "3"
+  },
+  {
+    "code": "GENG1401",
+    "name": "Tiếng Anh căn bản 1",
+    "credit": "4"
+  },
+  {
+    "code": "GENG1402",
+    "name": "Tiếng Anh căn bản 2",
+    "credit": "4"
+  },
+  {
+    "code": "GENG1403",
+    "name": "Tiếng Anh nâng cao 1 (Mã 2015)",
+    "credit": "4"
+  },
+  {
+    "code": "GENG1404",
+    "name": "Tiếng Anh nâng cao 2 (Mã 2015)",
+    "credit": "4"
+  },
+  {
+    "code": "GENG2317",
+    "name": "Tiếng Anh nâng cao 3 (Mã 2015)",
+    "credit": "3"
+  },
+  {
+    "code": "GENG2318",
+    "name": "Tiếng Anh nâng cao 4 (Mã 2015)",
+    "credit": "3"
+  }
+]
