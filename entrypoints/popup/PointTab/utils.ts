@@ -1,14 +1,11 @@
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
-import { _DEFAULT_FIXED_POINT, _DEFAULT_IGNORE_SUBJECT_DATA } from "@/constants/default";
 import { ScoreGroupType } from "./type";
 
-const updateIgnoreSubject = (data: ScoreGroupType[]) => {
+const updateIgnoreSubject = (data: ScoreGroupType[], ignoreList: string[]) => {
   const newData = data.map((d) => {
     d.data = d.data.map((item) => {
-      const isIgnore = _DEFAULT_IGNORE_SUBJECT_DATA.find((i) => item.code.includes(i));
-      if (isIgnore) {
-        item.isIgnore = true;
-      }
+      const isIgnore = ignoreList.some((i) => item.code.includes(i));
+      item.isIgnore = isIgnore;
       return item;
     });
     return d;
@@ -74,8 +71,8 @@ const updateScoreAvg = (data: ScoreGroupType[]) => {
 
     d.totalCredit = totalCredit;
     d.avgPoint = {
-      scale10: Number.parseFloat((avg.point.scale10 / avg.credit).toFixed(_DEFAULT_FIXED_POINT)) || null,
-      scale4: Number.parseFloat((avg.point.scale4 / avg.credit).toFixed(_DEFAULT_FIXED_POINT)) || null
+      scale10: Number.parseFloat(String(avg.point.scale10 / avg.credit)) || null,
+      scale4: Number.parseFloat(String(avg.point.scale4 / avg.credit)) || null
     };
 
     return d;
@@ -116,8 +113,8 @@ const getScoreSummary = (data: ScoreGroupType[]) => {
   return {
     semesterCount: data.length,
     totalCredit,
-    gpa10: sumCredit > 0 ? +(sumScale10 / sumCredit).toFixed(_DEFAULT_FIXED_POINT) : 0,
-    gpa4: sumCredit > 0 ? +(sumScale4 / sumCredit).toFixed(_DEFAULT_FIXED_POINT) : 0
+    gpa10: sumCredit > 0 ? +(sumScale10 / sumCredit) : 0,
+    gpa4: sumCredit > 0 ? +(sumScale4 / sumCredit) : 0
   };
 };
 

@@ -10,16 +10,16 @@ import {
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Line } from "react-chartjs-2";
-import { _DEFAULT_FIXED_POINT } from "@/constants/default";
 import { StatisticDataType } from "@/entrypoints/popup/StatisticTab/type";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Title, ChartDataLabels);
 
 type Props = {
   statistic: StatisticDataType;
+  fixedPoint: number;
 };
 
-const SemesterAverageChart = ({ statistic }: Props) => {
+const SemesterAverageChart = ({ statistic, fixedPoint }: Props) => {
   const labels = statistic.semester.data.map((s) => s.title);
   const data10 = statistic.semester.data.map((s) => s.scale10);
   const data4 = statistic.semester.data.map((s) => s.scale4);
@@ -50,7 +50,7 @@ const SemesterAverageChart = ({ statistic }: Props) => {
       size: 11,
       weight: "bold" as const
     },
-    formatter: (value: number) => value.toFixed(_DEFAULT_FIXED_POINT)
+    formatter: (value: number) => value.toFixed(fixedPoint)
   };
 
   const options = {
