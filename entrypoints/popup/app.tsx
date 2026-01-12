@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { _FACEBOOK_URL, _GITHUB_URL } from "@/constants";
 import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
+import { ConfigTab } from "@/entrypoints/popup/ConfigTab";
 import { _TAB_CATE } from "@/entrypoints/popup/type";
 import { useGlobalStore } from "@/store/use-global-store";
 import { getCurrTabURL, openNewTab } from "@/utils";
@@ -64,6 +65,7 @@ function App() {
           <TabsTrigger value='point'>Tính điểm</TabsTrigger>
           <TabsTrigger value='info'>Thông tin</TabsTrigger>
           <TabsTrigger value='statistic'>Thống kê</TabsTrigger>
+          <TabsTrigger value='config'>Cài đặt</TabsTrigger>
         </TabsList>
 
         <Activity mode={tab ? "visible" : "hidden"}>
@@ -75,6 +77,9 @@ function App() {
           </TabsContent>
           <TabsContent value='statistic'>
             <StatisticTab />
+          </TabsContent>
+          <TabsContent value='config'>
+            <ConfigTab />
           </TabsContent>
         </Activity>
       </Tabs>

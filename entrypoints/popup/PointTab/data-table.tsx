@@ -41,9 +41,10 @@ type Props = {
     subjectIdx: number,
     subject: Omit<ScoreRecordType, "isIgnore" | "isHead">
   ) => void;
+  fixedPoint: number;
 };
 
-const DataTable = ({ data, filter, handleDeleteSubject, handleAddSubject, handleEditSubject }: Props) => {
+const DataTable = ({ data, filter, handleDeleteSubject, handleAddSubject, handleEditSubject, fixedPoint }: Props) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedSemesterIdx, setSelectedSemesterIdx] = useState<number>(0);
@@ -142,7 +143,8 @@ const DataTable = ({ data, filter, handleDeleteSubject, handleAddSubject, handle
               <div>
                 <div className='font-semibold'>{semester.title}</div>
                 <div className='text-muted-foreground text-sm'>
-                  Hệ 10: {semester.avgPoint.scale10 || "---"} - Hệ 4: {semester.avgPoint.scale4 || "---"}
+                  Hệ 10: {semester.avgPoint.scale10?.toFixed(fixedPoint) || "---"} - Hệ 4:{" "}
+                  {semester.avgPoint.scale4?.toFixed(fixedPoint) || "---"}
                 </div>
               </div>
               <Button className='bg-white' onClick={() => handleOpenAddDialog(semesterIdx)} size='sm' variant='outline'>

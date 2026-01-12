@@ -2,7 +2,6 @@ import { ImportIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { _DEFAULT_FIXED_POINT } from "@/constants/default";
 import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
 import { CharacterPointChart } from "@/entrypoints/popup/StatisticTab/Chartjs/character-point-chart";
 import { SemesterAverageChart } from "@/entrypoints/popup/StatisticTab/Chartjs/semester-avg-chart";
@@ -12,6 +11,7 @@ import { useGlobalStore } from "@/store/use-global-store";
 
 const StatisticTab = () => {
   const scores = useScoreStore((s) => s.scores);
+  const fixedPoint = useGlobalStore((s) => s.fixedPoint);
   const setTab = useGlobalStore((s) => s.setTab);
   const [statistics, setStatistics] = useState<StatisticDataType | null>(null);
 
@@ -48,7 +48,7 @@ const StatisticTab = () => {
 
   return (
     <div className='space-y-8 p-8'>
-      <SemesterAverageChart statistic={statistics} />
+      <SemesterAverageChart fixedPoint={fixedPoint} statistic={statistics} />
       <CharacterPointChart data={statistics.character.detail} total={statistics.character.total} />
 
       <div className='space-y-4 px-4 text-sm'>
@@ -80,10 +80,10 @@ const StatisticTab = () => {
             <span className='text-right'>{statistics.semester.ignore}</span>
 
             <span>Điểm TB mỗi kỳ (10):</span>
-            <span className='text-right'>{statistics.semester.avg10.toFixed(_DEFAULT_FIXED_POINT)}</span>
+            <span className='text-right'>{statistics.semester.avg10.toFixed(fixedPoint)}</span>
 
             <span>Điểm TB mỗi kỳ (4):</span>
-            <span className='text-right'>{statistics.semester.avg4.toFixed(_DEFAULT_FIXED_POINT)}</span>
+            <span className='text-right'>{statistics.semester.avg4.toFixed(fixedPoint)}</span>
           </div>
         </div>
 

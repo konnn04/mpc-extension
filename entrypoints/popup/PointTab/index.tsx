@@ -15,7 +15,6 @@ import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { _DEFAULT_SCORE_SUMMARY } from "@/entrypoints/popup/PointTab/default";
 import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
 import { useGlobalStore } from "@/store/use-global-store";
-import { navigateToURL } from "@/utils";
 import { DataTable } from "./data-table";
 import { ScoreGroupType, ScoreRecordType, ScoreSummaryType } from "./type";
 import { getScoreSummary, handleExportData, updateIgnoreSubject, updateScoreAvg } from "./utils";
@@ -23,6 +22,8 @@ import { getScoreSummary, handleExportData, updateIgnoreSubject, updateScoreAvg 
 const PointTab = () => {
   const siteCurr = useGlobalStore((s) => s.siteCurr);
   const siteCurrURL = useGlobalStore((s) => s.siteCurrURL);
+  const fixedPoint = useGlobalStore((s) => s.fixedPoint);
+  const ignoreList = useGlobalStore((s) => s.ignoreList);
   const { setScores, scores, filter, setFilter, lastUpdate, setLastUpdate, saveData, getData } = useScoreStore();
   const [summary, setSummary] = useState<ScoreSummaryType>(_DEFAULT_SCORE_SUMMARY);
 
@@ -31,14 +32,17 @@ const PointTab = () => {
     setSummary(updatedSummary);
   }, []);
 
-  const handleNavigate = async (url: string) => {
-    await navigateToURL(url);
-  };
+  const updateIgnoreAndAvg = useCallback(
+    (data: ScoreGroupType[]) => {
+      const updatedIgnoreData = updateIgnoreSubject(data, ignoreList);
+      const updatedData = updateScoreAvg(updatedIgnoreData);
+      return updatedData;
+    },
+    [ignoreList]
+  );
 
   const saveCurrentData = async (data: ScoreGroupType[]) => {
-    const updatedIgnoreData = updateIgnoreSubject(data);
-    const updatedData = updateScoreAvg(updatedIgnoreData);
-
+    const updatedData = updateIgnoreAndAvg(data);
     const updatedSummary = getScoreSummary(updatedData);
     setSummary(updatedSummary);
 
@@ -195,16 +199,17 @@ const PointTab = () => {
             <div className='text-right font-medium'>{summary.totalCredit}</div>
 
             <div className='text-muted-foreground'>GPA (Hệ 10):</div>
-            <div className='text-right font-medium'>{summary.gpa10}</div>
+            <div className='text-right font-medium'>{summary.gpa10.toFixed(fixedPoint)}</div>
 
             <div className='text-muted-foreground'>GPA (Hệ 4):</div>
-            <div className='text-right font-medium'>{summary.gpa4}</div>
+            <div className='text-right font-medium'>{summary.gpa4.toFixed(fixedPoint)}</div>
           </div>
         </div>
 
         <DataTable
           data={scores}
           filter={filter}
+          fixedPoint={fixedPoint}
           handleAddSubject={handleAddSubject}
           handleDeleteSubject={handleDeleteSubject}
           handleEditSubject={handleEditSubject}
