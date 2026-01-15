@@ -8,7 +8,7 @@ import {
 } from "@/constants/chrome";
 import { getUserData } from "@/entrypoints/popup/InfoTab/scripts";
 import { getPointData } from "@/entrypoints/popup/PointTab/scripts";
-import { getCalendars } from "../popup/Calender/scripts";
+import { getCalendars } from "../popup/CalenderTab/scripts";
 
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener((msg, _sender, sendResponse) => {

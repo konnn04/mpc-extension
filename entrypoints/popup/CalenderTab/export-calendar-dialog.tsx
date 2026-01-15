@@ -24,7 +24,6 @@ type ExportCalendarDialogProps = {
 export function ExportCalendarDialog({ open, onOpenChange, calendarData, onExport }: ExportCalendarDialogProps) {
   const [selectedSemesters, setSelectedSemesters] = useState<Set<string>>(new Set());
 
-  // Auto-select the latest semester when dialog opens
   useEffect(() => {
     if (open && calendarData.length > 0) {
       const latestSemester = calendarData.at(-1)?.semester;

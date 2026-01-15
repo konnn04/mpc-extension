@@ -1,6 +1,6 @@
-import type * as T from "../type";
+import { type CalendarEntry, type ProgressCallback, type SemesterData } from "../type";
 
-const getCalendars = async (onProgress?: T.ProgressCallback): Promise<T.SemesterData[]> => {
+const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData[]> => {
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection
   const SUBJECT_CODE_REGEX = /\((.*?)\)/;
   const TIME_REGEX = /\d{2}:\d{2}/g;
@@ -259,7 +259,7 @@ const getCalendars = async (onProgress?: T.ProgressCallback): Promise<T.Semester
     return "OTHER";
   };
 
-  const processRow = (row: Element, headerCells: string[]): T.CalendarEntry[] => {
+  const processRow = (row: Element, headerCells: string[]): CalendarEntry[] => {
     const periodCell = row.querySelector(CONFIG.selectors.periodCell);
     if (!periodCell) {
       return [];
@@ -269,7 +269,7 @@ const getCalendars = async (onProgress?: T.ProgressCallback): Promise<T.Semester
     const currentPeriod = Number.parseInt(periodText, 10);
 
     const cells = [...row.querySelectorAll("td")].filter((td) => td.getAttribute("rowspan"));
-    const rowEntries: T.CalendarEntry[] = [];
+    const rowEntries: CalendarEntry[] = [];
 
     for (const cell of cells) {
       const colspanIndex = [...row.children].indexOf(cell);
@@ -306,7 +306,7 @@ const getCalendars = async (onProgress?: T.ProgressCallback): Promise<T.Semester
     return rowEntries;
   };
 
-  const scrapeScheduleTable = (): T.CalendarEntry[] => {
+  const scrapeScheduleTable = (): CalendarEntry[] => {
     const table = document.querySelector(CONFIG.selectors.table);
     if (!table) {
       console.warn("Không tìm thấy bảng TKB");
@@ -318,7 +318,7 @@ const getCalendars = async (onProgress?: T.ProgressCallback): Promise<T.Semester
       .filter((text) => text.includes("Thứ") || text.includes("Chủ"));
 
     const rows = [...table.querySelectorAll(CONFIG.selectors.tableRows)];
-    const result: T.CalendarEntry[] = [];
+    const result: CalendarEntry[] = [];
 
     for (const row of rows) {
       result.push(...processRow(row, headerCells));
@@ -340,7 +340,7 @@ const getCalendars = async (onProgress?: T.ProgressCallback): Promise<T.Semester
       throw new Error("Không tìm thấy học kỳ nào");
     }
 
-    const allData: T.SemesterData[] = [];
+    const allData: SemesterData[] = [];
     const totalSemesters = semesters.length;
 
     for (let semesterIndex = 0; semesterIndex < semesters.length; semesterIndex++) {
@@ -353,7 +353,7 @@ const getCalendars = async (onProgress?: T.ProgressCallback): Promise<T.Semester
 
       await selectSemester(semester);
 
-      const semesterData: T.SemesterData = { semester, weeks: [] };
+      const semesterData: SemesterData = { semester, weeks: [] };
       const firstWeek = getCurrentWeek();
 
       if (!firstWeek) {

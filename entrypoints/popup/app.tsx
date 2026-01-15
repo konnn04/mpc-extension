@@ -9,7 +9,7 @@ import { ConfigTab } from "@/entrypoints/popup/ConfigTab";
 import { _TAB_CATE } from "@/entrypoints/popup/type";
 import { useGlobalStore } from "@/store/use-global-store";
 import { getCurrTabURL, openNewTab } from "@/utils";
-import { CalenderTab } from "./Calender";
+import { CalenderTab } from "./CalenderTab";
 import { InfoTab } from "./InfoTab";
 import { PointTab } from "./PointTab";
 import { StatisticTab } from "./StatisticTab";
