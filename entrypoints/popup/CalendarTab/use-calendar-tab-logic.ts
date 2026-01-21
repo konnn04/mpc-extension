@@ -96,7 +96,6 @@ export function useCalendarTabLogic() {
       setProgressState({ isProgress: false, message: "Hoàn thành!" });
 
       if (data && !data.error) {
-        useCalendarStore.getState().setCalendarData(data);
         await saveData();
         toast.success(`Đã nhập và lưu thành công ${data?.length || 0} học kỳ!`);
       } else {

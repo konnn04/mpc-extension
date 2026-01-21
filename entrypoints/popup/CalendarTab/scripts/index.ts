@@ -42,7 +42,7 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
   };
 
   // ==================== HELPER FUNCTIONS ====================
-  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
   const createOverlay = (): HTMLDivElement => {
     const overlay = document.createElement("div");

@@ -9,7 +9,7 @@ import { ConfigTab } from "@/entrypoints/popup/ConfigTab";
 import { _TAB_CATE } from "@/entrypoints/popup/type";
 import { useGlobalStore } from "@/store/use-global-store";
 import { getCurrTabURL, openNewTab } from "@/utils";
-import { CalenderTab } from "./CalenderTab";
+import { CalendarTab } from "./CalendarTab";
 import { InfoTab } from "./InfoTab";
 import { PointTab } from "./PointTab";
 import { StatisticTab } from "./StatisticTab";
@@ -67,7 +67,7 @@ function App() {
         <TabsList className='w-full'>
           <TabsTrigger value='point'>Tính điểm</TabsTrigger>
           <TabsTrigger value='info'>Thông tin</TabsTrigger>
-          <TabsTrigger value='calender'>Lịch</TabsTrigger>
+          <TabsTrigger value='calendar'>Lịch</TabsTrigger>
           <TabsTrigger value='statistic'>Thống kê</TabsTrigger>
           <TabsTrigger value='config'>Cài đặt</TabsTrigger>
         </TabsList>
@@ -82,8 +82,8 @@ function App() {
           <TabsContent value='statistic'>
             <StatisticTab />
           </TabsContent>
-          <TabsContent value='calender'>
-            <CalenderTab />
+          <TabsContent value='calendar'>
+            <CalendarTab />
           </TabsContent>
           <TabsContent value='config'>
             <ConfigTab />
