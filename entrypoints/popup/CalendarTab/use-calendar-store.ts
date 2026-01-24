@@ -1,11 +1,10 @@
 import { create } from "zustand";
+import { _CHROME_STORAGE_CALENDAR_KEY } from "@/entrypoints/popup/CalendarTab/default";
 import type { CalendarEntry, CalendarStorageType, SemesterData } from "./type";
 import { buildScheduleMap } from "./utils/format";
 
-const STORAGE_KEY = "calendar_data";
-
 type CalendarState = {
-  calendarData: SemesterData[] | null;
+  calendarData: SemesterData[];
   lastUpdate: Date | null;
   scheduleMap: Map<string, CalendarEntry[]>;
   setCalendarData: (data: SemesterData[]) => void;
@@ -16,7 +15,7 @@ type CalendarState = {
 };
 
 export const useCalendarStore = create<CalendarState>((set, get) => ({
-  calendarData: null,
+  calendarData: [],
   lastUpdate: null,
   scheduleMap: new Map(),
 
@@ -29,9 +28,8 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
 
   getData: async () => {
     try {
-      const result = await browser.storage.local.get(STORAGE_KEY);
-      if (result[STORAGE_KEY]) {
-        const storageData = result[STORAGE_KEY] as CalendarStorageType;
+      const storageData = await storage.getItem<CalendarStorageType>(_CHROME_STORAGE_CALENDAR_KEY);
+      if (storageData) {
         const map = buildScheduleMap(storageData.data);
         set({
           calendarData: storageData.data,
@@ -47,10 +45,10 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   saveData: async () => {
     try {
       const data: CalendarStorageType = {
-        data: get().calendarData || [],
+        data: get().calendarData,
         updatedAt: new Date().toISOString()
       };
-      await browser.storage.local.set({ [STORAGE_KEY]: data });
+      await storage.setItem(_CHROME_STORAGE_CALENDAR_KEY, data);
       set({ lastUpdate: new Date() });
     } catch (error) {
       console.error("[Calendar Store] Error saving data:", error);
@@ -59,8 +57,8 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
 
   clearData: async () => {
     try {
-      await browser.storage.local.remove(STORAGE_KEY);
-      set({ calendarData: null, lastUpdate: null, scheduleMap: new Map() });
+      await storage.removeItem(_CHROME_STORAGE_CALENDAR_KEY);
+      set({ calendarData: [], lastUpdate: null, scheduleMap: new Map() });
     } catch (error) {
       console.error("[Calendar Store] Error clearing data:", error);
     }

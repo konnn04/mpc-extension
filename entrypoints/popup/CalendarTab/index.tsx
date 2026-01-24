@@ -176,7 +176,7 @@ const CalendarDataView = ({
   </>
 );
 
-export function CalenderTab() {
+export function CalendarTab() {
   const {
     navigateButton,
     isLoading,
@@ -216,7 +216,7 @@ export function CalenderTab() {
           </div>
         </AlertDescription>
       </Alert>
-      {!calendarData && (
+      {calendarData.length === 0 && (
         <CalendarEmptyState
           isLoading={isLoading}
           isOnCalendarPage={isOnCalendarPage}
@@ -224,7 +224,7 @@ export function CalenderTab() {
           onImport={getCalendars}
         />
       )}
-      {!!calendarData && (
+      {calendarData.length > 0 && (
         <CalendarDataView
           calendarData={calendarData}
           isLoading={isLoading}
@@ -237,14 +237,14 @@ export function CalenderTab() {
         />
       )}
 
-      {calendarData ? (
+      {calendarData.length > 0 && (
         <ExportCalendarDialog
           calendarData={calendarData}
           onExport={handleExportCalendar}
           onOpenChange={setExportDialogOpen}
           open={exportDialogOpen}
         />
-      ) : null}
+      )}
 
       <AlertDialog onOpenChange={(open) => setConfirmState({ ...confirmState, open })} open={confirmState.open}>
         <AlertDialogContent>
