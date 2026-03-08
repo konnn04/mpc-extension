@@ -25,7 +25,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { _GET_POINT_DATA } from "@/constants/chrome";
-import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { _DEFAULT_SCORE_SUMMARY } from "@/entrypoints/sidepanel/PointTab/default";
 import { useScoreStore } from "@/entrypoints/sidepanel/PointTab/use-score-store";
 import { useGlobalStore } from "@/store/use-global-store";
@@ -39,6 +38,7 @@ const PointTab = () => {
   const siteCurrURL = useGlobalStore((s) => s.siteCurrURL);
   const fixedPoint = useGlobalStore((s) => s.fixedPoint);
   const ignoreList = useGlobalStore((s) => s.ignoreList);
+  const siteURLMapping = useGlobalStore((s) => s.siteURLMapping);
   const { setScores, scores, filter, setFilter, lastUpdate, setLastUpdate, saveData, getData } = useScoreStore();
   const [summary, setSummary] = useState<ScoreSummaryType>(_DEFAULT_SCORE_SUMMARY);
 
@@ -76,7 +76,7 @@ const PointTab = () => {
   };
 
   const handleImportData = async () => {
-    if (siteCurrURL !== _DEFAULT_SITE_URL_MAPPING[siteCurr].point) {
+    if (siteCurrURL !== siteURLMapping[siteCurr].point) {
       toast.error("Vui lòng truy cập trang điểm để nhập dữ liệu!");
       return;
     }
@@ -204,10 +204,10 @@ const PointTab = () => {
         <AlertDescription>
           <div className='mx-auto flex items-center justify-center text-center'>
             Dữ liệu nhập từ:{" "}
-            <ButtonNavSite url={_DEFAULT_SITE_URL_MAPPING[siteCurr].point} variant='link'>
-              {_DEFAULT_SITE_URL_MAPPING[siteCurr].point}
+            <ButtonNavSite url={siteURLMapping[siteCurr].point} variant='link'>
+              {siteURLMapping[siteCurr].point}
             </ButtonNavSite>
-            {siteCurrURL === _DEFAULT_SITE_URL_MAPPING[siteCurr].point ? (
+            {siteCurrURL === siteURLMapping[siteCurr].point ? (
               <CircleCheckIcon className='ml-2 h-5 w-5 text-green-500' />
             ) : (
               <CircleAlertIcon className='ml-2 h-5 w-5 text-red-500' />
@@ -227,7 +227,7 @@ const PointTab = () => {
           </EmptyHeader>
           <EmptyContent>
             <div className='flex gap-2'>
-              <ButtonNavSite size='sm' url={_DEFAULT_SITE_URL_MAPPING[siteCurr].point}>
+              <ButtonNavSite size='sm' url={siteURLMapping[siteCurr].point}>
                 Đến trang điểm
               </ButtonNavSite>
               <Button onClick={handleImportData} size='sm'>

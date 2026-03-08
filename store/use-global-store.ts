@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { _DEFAULT_FIXED_POINT, _DEFAULT_IGNORE_SUBJECT_DATA } from "@/constants/default";
+import { _DEFAULT_FIXED_POINT, _DEFAULT_IGNORE_SUBJECT_DATA, _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { _CHROME_STORAGE_GLOBAL_KEY } from "@/entrypoints/sidepanel/default";
 import { _TAB_CATE } from "@/entrypoints/sidepanel/type";
 
@@ -7,6 +7,7 @@ type GlobalStorageType = {
   tab: _TAB_CATE;
   fixedPoint: number;
   ignoreList: string[];
+  siteURLMapping: _SITE_MAPPING;
 };
 
 type GlobalState = {
@@ -15,8 +16,10 @@ type GlobalState = {
   siteCurrURL: string;
   fixedPoint: number;
   ignoreList: string[];
+  siteURLMapping: _SITE_MAPPING;
   setFixedPoint: (point: number) => void;
   setIgnoreList: (list: string[]) => void;
+  setSiteURLMapping: (mapping: _SITE_MAPPING) => void;
   setTab: (tab: _TAB_CATE) => void;
   setSiteCurr: (siteCurr: _SITE_CATE) => void;
   setSiteCurrURL: (siteCurrURL: string) => void;
@@ -30,6 +33,7 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   siteCurrURL: "",
   fixedPoint: _DEFAULT_FIXED_POINT,
   ignoreList: _DEFAULT_IGNORE_SUBJECT_DATA,
+  siteURLMapping: _DEFAULT_SITE_URL_MAPPING,
   setTab: (tab: _TAB_CATE) => {
     set({ tab });
     get().saveData();
@@ -38,11 +42,13 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   setSiteCurrURL: (siteCurrURL: string) => set({ siteCurrURL }),
   setFixedPoint: (point: number) => set({ fixedPoint: point }),
   setIgnoreList: (list: string[]) => set({ ignoreList: list }),
+  setSiteURLMapping: (mapping: _SITE_MAPPING) => set({ siteURLMapping: mapping }),
   saveData: async () => {
     const data: GlobalStorageType = {
       tab: get().tab,
       fixedPoint: get().fixedPoint,
-      ignoreList: get().ignoreList
+      ignoreList: get().ignoreList,
+      siteURLMapping: get().siteURLMapping
     };
     await storage.setItem(_CHROME_STORAGE_GLOBAL_KEY, JSON.stringify(data));
   },
@@ -56,6 +62,9 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
     }
     if (savedData?.ignoreList) {
       set({ ignoreList: savedData.ignoreList });
+    }
+    if (savedData?.siteURLMapping) {
+      set({ siteURLMapping: savedData.siteURLMapping });
     }
   }
 }));

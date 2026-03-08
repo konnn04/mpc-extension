@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { _GET_CLASS_CALENDAR_DATA } from "@/constants/chrome";
-import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { useGlobalStore } from "@/store/use-global-store";
 import { SemesterData } from "./type";
 import { useCalendarStore } from "./use-calendar-store";
@@ -13,8 +12,8 @@ type ProgressState = {
   message: string;
 };
 
-export function getNavigateButtonState(siteCurr: string, siteCurrURL: string) {
-  const mapping = _DEFAULT_SITE_URL_MAPPING[siteCurr as keyof typeof _DEFAULT_SITE_URL_MAPPING];
+export function getNavigateButtonState(siteCurr: string, siteCurrURL: string, siteURLMapping: _SITE_MAPPING) {
+  const mapping = siteURLMapping[siteCurr as keyof _SITE_MAPPING];
   if (!mapping) {
     return null;
   }
@@ -41,11 +40,15 @@ export function getNavigateButtonState(siteCurr: string, siteCurrURL: string) {
 export function useCalendarTabLogic() {
   const siteCurr = useGlobalStore((s) => s.siteCurr);
   const siteCurrURL = useGlobalStore((s) => s.siteCurrURL);
+  const siteURLMapping = useGlobalStore((s) => s.siteURLMapping);
   const { calendarData, getData, saveData, clearData } = useCalendarStore();
   const [isLoading, setIsLoading] = useState(false);
   const setCalendarData = useCalendarStore((state) => state.setCalendarData);
 
-  const navigateButton = useMemo(() => getNavigateButtonState(siteCurr, siteCurrURL), [siteCurr, siteCurrURL]);
+  const navigateButton = useMemo(
+    () => getNavigateButtonState(siteCurr, siteCurrURL, siteURLMapping),
+    [siteCurr, siteCurrURL, siteURLMapping]
+  );
 
   const [progressState, setProgressState] = useState<ProgressState>({
     isProgress: false,
@@ -62,7 +65,7 @@ export function useCalendarTabLogic() {
 
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
-  const mapping = _DEFAULT_SITE_URL_MAPPING[siteCurr as keyof typeof _DEFAULT_SITE_URL_MAPPING];
+  const mapping = siteURLMapping[siteCurr as keyof _SITE_MAPPING];
   const isOnCalendarPage = mapping && (siteCurrURL === mapping.classCalendar || siteCurrURL === mapping.examCalendar);
 
   useEffect(() => {
@@ -75,7 +78,7 @@ export function useCalendarTabLogic() {
       return;
     }
 
-    if (siteCurrURL === _DEFAULT_SITE_URL_MAPPING[siteCurr].examCalendar) {
+    if (siteCurrURL === siteURLMapping[siteCurr].examCalendar) {
       toast.error("Chức năng nhập Lịch Thi hiện chưa được hỗ trợ.");
       return;
     }
