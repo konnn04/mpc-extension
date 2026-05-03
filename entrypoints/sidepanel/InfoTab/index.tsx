@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { _GET_USER_DATA } from "@/constants/chrome";
-import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { _COURSE_LABEL_MAPPING, _USER_LABEL_MAPPING } from "@/entrypoints/sidepanel/InfoTab/default";
 import { CourseType, UserType } from "@/entrypoints/sidepanel/InfoTab/type";
 import { handleExportData } from "@/entrypoints/sidepanel/InfoTab/utils";
@@ -24,6 +23,7 @@ import { useInfoStore } from "./use-info-store";
 const InfoTab = () => {
   const siteCurr = useGlobalStore((s) => s.siteCurr);
   const siteCurrURL = useGlobalStore((s) => s.siteCurrURL);
+  const siteURLMapping = useGlobalStore((s) => s.siteURLMapping);
   const { userData, courseData, setUserData, setCourseData, getData, saveData } = useInfoStore();
 
   const handleNavigate = async (url: string) => {
@@ -31,7 +31,7 @@ const InfoTab = () => {
   };
 
   const handleImportData = async () => {
-    if (siteCurrURL !== _DEFAULT_SITE_URL_MAPPING[siteCurr].info) {
+    if (siteCurrURL !== siteURLMapping[siteCurr].info) {
       toast.error("Vui lòng truy cập trang thông tin người dùng để nhập dữ liệu!");
       return;
     }
@@ -64,10 +64,10 @@ const InfoTab = () => {
         <AlertDescription>
           <div className='mx-auto flex items-center justify-center text-center'>
             Dữ liệu nhập từ:{" "}
-            <ButtonNavSite url={_DEFAULT_SITE_URL_MAPPING[siteCurr].info} variant='link'>
-              {_DEFAULT_SITE_URL_MAPPING[siteCurr].info}
+            <ButtonNavSite url={siteURLMapping[siteCurr].info} variant='link'>
+              {siteURLMapping[siteCurr].info}
             </ButtonNavSite>
-            {siteCurrURL === _DEFAULT_SITE_URL_MAPPING[siteCurr].info ? (
+            {siteCurrURL === siteURLMapping[siteCurr].info ? (
               <CircleCheckIcon className='ml-2 h-5 w-5 text-green-500' />
             ) : (
               <CircleAlertIcon className='ml-2 h-5 w-5 text-red-500' />
@@ -88,7 +88,7 @@ const InfoTab = () => {
           </EmptyHeader>
           <EmptyContent>
             <div className='flex gap-2'>
-              <ButtonNavSite size='sm' url={_DEFAULT_SITE_URL_MAPPING[siteCurr].info}>
+              <ButtonNavSite size='sm' url={siteURLMapping[siteCurr].info}>
                 Đến trang thông tin
               </ButtonNavSite>
               <Button onClick={handleImportData} size='sm'>

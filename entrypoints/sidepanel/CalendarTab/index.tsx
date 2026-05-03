@@ -30,7 +30,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { useGlobalStore } from "@/store/use-global-store";
 import { CalendarView } from "./calendar-view";
 import { ExportCalendarDialog } from "./export-calendar-dialog";
@@ -194,6 +193,7 @@ export function CalendarTab() {
   } = useCalendarTabLogic();
 
   const siteCurr = useGlobalStore((s) => s.siteCurr);
+  const siteURLMapping = useGlobalStore((s) => s.siteURLMapping);
 
   return (
     <section className='position-relative space-y-2 px-4 py-2'>
@@ -201,11 +201,11 @@ export function CalendarTab() {
         <AlertDescription>
           <div className='mx-auto flex items-center justify-center text-center'>
             Dữ liệu cần nhập từ:{" "}
-            <ButtonNavSite url={_DEFAULT_SITE_URL_MAPPING[siteCurr].classCalendar} variant='link'>
+            <ButtonNavSite url={siteURLMapping[siteCurr].classCalendar} variant='link'>
               Lịch Học
             </ButtonNavSite>
             hoặc
-            <ButtonNavSite url={_DEFAULT_SITE_URL_MAPPING[siteCurr].examCalendar} variant='link'>
+            <ButtonNavSite url={siteURLMapping[siteCurr].examCalendar} variant='link'>
               Lịch Thi
             </ButtonNavSite>
             {navigateButton?.isCalendarPage ? (

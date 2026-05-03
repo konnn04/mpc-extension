@@ -5,7 +5,6 @@ import { InfoDialog } from "@/components/custom/info-dialog";
 import { SidebarWidthAlert } from "@/components/custom/sidebar-width-alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { _FACEBOOK_URL, _GITHUB_URL } from "@/constants";
-import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { ConfigTab } from "@/entrypoints/sidepanel/ConfigTab";
 import { _TAB_CATE } from "@/entrypoints/sidepanel/type";
 import { useGlobalStore } from "@/store/use-global-store";
@@ -16,7 +15,7 @@ import { PointTab } from "./PointTab";
 import { StatisticTab } from "./StatisticTab";
 
 function App() {
-  const { tab, setTab, getData, setSiteCurr, setSiteCurrURL } = useGlobalStore();
+  const { tab, setTab, getData, setSiteCurr, setSiteCurrURL, siteURLMapping } = useGlobalStore();
 
   const handleChangeTab = (value: _TAB_CATE) => {
     setTab(value);
@@ -34,7 +33,7 @@ function App() {
       const currURL = await getCurrTabURL();
       let siteCurr: _SITE_CATE = "sv";
 
-      for (const [key, site] of Object.entries(_DEFAULT_SITE_URL_MAPPING)) {
+      for (const [key, site] of Object.entries(siteURLMapping)) {
         if (currURL.startsWith(site.homepage)) {
           siteCurr = key as _SITE_CATE;
         }
@@ -44,7 +43,7 @@ function App() {
       setSiteCurrURL(currURL);
     };
     loadSiteCurr();
-  }, [setSiteCurr, setSiteCurrURL]);
+  }, [setSiteCurr, setSiteCurrURL, siteURLMapping]);
 
   return (
     <div>

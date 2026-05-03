@@ -27,7 +27,7 @@ export const _DEFAULT_IGNORE_SUBJECT_DATA: string[] = [
 
 export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
   sv: {
-    label: "Tiện ích SV",
+    label: "Tiện ích SV (Dành cho SV chính quy)",
     homepage: "https://tienichsv.ou.edu.vn",
     point: "https://tienichsv.ou.edu.vn/#/diem",
     classCalendar: "https://tienichsv.ou.edu.vn/#/tkb-tuan",
