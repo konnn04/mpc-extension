@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/mpc-ou/mpc-extension/compare/v1.5.0...v1.6.0) (2026-05-03)
+
+
+### Features
+
+* add default URL to config tab ([5a4078c](https://github.com/mpc-ou/mpc-extension/commit/5a4078c4e729f98879095a5623edb4448c4ed2c7))
+
 # [1.5.0](https://github.com/mpc-ou/mpc-extension/compare/v1.4.1...v1.5.0) (2026-02-17)
 
 
