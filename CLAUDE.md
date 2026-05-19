@@ -76,5 +76,6 @@ Defined in [constants/default.ts](constants/default.ts) (`_DEFAULT_SITE_URL_MAPP
 - **Linter/Formatter**: Biome (not ESLint/Prettier) — config in [biome.jsonc](biome.jsonc)
 - **Commits**: Conventional Commits enforced by commitlint + husky (required for semantic-release versioning)
 - **Path alias**: `@/*` maps to the repo root
+- **Constants & Definitions**: When coding magic numbers, defining thresholds, or adding constant configuration functions, ALWAYS check the `constants/` directory (e.g., `constants/default.ts`) to reuse existing values or define them centrally.
 - **Grade conversion**: 10-point → 4-point scale logic is in [utils/index.ts](utils/index.ts)
 - **Release**: Automated via semantic-release on push to `main`; updates `package.json`, `wxt.config.ts`, `CHANGELOG.md`, and `assets/data/info.json`
