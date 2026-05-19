@@ -1,3 +1,10 @@
+export type AwardType = {
+  decisionName: string;
+  formOfReward: string;
+  decisionDate: string;
+  note: string;
+};
+
 export type UserType = {
   userId: string;
   fullName: string;
@@ -12,6 +19,8 @@ export type UserType = {
   nationality: string;
   religion: string;
   residentialAddress: string;
+  avatar: string;
+  awards: AwardType[];
   updatedAt: string;
 };
 

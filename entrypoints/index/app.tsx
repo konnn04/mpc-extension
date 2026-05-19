@@ -6,13 +6,14 @@ import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
 import { useGlobalStore } from "@/store/use-global-store";
 import { CalendarPage } from "./pages/CalendarPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { PersonalInfoPage } from "./pages/PersonalInfoPage";
 import { ScorePlanPage } from "./pages/ScorePlanPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { BREADCRUMB_MAP, type DashboardRoute, NAV_ITEMS } from "./types";
 
 function getInitialRoute(): DashboardRoute {
   const hash = window.location.hash.replace("#", "");
-  if (["dashboard", "score-plan", "calendar", "settings"].includes(hash)) {
+  if (["dashboard", "score-plan", "calendar", "settings", "personal-info"].includes(hash)) {
     return hash as DashboardRoute;
   }
   return "dashboard";
@@ -58,7 +59,7 @@ function App() {
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.replace("#", "") as DashboardRoute;
-      if (["dashboard", "score-plan", "calendar", "settings"].includes(hash)) {
+      if (["dashboard", "score-plan", "calendar", "settings", "personal-info"].includes(hash)) {
         setRoute(hash);
       }
     };
@@ -105,6 +106,8 @@ function App() {
     switch (route) {
       case "dashboard":
         return <DashboardPage />;
+      case "personal-info":
+        return <PersonalInfoPage />;
       case "score-plan":
         return <ScorePlanPage />;
       case "calendar":

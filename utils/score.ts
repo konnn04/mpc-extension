@@ -237,7 +237,8 @@ const GRADE_COLORS = _DEFAULT_GRADE_COLORS;
 
 function getAcademicRank(gpa4: number) {
   const found = _DEFAULT_ACADEMIC_RANKS.find((r) => gpa4 >= r.minGpa4);
-  return found?.rank ?? _DEFAULT_ACADEMIC_RANKS.at(-1)?.rank ?? "Kém";
+  // biome-ignore lint/style/noNonNullAssertion: Guaranteed to exist
+  return found?.rank ?? _DEFAULT_ACADEMIC_RANKS.at(-1)!.rank;
 }
 
 function getNextSemesterName(currentName: string): string | null {
@@ -266,13 +267,13 @@ function getTrainingRank(point: number) {
 }
 
 export {
-  updateIgnoreSubject,
-  updateScoreAvg,
-  getScoreSummary,
-  handleExportData,
   formatSemesterShort,
   GRADE_COLORS,
   getAcademicRank,
   getNextSemesterName,
-  getTrainingRank
+  getScoreSummary,
+  getTrainingRank,
+  handleExportData,
+  updateIgnoreSubject,
+  updateScoreAvg
 };

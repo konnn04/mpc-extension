@@ -18,6 +18,8 @@ export const _DEFAULT_USER_DATA: UserType = {
   presenceStatus: "",
   residentialAddress: "",
   nationality: "",
+  avatar: "",
+  awards: [],
   updatedAt: new Date().toISOString()
 };
 
@@ -44,6 +46,8 @@ export const _USER_LABEL_MAPPING: UserLabelMappingType = {
   nationality: "Quốc tịch",
   email: "Email",
   residentialAddress: "Địa chỉ",
+  avatar: "Ảnh đại diện",
+  awards: "Khen thưởng",
   updatedAt: "Cập nhật"
 };
 

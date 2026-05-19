@@ -22,9 +22,14 @@ const DataTable = ({ userData, courseData }: Props) => (
       <TableBody>
         {(Object.keys(_USER_LABEL_MAPPING) as (keyof UserType)[]).map((key) => {
           const value = userData[key];
-          const isDate = key === "updatedAt";
-          const displayValue = isDate ? format(new Date(value) as Date, "HH:mm:ss dd-MM-yyyy") : (value ?? "N/A");
-
+          let displayValue: React.ReactNode = (value as React.ReactNode) ?? "N/A";
+          if (key === "updatedAt") {
+            displayValue = format(new Date(value as string), "HH:mm:ss dd-MM-yyyy");
+          } else if (key === "awards") {
+            displayValue = `${(value as unknown[])?.length || 0} mục`;
+          } else if (key === "avatar") {
+            displayValue = value ? "Có ảnh" : "Không có";
+          }
           return (
             <TableRow key={key}>
               <TableCell className='font-medium' colSpan={4}>

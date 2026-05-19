@@ -416,10 +416,10 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
   }
 };
 
-export { getCalendars };
 export type {
   CalendarEntry,
   ProgressCallback,
   SemesterData,
   WeekData
 } from "../type";
+export { getCalendars };

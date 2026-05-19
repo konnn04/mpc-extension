@@ -1,5 +1,6 @@
-import { CourseType, UserType } from "@/entrypoints/popup/InfoTab/type";
+import { AwardType, CourseType, UserType } from "@/entrypoints/popup/InfoTab/type";
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: table parsing is complex
 const getUserData = () => {
   const appUserElement = document.querySelector("app-thongtin-user") as HTMLElement;
 
@@ -18,6 +19,32 @@ const getUserData = () => {
     ".row > div > div > div:last-child"
   );
 
+  const avatarImg = document.querySelector("app-thongtin-user img, app-tinbaiviet-main img") as HTMLImageElement;
+  const avatar = avatarImg?.src || "";
+
+  const awards: AwardType[] = [];
+  const cardHeaders = document.querySelectorAll(".card-header");
+  for (const header of cardHeaders) {
+    if ((header as HTMLElement).innerText.includes("Khen thưởng đạt được")) {
+      const card = header.closest(".card");
+      if (card) {
+        const rows = card.querySelectorAll("tbody tr");
+        for (const row of rows) {
+          const cols = row.querySelectorAll("td");
+          if (cols.length >= 4) {
+            awards.push({
+              decisionName: cols[0]?.innerText?.trim() || "",
+              formOfReward: cols[1]?.innerText?.trim() || "",
+              decisionDate: cols[2]?.innerText?.trim() || "",
+              note: cols[3]?.innerText?.trim() || ""
+            });
+          }
+        }
+      }
+      break;
+    }
+  }
+
   const userData: UserType = {
     userId: userInfoValues[0]?.innerText || "",
     fullName: userInfoValues[1]?.innerText || "",
@@ -32,6 +59,8 @@ const getUserData = () => {
     nationality: userInfoValues[10]?.innerText || "",
     email: userInfoValues[11]?.innerText || "",
     residentialAddress: userInfoValues[13]?.innerText || "",
+    avatar,
+    awards,
     updatedAt: new Date().toISOString()
   };
 

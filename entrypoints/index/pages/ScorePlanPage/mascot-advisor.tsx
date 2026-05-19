@@ -60,7 +60,7 @@ export function MascotAdvisor() {
           className={cn(
             "relative h-36 w-36 transform transition-all duration-300",
             isHovered
-              ? "-translate-y-4 -translate-x-2 scale-110 opacity-100 drop-shadow-2xl"
+              ? "-translate-x-2 -translate-y-4 scale-110 opacity-100 drop-shadow-2xl"
               : "translate-x-2 translate-y-2 scale-90 opacity-50 drop-shadow-md hover:scale-100"
           )}
         >
