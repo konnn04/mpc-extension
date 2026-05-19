@@ -1,4 +1,4 @@
-import { PointMappingType } from "@/entrypoints/sidepanel/PointTab/type";
+import { PointMappingType } from "@/entrypoints/popup/PointTab/type";
 
 export const _DEFAULT_IGNORE_SEMESTER_TITLE: string = "Bảo lưu";
 export const _DEFAULT_FIXED_POINT: number = 3;
@@ -44,11 +44,122 @@ export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
   }
 };
 
-// export const _DEFAULT_RANK_MAPPING: RankMappingType = {
-//   "Xuất sắc": 3.6,
-//   Giỏi: 3.2,
-//   Khá: 2.5,
-//   "Trung Bình": 2.0,
-//   Yếu: 1.0,
-//   Kém: 0
-// };
+export const _DEFAULT_GRADE_COLORS: Record<string, string> = {
+  "A+": "#22c55e",
+  A: "#4ade80",
+  "B+": "#86efac",
+  B: "#60a5fa",
+  "C+": "#93c5fd",
+  C: "#fbbf24",
+  "D+": "#fb923c",
+  D: "#f87171",
+  F: "#ef4444"
+};
+
+export type AcademicRankType = {
+  label: string;
+  emoji: string;
+  color: string;
+  bg: string;
+};
+
+export const _DEFAULT_ACADEMIC_RANKS: { minGpa4: number; rank: AcademicRankType }[] = [
+  {
+    minGpa4: 3.6,
+    rank: {
+      label: "Xuất sắc",
+      emoji: "🏆",
+      color: "text-amber-500",
+      bg: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800"
+    }
+  },
+  {
+    minGpa4: 3.2,
+    rank: {
+      label: "Giỏi",
+      emoji: "⭐",
+      color: "text-blue-500",
+      bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
+    }
+  },
+  {
+    minGpa4: 2.5,
+    rank: {
+      label: "Khá",
+      emoji: "👍",
+      color: "text-green-500",
+      bg: "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
+    }
+  },
+  {
+    minGpa4: 2.0,
+    rank: {
+      label: "Trung bình",
+      emoji: "📚",
+      color: "text-yellow-600",
+      bg: "bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800"
+    }
+  },
+  {
+    minGpa4: 0,
+    rank: {
+      label: "Yếu",
+      emoji: "⚠️",
+      color: "text-red-500",
+      bg: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800"
+    }
+  }
+];
+
+/** Regex pattern to parse semester titles like "Học kỳ 1 - Năm học 2024 - 2025" */
+export const _SEMESTER_TITLE_REGEX = /Học kỳ\s+(.*?)\s+-\s+Năm học\s+(\d{4})\s*-\s*(\d{4})/i;
+
+/** Regex pattern to extract short semester format like "HK1 24-25" */
+export const _SEMESTER_SHORT_REGEX = /Học kỳ\s+(.*?)\s+-\s+Năm học\s+\d{2}(\d{2})\s*-\s*\d{2}(\d{2})/i;
+
+/** Max number of terms per academic year before rolling over */
+export const _MAX_SEMESTER_TERMS = 3;
+
+/** Excel export column widths */
+export const _EXPORT_COL_WIDTHS = [5, 30, 15, 50, 10, 10, 10, 10, 20];
+
+/** Excel export sheet name */
+export const _EXPORT_SHEET_NAME = "Bảng điểm";
+
+/** Excel export file prefix */
+export const _EXPORT_FILE_PREFIX = "bang_diem_mpc";
+
+/** Max credits required for graduation (used for score prediction) */
+export const _DEFAULT_MAX_CREDITS = 135;
+
+/** Excellent GPA threshold (used for advisor mascot) */
+export const _DEFAULT_EXCELLENT_GPA_THRESHOLD = 3.6;
+
+export type TrainingRankType = {
+  label: string;
+  emoji: string;
+  color: string;
+  bg: string;
+  minPoint: number;
+};
+
+export const _DEFAULT_TRAINING_RANKS: TrainingRankType[] = [
+  { minPoint: 90, label: "Xuất sắc", emoji: "💎", color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30" },
+  { minPoint: 80, label: "Tốt", emoji: "🌟", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-950/30" },
+  { minPoint: 65, label: "Khá", emoji: "✨", color: "text-green-500", bg: "bg-green-50 dark:bg-green-950/30" },
+  {
+    minPoint: 50,
+    label: "Trung bình",
+    emoji: "📚",
+    color: "text-yellow-600",
+    bg: "bg-yellow-50 dark:bg-yellow-950/30"
+  },
+  { minPoint: 35, label: "Yếu", emoji: "⚠️", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-950/30" },
+  { minPoint: 0, label: "Kém", emoji: "❌", color: "text-red-500", bg: "bg-red-50 dark:bg-red-950/30" }
+];
+
+/** Threshold for minimum training point to avoid suspension warning */
+export const _DEFAULT_MIN_TRAINING_POINT_WARNING = 50;
+
+/** Threshold for minimum training point required for scholarship */
+export const _DEFAULT_MIN_TRAINING_POINT_SCHOLARSHIP = 65;

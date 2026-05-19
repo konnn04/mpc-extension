@@ -6,9 +6,9 @@ import {
   _NAVIGATE_TO_URL,
   _OPEN_NEW_TAB
 } from "@/constants/chrome";
-import { getUserData } from "@/entrypoints/sidepanel/InfoTab/scripts";
-import { getPointData } from "@/entrypoints/sidepanel/PointTab/scripts";
-import { getCalendars } from "../sidepanel/CalendarTab/scripts";
+import { getUserData } from "@/entrypoints/popup/InfoTab/scripts";
+import { getPointData } from "@/entrypoints/popup/PointTab/scripts";
+import { getCalendars } from "../popup/CalendarTab/scripts";
 
 export default defineBackground(() => {
   browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
