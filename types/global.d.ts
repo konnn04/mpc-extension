@@ -5,11 +5,18 @@ type _SITE_MAPPING = Record<
   _SITE_CATE,
   {
     label: string;
+    /** Plain URL used for navigation / display */
     homepage: string;
+    /** Regex pattern to detect if current URL is on homepage */
+    homepageRegex: string;
     point: string;
+    pointRegex: string;
     info: string;
+    infoRegex: string;
     classCalendar: string;
+    classCalendarRegex: string;
     examCalendar: string;
+    examCalendarRegex: string;
   }
 >;
 

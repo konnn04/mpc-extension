@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { _GET_CLASS_CALENDAR_DATA } from "@/constants/chrome";
 import { useGlobalStore } from "@/store/use-global-store";
+import { isMatchURL } from "@/utils";
 import { SemesterData } from "./type";
 import { useCalendarStore } from "./use-calendar-store";
 import { convertToExcel } from "./utils/excel-utils";
@@ -18,7 +19,7 @@ export function getNavigateButtonState(siteCurr: string, siteCurrURL: string, si
     return null;
   }
 
-  if (siteCurrURL === mapping.classCalendar) {
+  if (isMatchURL(mapping.classCalendarRegex, mapping.classCalendar, siteCurrURL)) {
     return {
       title: "Đi đến Lịch Thi",
       importButton: "Nhập lại lịch học",
@@ -26,7 +27,7 @@ export function getNavigateButtonState(siteCurr: string, siteCurrURL: string, si
       isCalendarPage: true
     };
   }
-  if (siteCurrURL === mapping.examCalendar) {
+  if (isMatchURL(mapping.examCalendarRegex, mapping.examCalendar, siteCurrURL)) {
     return {
       title: "Đi đến Lịch Học",
       importButton: "Nhập lại lịch thi",
@@ -66,7 +67,10 @@ export function useCalendarTabLogic() {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   const mapping = siteURLMapping[siteCurr as keyof _SITE_MAPPING];
-  const isOnCalendarPage = mapping && (siteCurrURL === mapping.classCalendar || siteCurrURL === mapping.examCalendar);
+  const isOnCalendarPage =
+    mapping &&
+    (isMatchURL(mapping.classCalendarRegex, mapping.classCalendar, siteCurrURL) ||
+      isMatchURL(mapping.examCalendarRegex, mapping.examCalendar, siteCurrURL));
 
   useEffect(() => {
     getData();

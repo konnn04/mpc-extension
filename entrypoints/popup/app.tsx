@@ -8,7 +8,7 @@ import { _FACEBOOK_URL, _GITHUB_URL } from "@/constants";
 import { ConfigTab } from "@/entrypoints/popup/ConfigTab";
 import { _TAB_CATE } from "@/entrypoints/popup/type";
 import { useGlobalStore } from "@/store/use-global-store";
-import { getCurrTabURL } from "@/utils";
+import { getCurrTabURL, isMatchURL } from "@/utils";
 import { CalendarTab } from "./CalendarTab";
 import { InfoTab } from "./InfoTab";
 import { PointTab } from "./PointTab";
@@ -34,7 +34,7 @@ function App() {
       let siteCurr: _SITE_CATE = "sv";
 
       for (const [key, site] of Object.entries(siteURLMapping)) {
-        if (currURL.startsWith(site.homepage)) {
+        if (isMatchURL(site.homepageRegex, site.homepage, currURL)) {
           siteCurr = key as _SITE_CATE;
         }
       }

@@ -72,6 +72,7 @@ function createWorksheet(rows: (string | number)[][]): WorkSheet {
 
 function generateSheetName(semester: string, index: number): string {
   if (semester.length > EXCEL_MAX_SHEET_NAME_LENGTH) {
+    // biome-ignore lint/style/noSubstr: legacy code, slice has different indexing
     return `HK${index + 1}_${semester.substring(0, 24)}`;
   }
   return semester;

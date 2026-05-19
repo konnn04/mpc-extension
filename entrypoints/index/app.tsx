@@ -113,7 +113,7 @@ function App() {
       case "calendar":
         return <CalendarPage />;
       case "settings":
-        return <SettingsPage />;
+        return <SettingsPage onThemeChange={setTheme} theme={theme} />;
       default:
         return <DashboardPage />;
     }

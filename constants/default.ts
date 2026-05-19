@@ -29,18 +29,28 @@ export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
   sv: {
     label: "Tiện ích SV (Dành cho SV chính quy)",
     homepage: "https://tienichsv.ou.edu.vn",
+    homepageRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?.*$",
     point: "https://tienichsv.ou.edu.vn/#/diem",
+    pointRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/diem.*$",
     classCalendar: "https://tienichsv.ou.edu.vn/#/tkb-tuan",
+    classCalendarRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/tkb-tuan.*$",
     examCalendar: "https://tienichsv.ou.edu.vn/#/lichthi",
-    info: "https://tienichsv.ou.edu.vn/#/home?mode=userinfo"
+    examCalendarRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/lichthi.*$",
+    info: "https://tienichsv.ou.edu.vn/#/home?mode=userinfo",
+    infoRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/home\\?mode=userinfo.*$"
   },
   kcq: {
     label: "Tiện ích KCQ",
     homepage: "https://tienichkcq.oude.edu.vn/",
+    homepageRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?.*$",
     point: "https://tienichkcq.oude.edu.vn/#/diem",
+    pointRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/diem.*$",
     classCalendar: "https://tienichkcq.oude.edu.vn/#/tkb-tuan",
+    classCalendarRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/tkb-tuan.*$",
     examCalendar: "https://tienichkcq.oude.edu.vn/#/lichthi",
-    info: "https://tienichkcq.oude.edu.vn/#/home?mode=userinfo"
+    examCalendarRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/lichthi.*$",
+    info: "https://tienichkcq.oude.edu.vn/#/home?mode=userinfo",
+    infoRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/home\\?mode=userinfo.*$"
   }
 };
 

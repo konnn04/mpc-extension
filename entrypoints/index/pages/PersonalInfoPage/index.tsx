@@ -188,8 +188,8 @@ export function PersonalInfoPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {userData.awards.map((award, index) => (
-                    <TableRow key={`${award.decisionName}-${index}`}>
+                  {userData.awards.map((award) => (
+                    <TableRow key={`${award.decisionDate}-${award.decisionName}`}>
                       <TableCell className='font-medium'>{award.decisionName}</TableCell>
                       <TableCell>{award.formOfReward}</TableCell>
                       <TableCell className='text-center'>{award.decisionDate}</TableCell>

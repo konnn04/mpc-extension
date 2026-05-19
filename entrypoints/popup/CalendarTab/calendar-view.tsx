@@ -24,8 +24,8 @@ const CustomDayButton = (props: CalendarDayButtonProps) => {
       {props.children}
       {!!hasEvents && (
         <div className='flex items-center justify-center gap-[2px]'>
-          {daySchedule.slice(0, 3).map((entry, index) => (
-            <div className='h-1 w-1 rounded-full bg-orange-500' key={`${entry.code}-${entry.startPeriod}-${index}`} />
+          {daySchedule.slice(0, 3).map((entry) => (
+            <div className='h-1 w-1 rounded-full bg-orange-500' key={`${entry.code}-${entry.startPeriod}`} />
           ))}
         </div>
       )}

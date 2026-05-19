@@ -28,6 +28,7 @@ import { _GET_POINT_DATA } from "@/constants/chrome";
 import { _DEFAULT_SCORE_SUMMARY } from "@/entrypoints/popup/PointTab/default";
 import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
 import { useGlobalStore } from "@/store/use-global-store";
+import { isMatchURL } from "@/utils";
 import { getScoreSummary, handleExportData, updateIgnoreSubject, updateScoreAvg } from "@/utils/score";
 import { DataTable } from "./data-table";
 import { FormSemesterDialog } from "./form-semester-dialog";
@@ -77,7 +78,7 @@ const PointTab = () => {
   };
 
   const handleImportData = async () => {
-    if (siteCurrURL !== siteURLMapping[siteCurr].point) {
+    if (!isMatchURL(siteURLMapping[siteCurr].pointRegex, siteURLMapping[siteCurr].point, siteCurrURL)) {
       toast.error("Vui lòng truy cập trang điểm để nhập dữ liệu!");
       return;
     }
@@ -217,7 +218,7 @@ const PointTab = () => {
             <ButtonNavSite url={siteURLMapping[siteCurr].point} variant='link'>
               {siteURLMapping[siteCurr].point}
             </ButtonNavSite>
-            {siteCurrURL === siteURLMapping[siteCurr].point ? (
+            {isMatchURL(siteURLMapping[siteCurr].pointRegex, siteURLMapping[siteCurr].point, siteCurrURL) ? (
               <CircleCheckIcon className='ml-2 h-5 w-5 text-green-500' />
             ) : (
               <CircleAlertIcon className='ml-2 h-5 w-5 text-red-500' />

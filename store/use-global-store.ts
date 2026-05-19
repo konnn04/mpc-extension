@@ -64,7 +64,13 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
       set({ ignoreList: savedData.ignoreList });
     }
     if (savedData?.siteURLMapping) {
-      set({ siteURLMapping: savedData.siteURLMapping });
+      const merged: _SITE_MAPPING = { ..._DEFAULT_SITE_URL_MAPPING };
+      for (const key of Object.keys(savedData.siteURLMapping) as _SITE_CATE[]) {
+        if (merged[key]) {
+          merged[key] = { ...merged[key], ...savedData.siteURLMapping[key] };
+        }
+      }
+      set({ siteURLMapping: merged });
     }
   }
 }));

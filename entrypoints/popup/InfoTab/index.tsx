@@ -16,7 +16,7 @@ import { _COURSE_LABEL_MAPPING, _USER_LABEL_MAPPING } from "@/entrypoints/popup/
 import { CourseType, UserType } from "@/entrypoints/popup/InfoTab/type";
 import { handleExportData } from "@/entrypoints/popup/InfoTab/utils";
 import { useGlobalStore } from "@/store/use-global-store";
-import { navigateToURL } from "@/utils";
+import { isMatchURL, navigateToURL } from "@/utils";
 import { DataTable } from "./data-table";
 import { useInfoStore } from "./use-info-store";
 
@@ -31,7 +31,7 @@ const InfoTab = () => {
   };
 
   const handleImportData = async () => {
-    if (siteCurrURL !== siteURLMapping[siteCurr].info) {
+    if (!isMatchURL(siteURLMapping[siteCurr].infoRegex, siteURLMapping[siteCurr].info, siteCurrURL)) {
       toast.error("Vui lòng truy cập trang thông tin người dùng để nhập dữ liệu!");
       return;
     }
@@ -67,7 +67,7 @@ const InfoTab = () => {
             <ButtonNavSite url={siteURLMapping[siteCurr].info} variant='link'>
               {siteURLMapping[siteCurr].info}
             </ButtonNavSite>
-            {siteCurrURL === siteURLMapping[siteCurr].info ? (
+            {isMatchURL(siteURLMapping[siteCurr].infoRegex, siteURLMapping[siteCurr].info, siteCurrURL) ? (
               <CircleCheckIcon className='ml-2 h-5 w-5 text-green-500' />
             ) : (
               <CircleAlertIcon className='ml-2 h-5 w-5 text-red-500' />
