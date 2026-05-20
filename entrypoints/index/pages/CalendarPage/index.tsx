@@ -1,16 +1,7 @@
 import { Calendar, CalendarPlus, Download, Info, Trash2 } from "lucide-react";
 import { useLayoutEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +15,7 @@ import { ExportCalendarDialog } from "@/entrypoints/popup/CalendarTab/export-cal
 import type { SemesterData } from "@/entrypoints/popup/CalendarTab/type";
 import { useCalendarStore } from "@/entrypoints/popup/CalendarTab/use-calendar-store";
 import { downloadICS } from "@/entrypoints/popup/CalendarTab/utils/ics-utils";
+import { useConfirm } from "@/hooks/use-confirm";
 import { MonthViewCalendar } from "./components/month-view-calendar";
 import { UpcomingEvents } from "./components/upcoming-events";
 
@@ -31,16 +23,24 @@ export function CalendarPage() {
   const { calendarData, lastUpdate, scheduleMap, getData, clearData } = useCalendarStore();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
+  const confirm = useConfirm();
 
   useLayoutEffect(() => {
     getData();
   }, [getData]);
 
   const handleClearConfirm = async () => {
-    await clearData();
-    toast.success("Đã xóa dữ liệu lịch học");
-    setIsClearDialogOpen(false);
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa dữ liệu",
+      description: "Bạn có chắc chắn muốn xóa toàn bộ dữ liệu lịch học? Hành động này không thể hoàn tác.",
+      confirmText: "Xóa lịch",
+      variant: "destructive"
+    });
+
+    if (isConfirmed) {
+      await clearData();
+      toast.success("Đã xóa dữ liệu lịch học");
+    }
   };
 
   const handleExport = (selectedSemesters: SemesterData[]) => {
@@ -55,7 +55,6 @@ export function CalendarPage() {
 
   return (
     <div className='flex h-full flex-col space-y-4'>
-      {/* Header Toolbar */}
       <div className='flex items-center justify-between rounded-lg border bg-card p-4 shadow-sm'>
         <div className='flex items-center gap-4'>
           <div className='flex h-10 w-10 items-center justify-center rounded-full bg-primary/10'>
@@ -85,16 +84,14 @@ export function CalendarPage() {
             <CalendarPlus className='mr-2 h-4 w-4' />
             Xuất lịch
           </Button>
-          <Button disabled={calendarData.length === 0} onClick={() => setIsClearDialogOpen(true)} variant='destructive'>
+          <Button disabled={calendarData.length === 0} onClick={handleClearConfirm} variant='destructive'>
             <Trash2 className='mr-2 h-4 w-4' />
             Xóa lịch
           </Button>
         </div>
       </div>
 
-      {/* Main Content: 40 / 60 split */}
       <div className='flex flex-1 gap-6 overflow-hidden'>
-        {/* Left 40% - Upcoming Events */}
         <div className='w-[40%] flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-card shadow-sm'>
           <div className='border-b p-4'>
             <h2 className='font-semibold'>Lịch học sắp tới</h2>
@@ -104,13 +101,11 @@ export function CalendarPage() {
           </div>
         </div>
 
-        {/* Right 60% - Month View Calendar */}
         <div className='flex-1 overflow-hidden'>
           <MonthViewCalendar scheduleMap={scheduleMap} />
         </div>
       </div>
 
-      {/* Import Instruction Modal */}
       <Dialog onOpenChange={setIsImportModalOpen} open={isImportModalOpen}>
         <DialogContent className='max-w-md'>
           <DialogHeader>
@@ -143,34 +138,12 @@ export function CalendarPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Export Calendar Dialog */}
       <ExportCalendarDialog
         calendarData={calendarData}
         onExport={handleExport}
         onOpenChange={setIsExportModalOpen}
         open={isExportModalOpen}
       />
-
-      {/* Clear Confirmation Dialog */}
-      <AlertDialog onOpenChange={setIsClearDialogOpen} open={isClearDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa dữ liệu</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa toàn bộ dữ liệu lịch học? Hành động này không thể hoàn tác.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-              onClick={handleClearConfirm}
-            >
-              Xóa lịch
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

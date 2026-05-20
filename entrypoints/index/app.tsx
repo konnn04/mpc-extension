@@ -3,6 +3,7 @@ import { AppHeader, type ThemeMode } from "@/components/custom/app-header";
 import { AppSidebar } from "@/components/custom/app-sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
+import { ConfirmDialogProvider } from "@/hooks/use-confirm";
 import { useGlobalStore } from "@/store/use-global-store";
 import { CalendarPage } from "./pages/CalendarPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -156,6 +157,7 @@ function App() {
           <main className='flex-1 overflow-y-auto p-6'>{renderPage()}</main>
         </div>
       </div>
+      <ConfirmDialogProvider />
     </TooltipProvider>
   );
 }
