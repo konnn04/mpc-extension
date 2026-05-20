@@ -48,7 +48,9 @@ export function buildScheduleMap(data: SemesterData[]): Map<string, CalendarEntr
       for (const entry of weekData.schedule) {
         const dateParts = extractDateParts(entry.day);
         if (dateParts) {
-          const dateKey = `${year}-${dateParts.month}-${dateParts.day}`;
+          const paddedMonth = dateParts.month.padStart(2, "0");
+          const paddedDay = dateParts.day.padStart(2, "0");
+          const dateKey = `${year}-${paddedMonth}-${paddedDay}`;
           addEntryToMap(map, dateKey, entry);
         }
       }
