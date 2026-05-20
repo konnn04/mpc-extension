@@ -1,9 +1,11 @@
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { Video } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { CalendarEntry } from "@/entrypoints/popup/CalendarTab/type";
-import { getSubjectColor } from "@/entrypoints/popup/CalendarTab/utils/format";
+import type { CalendarEntry } from "@/types";
+import { getCategoryLabel, getLocationLabel, getSubjectHexColor } from "@/utils/calendar-format";
 
 type DayEventsModalProps = {
   date: Date | null;
@@ -32,15 +34,30 @@ export function DayEventsModal({ date, events, isOpen, onClose }: DayEventsModal
               {events.map((event, i) => (
                 <div
                   className='flex items-start gap-3 rounded-lg border p-3'
-                  // biome-ignore lint/suspicious/noArrayIndexKey: order is stable within a day
                   key={`${event.code}-${event.startPeriod}-${i}`}
                 >
                   <div
                     className='mt-1 h-3 w-3 shrink-0 rounded-full'
-                    style={{ backgroundColor: getSubjectColor(event.code || event.title) }}
+                    style={{ backgroundColor: getSubjectHexColor(event.code || event.title) }}
                   />
                   <div className='flex-1 space-y-1'>
-                    <div className='font-medium leading-none'>{event.title}</div>
+                    <div className='flex flex-wrap items-center gap-2 font-medium leading-none'>
+                      {event.title}
+                      <Badge
+                        className='h-4 whitespace-nowrap px-1 py-0 font-medium text-[10px] leading-none'
+                        variant='outline'
+                      >
+                        {getCategoryLabel(event.category)}
+                      </Badge>
+                      {event.locationType && event.locationType !== "OTHER" && (
+                        <Badge
+                          className='h-4 whitespace-nowrap px-1 py-0 font-medium text-[10px] leading-none'
+                          variant='secondary'
+                        >
+                          {getLocationLabel(event.locationType)}
+                        </Badge>
+                      )}
+                    </div>
                     <div className='text-muted-foreground text-sm'>
                       {event.startTime} - {event.endTime}
                     </div>
@@ -49,6 +66,20 @@ export function DayEventsModal({ date, events, isOpen, onClose }: DayEventsModal
                       {event.room && <div>Phòng: {event.room}</div>}
                       {event.group && <div>Nhóm: {event.group}</div>}
                       {event.teacher && <div>Giảng viên: {event.teacher}</div>}
+                      {event.link && (
+                        <div className='mt-2'>
+                          <a
+                            className='inline-flex items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50'
+                            href={event.link}
+                            onClick={(e) => e.stopPropagation()}
+                            rel='noreferrer'
+                            target='_blank'
+                          >
+                            <Video className='h-4 w-4' />
+                            Tham gia lớp học Online
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

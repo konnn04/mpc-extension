@@ -10,7 +10,7 @@ import {
   _SEMESTER_SHORT_REGEX,
   _SEMESTER_TITLE_REGEX
 } from "@/constants/default";
-import { ScoreGroupType, ScoreRecordType } from "@/entrypoints/popup/PointTab/type";
+import { ScoreGroupType, ScoreRecordType } from "@/types";
 
 const checkImproveSubject = (d: ScoreGroupType, map: Record<string, ScoreRecordType[]>) => {
   for (const item of d.data) {
@@ -94,7 +94,8 @@ const updateScoreAvg = (data: ScoreGroupType[]) => {
           typeof point.scale10 === "number" &&
           typeof point.scale4 === "number" &&
           !Number.isNaN(point.scale10) &&
-          !Number.isNaN(point.scale4);
+          !Number.isNaN(point.scale4) &&
+          !!point.character;
 
         if (!isValidPoint || curr.isIgnore) {
           return acc;
@@ -119,8 +120,8 @@ const updateScoreAvg = (data: ScoreGroupType[]) => {
 
     d.totalCredit = totalCredit;
     d.avgPoint = {
-      scale10: Number.parseFloat(String(avg.point.scale10 / avg.credit)) || null,
-      scale4: Number.parseFloat(String(avg.point.scale4 / avg.credit)) || null
+      scale10: avg.credit > 0 ? Number.parseFloat((avg.point.scale10 / avg.credit).toFixed(2)) : null,
+      scale4: avg.credit > 0 ? Number.parseFloat((avg.point.scale4 / avg.credit).toFixed(2)) : null
     };
 
     return d;
@@ -142,6 +143,7 @@ const getScoreSummary = (data: ScoreGroupType[]) => {
 
       if (
         curr.isIgnore ||
+        !curr.point.character ||
         typeof credit !== "number" ||
         typeof point.scale10 !== "number" ||
         typeof point.scale4 !== "number" ||
@@ -181,7 +183,7 @@ const getScoreSummary = (data: ScoreGroupType[]) => {
   };
 };
 
-const handleExportData = (data: ScoreGroupType[]) => {
+const handleExportScoreData = (data: ScoreGroupType[]) => {
   const worksheetData: (string | number)[][] = [];
 
   // Header
@@ -273,7 +275,7 @@ export {
   getNextSemesterName,
   getScoreSummary,
   getTrainingRank,
-  handleExportData,
+  handleExportScoreData,
   updateIgnoreSubject,
   updateScoreAvg
 };

@@ -1,11 +1,13 @@
-import { Check, Copy, Eye, EyeOff, GraduationCap, Mail, MapPin, Phone, User } from "lucide-react";
+import { Check, Copy, Eye, EyeOff, GraduationCap, InfoIcon, Mail, MapPin, Phone, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import thongTinMd from "@/assets/docs/thong_tin.md?raw";
+import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { _COURSE_LABEL_MAPPING, _USER_LABEL_MAPPING } from "@/entrypoints/popup/InfoTab/default";
-import { useInfoStore } from "@/entrypoints/popup/InfoTab/use-info-store";
+import { _COURSE_LABEL_MAPPING, _USER_LABEL_MAPPING } from "@/constants/default";
+import { useInfoStore } from "@/store/use-info-store";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -48,6 +50,7 @@ function HiddenField({ value, label }: { value: string; label: string }) {
 
 export function PersonalInfoPage() {
   const { userData, courseData, getData } = useInfoStore();
+  const [guideOpen, setGuideOpen] = useState(false);
 
   useEffect(() => {
     getData();
@@ -55,14 +58,36 @@ export function PersonalInfoPage() {
 
   if (!userData?.userId) {
     return (
-      <div className='flex h-full items-center justify-center'>
-        <p className='text-muted-foreground text-sm'>Vui lòng mở popup Extension ở trang OUMac để đồng bộ dữ liệu.</p>
+      <div className='flex h-[60vh] flex-col items-center justify-center space-y-4'>
+        <div className='mb-4 rounded-full bg-muted p-6'>
+          <User className='h-12 w-12 text-muted-foreground' />
+        </div>
+        <h2 className='font-semibold text-2xl'>Chưa có dữ liệu cá nhân</h2>
+        <p className='mb-6 max-w-md text-center text-muted-foreground'>
+          Hệ thống chưa tìm thấy dữ liệu sinh viên của bạn. Vui lòng cập nhật để xem thông tin.
+        </p>
+        <Button onClick={() => setGuideOpen(true)}>
+          <InfoIcon className='mr-2 h-4 w-4' />
+          Hướng dẫn đồng bộ
+        </Button>
+        <MarkdownModal
+          isOpen={guideOpen}
+          markdownContent={thongTinMd}
+          onClose={() => setGuideOpen(false)}
+          title='Hướng dẫn cập nhật thông tin'
+        />
       </div>
     );
   }
 
   return (
     <div className='space-y-6'>
+      <div className='flex justify-end'>
+        <Button onClick={() => setGuideOpen(true)} variant='outline'>
+          <InfoIcon className='mr-2 h-4 w-4' />
+          Hướng dẫn đồng bộ
+        </Button>
+      </div>
       <div className='flex flex-col gap-6 md:flex-row'>
         <Card className='w-full md:w-1/3'>
           <CardHeader className='flex flex-col items-center pb-2 text-center'>
@@ -206,6 +231,13 @@ export function PersonalInfoPage() {
           )}
         </CardContent>
       </Card>
+
+      <MarkdownModal
+        isOpen={guideOpen}
+        markdownContent={thongTinMd}
+        onClose={() => setGuideOpen(false)}
+        title='Hướng dẫn cập nhật thông tin'
+      />
     </div>
   );
 }

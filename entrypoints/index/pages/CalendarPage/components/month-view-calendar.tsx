@@ -1,4 +1,5 @@
 import {
+  addDays,
   addMonths,
   eachDayOfInterval,
   endOfMonth,
@@ -14,9 +15,9 @@ import { vi } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { CalendarEntry } from "@/entrypoints/popup/CalendarTab/type";
-import { getSubjectColor } from "@/entrypoints/popup/CalendarTab/utils/format";
 import { cn } from "@/lib/utils";
+import type { CalendarEntry } from "@/types";
+import { getSubjectHexColor } from "@/utils/calendar-format";
 import { DayEventsModal } from "./day-events-modal";
 
 type MonthViewCalendarProps = {
@@ -42,6 +43,13 @@ export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
 
   const dateFormat = "d";
   const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+  // Ensure exactly 42 days (6 weeks) are rendered to keep grid height consistent
+  while (days.length < 42) {
+    // biome-ignore lint/style/useAtIndex: using at(-1) requires non-null assertion which biome also complains about sometimes, but let's just use it safely
+    const lastDay = days[days.length - 1];
+    days.push(addDays(lastDay, 1));
+  }
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
@@ -88,7 +96,7 @@ export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className='grid flex-1 grid-cols-7 grid-rows-5 lg:grid-rows-auto'>
+      <div className='grid flex-1 grid-cols-7 grid-rows-6 lg:grid-rows-auto'>
         {days.map((day, i) => {
           const isCurrentMonth = isSameMonth(day, monthStart);
           const isToday = isSameDay(day, new Date());
@@ -127,9 +135,8 @@ export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
                 {events.slice(0, 3).map((event, j) => (
                   <div
                     className='truncate rounded-sm px-1.5 py-0.5 font-medium text-[10px] text-white leading-tight'
-                    // biome-ignore lint/suspicious/noArrayIndexKey: order is stable
                     key={`${event.code}-${j}`}
-                    style={{ backgroundColor: getSubjectColor(event.code || event.title) }}
+                    style={{ backgroundColor: getSubjectHexColor(event.code || event.title) }}
                   >
                     {event.startTime} {event.title}
                   </div>

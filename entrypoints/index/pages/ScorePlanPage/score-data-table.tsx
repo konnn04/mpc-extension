@@ -34,9 +34,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { _DEFAULT_FORM_DATA } from "@/entrypoints/popup/PointTab/default";
-import type { ScoreGroupType, ScoreRecordType } from "@/entrypoints/popup/PointTab/type";
+import { _DEFAULT_FORM_DATA } from "@/constants/default";
 import { cn } from "@/lib/utils";
+import type { ScoreGroupType, ScoreRecordType } from "@/types";
 import { parseScale10ToCharacterAndScale4, removeVietnameseTones } from "@/utils";
 
 type SortKey = "code" | "name" | "credit" | "scale10" | "scale4" | "character";

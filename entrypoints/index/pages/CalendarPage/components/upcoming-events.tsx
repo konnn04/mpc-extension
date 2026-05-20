@@ -1,9 +1,11 @@
 import { format, isAfter, isSameDay, parseISO, startOfDay } from "date-fns";
 import { vi } from "date-fns/locale";
-import { useState } from "react";
+import { Video } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { CalendarEntry } from "@/entrypoints/popup/CalendarTab/type";
-import { getSubjectColor } from "@/entrypoints/popup/CalendarTab/utils/format";
+import type { CalendarEntry } from "@/types";
+import { getCategoryLabel, getLocationLabel, getSubjectHexColor } from "@/utils/calendar-format";
 import { DayEventsModal } from "./day-events-modal";
 
 type UpcomingEventsProps = {
@@ -69,7 +71,6 @@ export function UpcomingEvents({ scheduleMap }: UpcomingEventsProps) {
             const showDateHeader = i === 0 || event.dateStr !== upcomingEvents[i - 1].dateStr;
 
             return (
-              // biome-ignore lint/suspicious/noArrayIndexKey: order is stable
               <div key={`${event.dateStr}-${event.code}-${event.startPeriod}-${i}`}>
                 {showDateHeader && (
                   <div className='sticky top-0 z-10 mt-4 mb-2 bg-background/95 py-2 font-semibold backdrop-blur'>
@@ -95,11 +96,27 @@ export function UpcomingEvents({ scheduleMap }: UpcomingEventsProps) {
 
                   <div
                     className='w-1 shrink-0 rounded-full'
-                    style={{ backgroundColor: getSubjectColor(event.code || event.title) }}
+                    style={{ backgroundColor: getSubjectHexColor(event.code || event.title) }}
                   />
 
                   <div className='flex-1 space-y-1'>
-                    <div className='font-medium text-sm leading-none'>{event.title}</div>
+                    <div className='flex flex-wrap items-center gap-2 font-medium text-sm leading-none'>
+                      {event.title}
+                      <Badge
+                        className='h-4 whitespace-nowrap px-1 py-0 font-medium text-[10px] leading-none'
+                        variant='outline'
+                      >
+                        {getCategoryLabel(event.category)}
+                      </Badge>
+                      {event.locationType && event.locationType !== "OTHER" && (
+                        <Badge
+                          className='h-4 whitespace-nowrap px-1 py-0 font-medium text-[10px] leading-none'
+                          variant='secondary'
+                        >
+                          {getLocationLabel(event.locationType)}
+                        </Badge>
+                      )}
+                    </div>
                     {event.description && <div className='text-muted-foreground text-xs'>{event.description}</div>}
                     <div className='mt-2 flex flex-wrap gap-2 text-muted-foreground text-xs'>
                       {event.room && (
@@ -116,6 +133,18 @@ export function UpcomingEvents({ scheduleMap }: UpcomingEventsProps) {
                         <span className='inline-flex items-center gap-1 rounded border px-1.5 py-0.5'>
                           GV: {event.teacher}
                         </span>
+                      )}
+                      {event.link && (
+                        <a
+                          className='inline-flex items-center gap-1 rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50'
+                          href={event.link}
+                          onClick={(e) => e.stopPropagation()}
+                          rel='noreferrer'
+                          target='_blank'
+                        >
+                          <Video className='h-3 w-3' />
+                          Học Online
+                        </a>
                       )}
                     </div>
                   </div>

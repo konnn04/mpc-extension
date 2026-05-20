@@ -1,14 +1,15 @@
 import {
   _GET_CLASS_CALENDAR_DATA,
   _GET_CURRENT_URL,
+  _GET_EXAM_CALENDAR_DATA,
   _GET_POINT_DATA,
   _GET_USER_DATA,
   _NAVIGATE_TO_URL,
   _OPEN_NEW_TAB
 } from "@/constants/chrome";
-import { getUserData } from "@/entrypoints/popup/InfoTab/scripts";
-import { getPointData } from "@/entrypoints/popup/PointTab/scripts";
-import { getCalendars } from "../popup/CalendarTab/scripts";
+import { getCalendars, getExamCalendars } from "@/utils/scrapers/calendar-scraper";
+import { getUserData } from "@/utils/scrapers/info-scraper";
+import { getPointData } from "@/utils/scrapers/score-scraper";
 
 export default defineBackground(() => {
   browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -97,6 +98,30 @@ export default defineBackground(() => {
           })
           .catch((error) => {
             console.error("Error executing getCalendars:", error);
+            sendResponse({ error: error.message });
+          });
+      });
+      return true;
+    }
+
+    if (msg.type === _GET_EXAM_CALENDAR_DATA) {
+      browser.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+        if (!tab.id) {
+          sendResponse({ error: "Không tìm thấy tab hiện tại" });
+          return;
+        }
+
+        browser.scripting
+          .executeScript({
+            target: { tabId: tab.id },
+            func: getExamCalendars
+          })
+          .then((results) => {
+            const data = results[0].result;
+            sendResponse(data);
+          })
+          .catch((error) => {
+            console.error("Error executing getExamCalendars:", error);
             sendResponse({ error: error.message });
           });
       });

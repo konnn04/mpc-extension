@@ -1,14 +1,15 @@
-import { CalendarDays, GraduationCap, LayoutDashboard, Settings, UserCircle } from "lucide-react";
+import { CalendarDays, GraduationCap, Info, LayoutDashboard, Settings, UserCircle } from "lucide-react";
 import type { SidebarNavItem } from "@/components/custom/app-sidebar";
 
-export type DashboardRoute = "dashboard" | "score-plan" | "calendar" | "settings" | "personal-info";
+export type DashboardRoute = "dashboard" | "score-plan" | "calendar" | "settings" | "personal-info" | "about-us";
 
 export const NAV_ITEMS: SidebarNavItem[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "personal-info", label: "Thông tin cá nhân", icon: UserCircle },
   { key: "score-plan", label: "Kế hoạch điểm số", icon: GraduationCap },
   { key: "calendar", label: "Lịch học tập", icon: CalendarDays },
-  { key: "settings", label: "Cài đặt", icon: Settings }
+  { key: "settings", label: "Cài đặt", icon: Settings },
+  { key: "about-us", label: "Về chúng tôi", icon: Info }
 ];
 
 export const BREADCRUMB_MAP: Record<DashboardRoute, string[]> = {
@@ -16,5 +17,6 @@ export const BREADCRUMB_MAP: Record<DashboardRoute, string[]> = {
   "personal-info": ["MPC", "Thông tin cá nhân"],
   "score-plan": ["MPC", "Kế hoạch điểm số"],
   calendar: ["MPC", "Lịch học tập"],
-  settings: ["MPC", "Cài đặt"]
+  settings: ["MPC", "Cài đặt"],
+  "about-us": ["MPC", "Về chúng tôi"]
 };

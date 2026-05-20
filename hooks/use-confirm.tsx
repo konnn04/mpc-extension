@@ -60,9 +60,7 @@ export function ConfirmDialogProvider() {
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => close(false)}>{options.cancelText || "Hủy"}</AlertDialogCancel>
           <AlertDialogAction
-            className={cn(
-              options.variant === "destructive" && "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            )}
+            className={cn(options.variant === "destructive" && "bg-red-600")}
             onClick={() => close(true)}
           >
             {options.confirmText || "Xác nhận"}

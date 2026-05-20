@@ -1,4 +1,12 @@
-import { PointMappingType } from "@/entrypoints/popup/PointTab/type";
+import type {
+  CourseLabelMappingType,
+  CourseType,
+  PointMappingType,
+  ScoreFilterType,
+  ScoreSummaryType,
+  UserLabelMappingType,
+  UserType
+} from "@/types";
 
 export const _DEFAULT_IGNORE_SEMESTER_TITLE: string = "Bảo lưu";
 export const _DEFAULT_FIXED_POINT: number = 3;
@@ -22,7 +30,9 @@ export const _DEFAULT_IGNORE_SUBJECT_DATA: string[] = [
   "DEDU", // Giáo dục quốc phòng
   "TEST", // Kiểm tra đầu vào
   "GENG0", // Tiếng Anh căn bản
-  "GENG4" // Tiếng Anh đầu ra
+  "GENG4", // Tiếng Anh đầu ra
+  "_BHYT12T",
+  "_BHYT6T"
 ];
 
 export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
@@ -32,8 +42,8 @@ export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
     homepageRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?.*$",
     point: "https://tienichsv.ou.edu.vn/#/diem",
     pointRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/diem.*$",
-    classCalendar: "https://tienichsv.ou.edu.vn/#/tkb-tuan",
-    classCalendarRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/tkb-tuan.*$",
+    classCalendar: "https://tienichsv.ou.edu.vn/#/tkb-hocky",
+    classCalendarRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/tkb-hocky.*$",
     examCalendar: "https://tienichsv.ou.edu.vn/#/lichthi",
     examCalendarRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/lichthi.*$",
     info: "https://tienichsv.ou.edu.vn/#/home?mode=userinfo",
@@ -45,8 +55,8 @@ export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
     homepageRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?.*$",
     point: "https://tienichkcq.oude.edu.vn/#/diem",
     pointRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/diem.*$",
-    classCalendar: "https://tienichkcq.oude.edu.vn/#/tkb-tuan",
-    classCalendarRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/tkb-tuan.*$",
+    classCalendar: "https://tienichkcq.oude.edu.vn/#/tkb-hocky",
+    classCalendarRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/tkb-hocky.*$",
     examCalendar: "https://tienichkcq.oude.edu.vn/#/lichthi",
     examCalendarRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/lichthi.*$",
     info: "https://tienichkcq.oude.edu.vn/#/home?mode=userinfo",
@@ -173,3 +183,89 @@ export const _DEFAULT_MIN_TRAINING_POINT_WARNING = 50;
 
 /** Threshold for minimum training point required for scholarship */
 export const _DEFAULT_MIN_TRAINING_POINT_SCHOLARSHIP = 65;
+
+export const _DEFAULT_USER_DATA: UserType = {
+  userId: "",
+  fullName: "",
+  dateOfBirth: "",
+  gender: "",
+  phone: "",
+  identityNumber: "",
+  email: "",
+  placeOfBirth: "",
+  ethnicity: "",
+  religion: "",
+  presenceStatus: "",
+  residentialAddress: "",
+  nationality: "",
+  avatar: "",
+  awards: [],
+  updatedAt: new Date().toISOString()
+};
+
+export const _DEFAULT_COURSE_DATA: CourseType = {
+  classCode: "",
+  major: "",
+  faculty: "",
+  degreeProgram: "",
+  academicYear: "",
+  updatedAt: new Date().toISOString()
+};
+
+export const _USER_LABEL_MAPPING: UserLabelMappingType = {
+  userId: "Mã SV",
+  fullName: "Họ và tên",
+  dateOfBirth: "Ngày sinh",
+  gender: "Giới tính",
+  presenceStatus: "Trạng thái",
+  phone: "Điện thoại",
+  identityNumber: "Số CMND/CCCD",
+  ethnicity: "Dân tộc",
+  religion: "Tôn giáo",
+  placeOfBirth: "Nơi sinh",
+  nationality: "Quốc tịch",
+  email: "Email",
+  residentialAddress: "Địa chỉ",
+  avatar: "Ảnh đại diện",
+  awards: "Khen thưởng",
+  updatedAt: "Cập nhật"
+};
+
+export const _COURSE_LABEL_MAPPING: CourseLabelMappingType = {
+  classCode: "Mã lớp",
+  major: "Ngành",
+  faculty: "Khoa",
+  degreeProgram: "Chương trình đào tạo",
+  academicYear: "Niên khóa",
+  updatedAt: "Cập nhật"
+};
+
+export const _DEFAULT_SCORE_SUMMARY: ScoreSummaryType = {
+  semesterCount: 0,
+  totalCredit: 0,
+  gpa10: 0,
+  gpa4: 0,
+  avgTrainingPoint: 0
+};
+
+export const _DEFAULT_SCORE_FILTER: ScoreFilterType = {
+  queryText: "",
+  isOnlyCalcGPA: false
+};
+
+export const _DEFAULT_FORM_DATA = {
+  code: "",
+  name: "",
+  credit: "",
+  scale10: ""
+};
+
+export const URL_FIELD_LABELS: Record<string, string> = {
+  homepage: "Trang chủ",
+  point: "Bảng điểm",
+  classCalendar: "Lịch học",
+  examCalendar: "Lịch thi",
+  info: "Thông tin cá nhân"
+};
+
+export const URL_FIELDS: string[] = ["homepage", "point", "classCalendar", "examCalendar", "info"];

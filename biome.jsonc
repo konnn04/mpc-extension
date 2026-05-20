@@ -13,7 +13,8 @@
       "**/*.js",
       "**/*.jsx",
       "!**/components/ui",
-      "!**/*.d.ts"
+      "!**/*.d.ts",
+      "!utils/scrapers"
     ]
   },
   "assist": {

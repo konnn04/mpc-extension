@@ -1,33 +1,76 @@
-import { CalendarPlus, Download, Info, Trash2 } from "lucide-react";
-import { useLayoutEffect, useState } from "react";
+import { CalendarPlus, Download, Trash2 } from "lucide-react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
+import lichHocLichThiMd from "@/assets/docs/lich_hoc_lich_thi.md?raw";
+import { ExportCalendarDialog } from "@/components/custom/export-calendar-dialog";
+import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import { ExportCalendarDialog } from "@/entrypoints/popup/CalendarTab/export-calendar-dialog";
-import type { SemesterData } from "@/entrypoints/popup/CalendarTab/type";
-import { useCalendarStore } from "@/entrypoints/popup/CalendarTab/use-calendar-store";
-import { downloadICS } from "@/entrypoints/popup/CalendarTab/utils/ics-utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useCalendarStore } from "@/store/use-calendar-store";
+import type { CalendarEntry, SemesterData } from "@/types";
+import { downloadICS } from "@/utils/ics-utils";
 import { MonthViewCalendar } from "./components/month-view-calendar";
 import { UpcomingEvents } from "./components/upcoming-events";
 
 export function CalendarPage() {
-  const { calendarData, lastUpdate, scheduleMap, getData, clearData } = useCalendarStore();
+  const { calendarData, examData, lastUpdate, scheduleMap, getData, clearData } = useCalendarStore();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [filterType, setFilterType] = useState<string>("ALL");
   const confirm = useConfirm();
+
+  const mergedExportData = useMemo(() => {
+    const merged = [...calendarData];
+    for (const sem of examData) {
+      const existingSem = merged.find((s) => s.semester === sem.semester);
+      if (existingSem) {
+        const existingSemCopy = { ...existingSem, weeks: [...existingSem.weeks] };
+        for (const week of sem.weeks) {
+          const existingWeek = existingSemCopy.weeks.find((w) => w.week === week.week);
+          if (existingWeek) {
+            existingWeek.schedule = [...existingWeek.schedule, ...week.schedule];
+          } else {
+            existingSemCopy.weeks.push({ ...week });
+          }
+        }
+        merged[merged.indexOf(existingSem)] = existingSemCopy;
+      } else {
+        merged.push({ ...sem });
+      }
+    }
+    return merged;
+  }, [calendarData, examData]);
 
   useLayoutEffect(() => {
     getData();
   }, [getData]);
+
+  const filteredScheduleMap = useMemo(() => {
+    if (filterType === "ALL") {
+      return scheduleMap;
+    }
+
+    const map = new Map<string, CalendarEntry[]>();
+    for (const [date, entries] of scheduleMap.entries()) {
+      const filtered = entries.filter((entry) => {
+        if (filterType === "STUDY") {
+          return entry.eventType === "STUDY" || entry.category === "COURSE" || entry.category === "LAB";
+        }
+        if (filterType === "EXAM") {
+          return entry.eventType === "EXAM" || entry.category === "EXAM";
+        }
+        if (filterType === "OTHER") {
+          return entry.category === "OTHER" || entry.category === "HOLIDAY";
+        }
+        return true;
+      });
+      if (filtered.length > 0) {
+        map.set(date, filtered);
+      }
+    }
+    return map;
+  }, [scheduleMap, filterType]);
 
   const handleClearConfirm = async () => {
     const isConfirmed = await confirm({
@@ -68,6 +111,17 @@ export function CalendarPage() {
         </p>
 
         <div className='flex w-full flex-wrap items-center gap-2 md:w-auto'>
+          <Select onValueChange={setFilterType} value={filterType}>
+            <SelectTrigger className='w-[140px]'>
+              <SelectValue placeholder='Loại lịch' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='ALL'>Tất cả</SelectItem>
+              <SelectItem value='STUDY'>Học tập</SelectItem>
+              <SelectItem value='EXAM'>Thi cử</SelectItem>
+              <SelectItem value='OTHER'>Khác</SelectItem>
+            </SelectContent>
+          </Select>
           <Button onClick={() => setIsImportModalOpen(true)} variant='outline'>
             <Download className='mr-2 h-4 w-4' />
             Nhập lịch
@@ -89,49 +143,24 @@ export function CalendarPage() {
             <h2 className='font-semibold'>Lịch học sắp tới</h2>
           </div>
           <div className='flex-1 p-4'>
-            <UpcomingEvents scheduleMap={scheduleMap} />
+            <UpcomingEvents scheduleMap={filteredScheduleMap} />
           </div>
         </div>
 
         <div className='flex-1 overflow-hidden'>
-          <MonthViewCalendar scheduleMap={scheduleMap} />
+          <MonthViewCalendar scheduleMap={filteredScheduleMap} />
         </div>
       </div>
 
-      <Dialog onOpenChange={setIsImportModalOpen} open={isImportModalOpen}>
-        <DialogContent className='max-w-md'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2'>
-              <Info className='h-5 w-5 text-blue-500' />
-              Hướng dẫn nhập lịch
-            </DialogTitle>
-          </DialogHeader>
-          <DialogDescription className='space-y-4 pt-4 text-base text-foreground'>
-            <p>Hiện tại tính năng đồng bộ lịch tự động chưa được hỗ trợ trên trang Dashboard.</p>
-            <p>Để cập nhật lịch học mới nhất, vui lòng:</p>
-            <ol className='ml-4 list-decimal space-y-2'>
-              <li>Truy cập trang web đào tạo của trường.</li>
-              <li>
-                Mở <span className='font-semibold text-foreground'>popup tiện ích MPC</span> trên thanh công cụ trình
-                duyệt.
-              </li>
-              <li>
-                Chuyển sang tab <span className='font-semibold text-foreground'>Lịch</span>.
-              </li>
-              <li>
-                Nhấn nút <span className='font-semibold text-foreground'>"Cập nhật lịch"</span>.
-              </li>
-            </ol>
-            <p>Sau khi đồng bộ thành công, quay lại trang này và làm mới (F5) để xem lịch mới nhất.</p>
-          </DialogDescription>
-          <DialogFooter>
-            <Button onClick={() => setIsImportModalOpen(false)}>Đã hiểu</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <MarkdownModal
+        isOpen={isImportModalOpen}
+        markdownContent={lichHocLichThiMd}
+        onClose={() => setIsImportModalOpen(false)}
+        title='Hướng dẫn nhập lịch'
+      />
 
       <ExportCalendarDialog
-        calendarData={calendarData}
+        calendarData={mergedExportData}
         onExport={handleExport}
         onOpenChange={setIsExportModalOpen}
         open={isExportModalOpen}

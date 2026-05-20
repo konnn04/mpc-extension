@@ -31,11 +31,11 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { _DEFAULT_SCORE_SUMMARY } from "@/entrypoints/popup/PointTab/default";
-import type { ScoreGroupType, ScoreSummaryType } from "@/entrypoints/popup/PointTab/type";
-import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
+import { _DEFAULT_SCORE_SUMMARY } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import { useGlobalStore } from "@/store/use-global-store";
+import { useScoreStore } from "@/store/use-score-store";
+import type { ScoreGroupType, ScoreSummaryType } from "@/types";
 import { computeScoreHash } from "@/utils/hash";
 import { formatSemesterShort, GRADE_COLORS, getAcademicRank, getScoreSummary } from "@/utils/score";
 
@@ -120,6 +120,21 @@ function DashboardPage() {
 
   const totalCredit = summary.totalCredit;
   const targetCredit = 135;
+
+  if (displayScores.length === 0) {
+    return (
+      <div className='flex min-h-[60vh] flex-col items-center justify-center space-y-4'>
+        <div className='mb-4 rounded-full bg-muted p-6'>
+          <BookOpenIcon className='h-12 w-12 text-muted-foreground' />
+        </div>
+        <h2 className='font-semibold text-2xl'>Chưa có dữ liệu điểm số</h2>
+        <p className='max-w-md text-center text-muted-foreground'>
+          Hệ thống chưa tìm thấy dữ liệu điểm của bạn. Vui lòng truy cập trang web Xem điểm của trường và mở tiện ích
+          (popup) để đồng bộ dữ liệu nhé!
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-6'>

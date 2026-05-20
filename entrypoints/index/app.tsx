@@ -2,9 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { AppHeader, type ThemeMode } from "@/components/custom/app-header";
 import { AppSidebar } from "@/components/custom/app-sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
 import { ConfirmDialogProvider } from "@/hooks/use-confirm";
 import { useGlobalStore } from "@/store/use-global-store";
+import { useScoreStore } from "@/store/use-score-store";
+import { AboutUsPage } from "./pages/AboutUsPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { PersonalInfoPage } from "./pages/PersonalInfoPage";
@@ -14,7 +15,7 @@ import { BREADCRUMB_MAP, type DashboardRoute, NAV_ITEMS } from "./types";
 
 function getInitialRoute(): DashboardRoute {
   const hash = window.location.hash.replace("#", "");
-  if (["dashboard", "score-plan", "calendar", "settings", "personal-info"].includes(hash)) {
+  if (["dashboard", "score-plan", "calendar", "settings", "personal-info", "about-us"].includes(hash)) {
     return hash as DashboardRoute;
   }
   return "dashboard";
@@ -60,7 +61,7 @@ function App() {
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.replace("#", "") as DashboardRoute;
-      if (["dashboard", "score-plan", "calendar", "settings", "personal-info"].includes(hash)) {
+      if (["dashboard", "score-plan", "calendar", "settings", "personal-info", "about-us"].includes(hash)) {
         setRoute(hash);
       }
     };
@@ -115,6 +116,8 @@ function App() {
         return <CalendarPage />;
       case "settings":
         return <SettingsPage onThemeChange={setTheme} theme={theme} />;
+      case "about-us":
+        return <AboutUsPage />;
       default:
         return <DashboardPage />;
     }

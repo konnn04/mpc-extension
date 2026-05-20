@@ -8,8 +8,8 @@ import {
   _DEFAULT_MIN_TRAINING_POINT_SCHOLARSHIP,
   _DEFAULT_MIN_TRAINING_POINT_WARNING
 } from "@/constants/default";
-import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
 import { cn } from "@/lib/utils";
+import { useScoreStore } from "@/store/use-score-store";
 import { getAcademicRank, getScoreSummary, getTrainingRank } from "@/utils/score";
 
 export function MascotAdvisor() {
@@ -224,7 +224,7 @@ export function MascotAdvisor() {
                       <ShieldAlert className='mt-0.5 h-6 w-6 shrink-0 text-red-500' />
                       <div className='text-red-900 text-sm dark:text-red-200'>
                         <p className='mb-1.5 flex items-center gap-1.5 font-bold text-red-700 dark:text-red-400'>
-                          ĐRL đang ở mức {analysis.trainingRank.label} ({analysis.currentTrainingPoint})
+                          ĐRL đang ở mức {analysis.trainingRank.label} ({analysis.currentTrainingPoint.toFixed(2)})
                         </p>
                         <p className='leading-relaxed opacity-90'>
                           Cảnh báo: Nếu bị xếp loại Yếu/Kém (dưới {_DEFAULT_MIN_TRAINING_POINT_WARNING}) trong 2 học kỳ
@@ -241,7 +241,7 @@ export function MascotAdvisor() {
                       <AlertCircle className='mt-0.5 h-6 w-6 shrink-0 text-orange-500' />
                       <div className='text-orange-900 text-sm dark:text-orange-200'>
                         <p className='mb-1.5 flex items-center gap-1.5 font-bold text-orange-700 dark:text-orange-400'>
-                          ĐRL đang ở mức {analysis.trainingRank.label} ({analysis.currentTrainingPoint})
+                          ĐRL đang ở mức {analysis.trainingRank.label} ({analysis.currentTrainingPoint.toFixed(2)})
                         </p>
                         <p className='leading-relaxed opacity-90'>
                           Lưu ý: Mức này chưa đủ điều kiện xét học bổng (yêu cầu từ Khá -{" "}
@@ -257,7 +257,8 @@ export function MascotAdvisor() {
                     <ShieldCheck className='mt-0.5 h-6 w-6 shrink-0 text-emerald-500' />
                     <div className='text-emerald-900 text-sm dark:text-emerald-200'>
                       <p className='mb-1.5 flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400'>
-                        Tuyệt vời: ĐRL đạt mức {analysis.trainingRank.label} ({analysis.currentTrainingPoint})
+                        Tuyệt vời: ĐRL đạt mức {analysis.trainingRank.label} ({analysis.currentTrainingPoint.toFixed(2)}
+                        )
                       </p>
                       <p className='leading-relaxed opacity-90'>
                         Bạn đã đủ điều kiện về ĐRL để xét học bổng (Khá trở lên) và an toàn không lo bị hạ bậc bằng tốt

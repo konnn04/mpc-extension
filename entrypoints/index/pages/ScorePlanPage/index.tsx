@@ -1,18 +1,21 @@
 import { format } from "date-fns";
 import {
   ArrowRightIcon,
+  BookOpenIcon,
   ClipboardCopyIcon,
   DownloadIcon,
   FileOutputIcon,
   FilterIcon,
   ImportIcon,
+  InfoIcon,
   MonitorIcon,
   PlusIcon,
-  SearchIcon
+  SearchIcon,
+  Trash2
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { browser } from "wxt/browser";
+import { FormSemesterDialog } from "@/components/custom/form-semester-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -22,29 +25,32 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { _GET_POINT_DATA } from "@/constants/chrome";
-import { _DEFAULT_SCORE_SUMMARY } from "@/entrypoints/popup/PointTab/default";
-import { FormSemesterDialog } from "@/entrypoints/popup/PointTab/form-semester-dialog";
-import type { ScoreGroupType, ScoreRecordType, ScoreSummaryType } from "@/entrypoints/popup/PointTab/type";
-import { useScoreStore } from "@/entrypoints/popup/PointTab/use-score-store";
+import { _DEFAULT_SCORE_SUMMARY } from "@/constants/default";
 import { useGlobalStore } from "@/store/use-global-store";
+import { useScoreStore } from "@/store/use-score-store";
+import type { ScoreGroupType, ScoreRecordType, ScoreSummaryType } from "@/types";
 import { computeScoreHash } from "@/utils/hash";
 import {
   getAcademicRank,
   getNextSemesterName,
   getScoreSummary,
-  handleExportData,
+  handleExportScoreData,
   updateIgnoreSubject,
   updateScoreAvg
 } from "@/utils/score";
 import { FilterModal } from "./filter-modal";
+import { ImportScoreModal } from "./import-score-modal";
 import { ScoreDataTable } from "./score-data-table";
 
 type GroupMode = "semester" | "all";
 
+import keHoachDiemSoMd from "@/assets/docs/ke_hoach_diem_so.md?raw";
+import { MarkdownModal } from "@/components/custom/markdown-modal";
+import { useConfirm } from "@/hooks/use-confirm";
 import { MascotAdvisor } from "./mascot-advisor";
 
 function ScorePlanPage() {
+  const confirm = useConfirm();
   const fixedPoint = useGlobalStore((s) => s.fixedPoint);
   const ignoreList = useGlobalStore((s) => s.ignoreList);
   const siteURLMapping = useGlobalStore((s) => s.siteURLMapping);
@@ -61,6 +67,8 @@ function ScorePlanPage() {
     mode: "add" | "edit";
     semesterIdx?: number;
   }>({ open: false, mode: "add" });
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const [originalSummary, setOriginalSummary] = useState<ScoreSummaryType | null>(null);
 
@@ -71,6 +79,15 @@ function ScorePlanPage() {
       setOriginalSummary(null);
     }
   }, [originalScores]);
+
+  const handleImportSuccess = async (data: ScoreGroupType[]) => {
+    setSummary(getScoreSummary(data));
+    setScores(data);
+    setOriginalScores(data);
+    setLastUpdate(new Date());
+    await saveData();
+    toast.success("Đã nhập dữ liệu điểm thành công!");
+  };
 
   const currentHash = useMemo(() => computeScoreHash(scores), [scores]);
   const hasUnsavedChanges = savedScoresHash !== "" && currentHash !== savedScoresHash;
@@ -165,25 +182,22 @@ function ScorePlanPage() {
     setSummary(getScoreSummary(scores));
   }, [scores]);
 
-  const handleImportAuto = async () => {
-    try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.url?.startsWith(siteURLMapping[siteCurr].point.split("#")[0])) {
-        toast.info(
-          "Hãy mở trang điểm trên tiện ích sinh viên, sau đó sử dụng popup extension để nhập dữ liệu tự động."
-        );
-        window.open(siteURLMapping[siteCurr].point, "_blank");
-        return;
-      }
-      const data: ScoreGroupType[] = await browser.runtime.sendMessage({ type: _GET_POINT_DATA });
-      const processedData = updateIgnoreAndAvg(data);
-      setOriginalScores(structuredClone(processedData));
-      setScores(processedData);
-      setSummary(getScoreSummary(processedData));
-      await saveData();
-      toast.success("Nhập dữ liệu thành công!");
-    } catch {
-      toast.info("Vui lòng sử dụng popup extension trên trang tiện ích sinh viên để nhập dữ liệu tự động.");
+  const handleImportAuto = () => {
+    setGuideOpen(true);
+  };
+
+  const handleClearData = async () => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa dữ liệu",
+      description: "Bạn có chắc chắn muốn xóa toàn bộ dữ liệu điểm số? Hành động này không thể hoàn tác.",
+      confirmText: "Xóa điểm",
+      variant: "destructive"
+    });
+
+    if (isConfirmed) {
+      const { clearData } = useScoreStore.getState();
+      await clearData();
+      toast.success("Đã xóa dữ liệu điểm số");
     }
   };
 
@@ -248,6 +262,41 @@ function ScorePlanPage() {
   };
 
   const rank = getAcademicRank(summary.gpa4).label;
+
+  if (scores.length === 0) {
+    return (
+      <>
+        <div className='flex min-h-[60vh] flex-col items-center justify-center space-y-4'>
+          <div className='mb-4 rounded-full bg-muted p-6'>
+            <BookOpenIcon className='h-12 w-12 text-muted-foreground' />
+          </div>
+          <h2 className='font-semibold text-2xl'>Chưa có dữ liệu điểm số</h2>
+          <p className='mb-6 max-w-md text-center text-muted-foreground'>
+            Hệ thống chưa tìm thấy dữ liệu điểm của bạn. Vui lòng truy cập trang web Xem điểm của trường và mở tiện ích
+            (popup) để đồng bộ dữ liệu nhé!
+          </p>
+          <Button className='w-full max-w-sm' onClick={() => setImportModalOpen(true)} variant='outline'>
+            Tải bảng điểm thủ công
+          </Button>
+          <Button onClick={() => setGuideOpen(true)} variant='outline'>
+            <InfoIcon className='mr-2 h-4 w-4' />
+            Hướng dẫn đồng bộ điểm
+          </Button>
+        </div>
+        <MarkdownModal
+          isOpen={guideOpen}
+          markdownContent={keHoachDiemSoMd}
+          onClose={() => setGuideOpen(false)}
+          title='Hướng dẫn Kế hoạch điểm số'
+        />
+        <ImportScoreModal
+          onImportSuccess={handleImportSuccess}
+          onOpenChange={setImportModalOpen}
+          open={importModalOpen}
+        />
+      </>
+    );
+  }
 
   return (
     <div className='space-y-6 pb-24'>
@@ -314,6 +363,11 @@ function ScorePlanPage() {
           </span>
         )}
 
+        <Button className='text-muted-foreground' onClick={() => setGuideOpen(true)} size='sm' variant='ghost'>
+          <InfoIcon className='mr-2 h-4 w-4' />
+          Hướng dẫn
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size='sm'>
@@ -326,7 +380,7 @@ function ScorePlanPage() {
               <MonitorIcon className='mr-2 h-4 w-4 text-blue-500' />
               Nhập tự động
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => toast.info("Tính năng nhập thủ công đang phát triển.")}>
+            <DropdownMenuItem onSelect={() => setImportModalOpen(true)}>
               <DownloadIcon className='mr-2 h-4 w-4 text-green-500' />
               Nhập thủ công
             </DropdownMenuItem>
@@ -341,7 +395,7 @@ function ScorePlanPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onSelect={() => handleExportData(scores)}>
+            <DropdownMenuItem onSelect={() => handleExportScoreData(scores)}>
               <FileOutputIcon className='mr-2 h-4 w-4 text-green-500' />
               Xuất điểm (Excel)
             </DropdownMenuItem>
@@ -351,6 +405,11 @@ function ScorePlanPage() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button onClick={handleClearData} size='sm' variant='destructive'>
+          <Trash2 className='mr-2 h-4 w-4' />
+          Xóa dữ liệu
+        </Button>
       </div>
 
       <div className='flex flex-wrap items-center gap-2'>
@@ -467,6 +526,18 @@ function ScorePlanPage() {
         </div>
       )}
       <MascotAdvisor />
+
+      <MarkdownModal
+        isOpen={guideOpen}
+        markdownContent={keHoachDiemSoMd}
+        onClose={() => setGuideOpen(false)}
+        title='Hướng dẫn Kế hoạch điểm số'
+      />
+      <ImportScoreModal
+        onImportSuccess={handleImportSuccess}
+        onOpenChange={setImportModalOpen}
+        open={importModalOpen}
+      />
     </div>
   );
 }
