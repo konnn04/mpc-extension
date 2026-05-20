@@ -55,7 +55,7 @@ export function CalendarPage() {
 
   return (
     <div className='flex h-auto flex-col space-y-4 lg:h-full'>
-      <div className='flex flex-col items-start justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm md:flex-row md:items-center'>
+      <div className='flex flex-col items-start justify-between gap-4 md:flex-row md:items-center'>
         <p className='mt-1 text-muted-foreground text-sm'>
           Cập nhật lúc:{" "}
           {lastUpdate ? (
