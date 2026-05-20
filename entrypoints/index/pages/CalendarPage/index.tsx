@@ -54,8 +54,8 @@ export function CalendarPage() {
   };
 
   return (
-    <div className='flex h-full flex-col space-y-4'>
-      <div className='flex items-center justify-between rounded-lg border bg-card p-4 shadow-sm'>
+    <div className='flex h-auto flex-col space-y-4 lg:h-full'>
+      <div className='flex flex-col items-start justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm md:flex-row md:items-center'>
         <div className='flex items-center gap-4'>
           <div className='flex h-10 w-10 items-center justify-center rounded-full bg-primary/10'>
             <Calendar className='h-5 w-5 text-primary' />
@@ -75,7 +75,7 @@ export function CalendarPage() {
           </div>
         </div>
 
-        <div className='flex items-center gap-2'>
+        <div className='flex w-full flex-wrap items-center gap-2 md:w-auto'>
           <Button onClick={() => setIsImportModalOpen(true)} variant='outline'>
             <Download className='mr-2 h-4 w-4' />
             Nhập lịch
@@ -91,8 +91,8 @@ export function CalendarPage() {
         </div>
       </div>
 
-      <div className='flex flex-1 gap-6 overflow-hidden'>
-        <div className='w-[40%] flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-card shadow-sm'>
+      <div className='flex flex-1 flex-col gap-6 overflow-y-auto lg:flex-row lg:overflow-hidden'>
+        <div className='flex w-full flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-card shadow-sm lg:w-[40%]'>
           <div className='border-b p-4'>
             <h2 className='font-semibold'>Lịch học sắp tới</h2>
           </div>

@@ -47,7 +47,7 @@ export function UpcomingEvents({ scheduleMap }: UpcomingEventsProps) {
   }
 
   return (
-    <ScrollArea className='h-[calc(100vh-12rem)] pr-4'>
+    <ScrollArea className='h-[400px] pr-4 lg:h-[calc(100vh-12rem)]'>
       <div className='space-y-4'>
         {upcomingEvents.map((event, i) => {
           // Group by date visually
