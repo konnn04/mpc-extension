@@ -25,17 +25,15 @@ export function UpcomingEvents({ scheduleMap }: UpcomingEventsProps) {
       }
     }
 
-    // Sort by date then time
     allEvents.sort((a, b) => {
       const dateDiff = a.dateObj.getTime() - b.dateObj.getTime();
       if (dateDiff !== 0) {
         return dateDiff;
       }
-      // time format is like "07:30", string compare is fine
       return (a.startTime || "").localeCompare(b.startTime || "");
     });
 
-    return allEvents.slice(0, 50); // limit to next 50 events to avoid lag
+    return allEvents.slice(0, 50);
   }, [scheduleMap]);
 
   if (upcomingEvents.length === 0) {
@@ -50,7 +48,6 @@ export function UpcomingEvents({ scheduleMap }: UpcomingEventsProps) {
     <ScrollArea className='h-[400px] pr-4 lg:h-[calc(100vh-12rem)]'>
       <div className='space-y-4'>
         {upcomingEvents.map((event, i) => {
-          // Group by date visually
           const showDateHeader = i === 0 || event.dateStr !== upcomingEvents[i - 1].dateStr;
 
           return (
@@ -62,19 +59,16 @@ export function UpcomingEvents({ scheduleMap }: UpcomingEventsProps) {
                 </div>
               )}
               <div className='flex items-stretch gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50'>
-                {/* Time column */}
                 <div className='flex w-16 shrink-0 flex-col justify-center text-right text-xs'>
                   <span className='font-medium text-foreground'>{event.startTime}</span>
                   <span className='text-muted-foreground'>{event.endTime}</span>
                 </div>
 
-                {/* Color bar */}
                 <div
                   className='w-1 shrink-0 rounded-full'
                   style={{ backgroundColor: getSubjectColor(event.code || event.title) }}
                 />
 
-                {/* Details */}
                 <div className='flex-1 space-y-1'>
                   <div className='font-medium text-sm leading-none'>{event.title}</div>
                   {event.description && <div className='text-muted-foreground text-xs'>{event.description}</div>}

@@ -1,4 +1,4 @@
-import { Calendar, CalendarPlus, Download, Info, Trash2 } from "lucide-react";
+import { CalendarPlus, Download, Info, Trash2 } from "lucide-react";
 import { useLayoutEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -56,24 +56,16 @@ export function CalendarPage() {
   return (
     <div className='flex h-auto flex-col space-y-4 lg:h-full'>
       <div className='flex flex-col items-start justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm md:flex-row md:items-center'>
-        <div className='flex items-center gap-4'>
-          <div className='flex h-10 w-10 items-center justify-center rounded-full bg-primary/10'>
-            <Calendar className='h-5 w-5 text-primary' />
-          </div>
-          <div>
-            <h1 className='font-semibold text-lg leading-none'>Lịch học & thi</h1>
-            <p className='mt-1 text-muted-foreground text-sm'>
-              Cập nhật lúc:{" "}
-              {lastUpdate ? (
-                <span className='font-medium text-foreground'>
-                  {lastUpdate.toLocaleTimeString()} {lastUpdate.toLocaleDateString()}
-                </span>
-              ) : (
-                "Chưa có dữ liệu"
-              )}
-            </p>
-          </div>
-        </div>
+        <p className='mt-1 text-muted-foreground text-sm'>
+          Cập nhật lúc:{" "}
+          {lastUpdate ? (
+            <span className='font-medium text-foreground'>
+              {lastUpdate.toLocaleTimeString()} {lastUpdate.toLocaleDateString()}
+            </span>
+          ) : (
+            "Chưa có dữ liệu"
+          )}
+        </p>
 
         <div className='flex w-full flex-wrap items-center gap-2 md:w-auto'>
           <Button onClick={() => setIsImportModalOpen(true)} variant='outline'>

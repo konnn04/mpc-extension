@@ -121,10 +121,9 @@ export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
                 >
                   {format(day, dateFormat)}
                 </span>
-                {events.length > 0 && <span className='text-muted-foreground text-xs'>{events.length}</span>}
               </div>
 
-              <div className='mt-2 space-y-1'>
+              <div className='mt-2 space-y-1 overflow-hidden'>
                 {events.slice(0, 3).map((event, j) => (
                   <div
                     className='truncate rounded-sm px-1.5 py-0.5 font-medium text-[10px] text-white leading-tight'
@@ -136,7 +135,9 @@ export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
                   </div>
                 ))}
                 {events.length > 3 && (
-                  <div className='pl-1 font-medium text-[10px] text-muted-foreground'>+{events.length - 3} sự kiện</div>
+                  <div className='truncate rounded-sm bg-muted px-1.5 py-0.5 font-medium text-[10px] text-muted-foreground leading-tight'>
+                    +{events.length - 3} sự kiện khác
+                  </div>
                 )}
               </div>
             </div>
