@@ -40,12 +40,6 @@ export const navigateToURL = async (url: string): Promise<void> => {
   await browser.runtime.sendMessage({ type: _NAVIGATE_TO_URL, url });
 };
 
-/** Match currUrl against a regex pattern.
- * Falls back to exact match or startsWith with the plain URL if regex is invalid.
- * @param regexStr - Regex pattern for detection (e.g. "^https://...")
- * @param plainUrl - Plain URL used as fallback for comparison
- * @param currUrl  - Current URL to test
- */
 export const isMatchURL = (regexStr: string, plainUrl: string, currUrl: string): boolean => {
   try {
     return new RegExp(regexStr).test(currUrl);

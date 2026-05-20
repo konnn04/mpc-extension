@@ -1,14 +1,146 @@
-import { CalendarDays } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, CalendarPlus, Download, Info, Trash2 } from "lucide-react";
+import { useLayoutEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { ExportCalendarDialog } from "@/entrypoints/popup/CalendarTab/export-calendar-dialog";
+import type { SemesterData } from "@/entrypoints/popup/CalendarTab/type";
+import { useCalendarStore } from "@/entrypoints/popup/CalendarTab/use-calendar-store";
+import { downloadICS } from "@/entrypoints/popup/CalendarTab/utils/ics-utils";
+import { MonthViewCalendar } from "./components/month-view-calendar";
+import { UpcomingEvents } from "./components/upcoming-events";
 
 export function CalendarPage() {
+  const { calendarData, lastUpdate, scheduleMap, getData, clearData } = useCalendarStore();
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  useLayoutEffect(() => {
+    getData();
+  }, [getData]);
+
+  const handleClearData = async () => {
+    // biome-ignore lint/suspicious/noAlert: standard native confirm is acceptable here
+    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu lịch không?")) {
+      await clearData();
+      toast.success("Đã xóa dữ liệu lịch học");
+    }
+  };
+
+  const handleExport = (selectedSemesters: SemesterData[]) => {
+    try {
+      downloadICS(selectedSemesters);
+      toast.success(`Đã xuất ${selectedSemesters.length} học kỳ`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Có lỗi xảy ra khi xuất lịch.");
+    }
+  };
+
   return (
-    <Card>
-      <CardContent className='flex flex-col items-center justify-center py-20'>
-        <CalendarDays className='h-16 w-16 text-muted-foreground/40' />
-        <h2 className='mt-4 font-semibold text-xl'>Lịch học tập</h2>
-        <p className='mt-2 text-muted-foreground text-sm'>Tính năng đang được phát triển. Hãy quay lại sau nhé!</p>
-      </CardContent>
-    </Card>
+    <div className='flex h-full flex-col space-y-4'>
+      {/* Header Toolbar */}
+      <div className='flex items-center justify-between rounded-lg border bg-card p-4 shadow-sm'>
+        <div className='flex items-center gap-4'>
+          <div className='flex h-10 w-10 items-center justify-center rounded-full bg-primary/10'>
+            <Calendar className='h-5 w-5 text-primary' />
+          </div>
+          <div>
+            <h1 className='font-semibold text-lg leading-none'>Lịch học & thi</h1>
+            <p className='mt-1 text-muted-foreground text-sm'>
+              Cập nhật lúc:{" "}
+              {lastUpdate ? (
+                <span className='font-medium text-foreground'>
+                  {lastUpdate.toLocaleTimeString()} {lastUpdate.toLocaleDateString()}
+                </span>
+              ) : (
+                "Chưa có dữ liệu"
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className='flex items-center gap-2'>
+          <Button onClick={() => setIsImportModalOpen(true)} variant='outline'>
+            <Download className='mr-2 h-4 w-4' />
+            Nhập lịch
+          </Button>
+          <Button disabled={calendarData.length === 0} onClick={() => setIsExportModalOpen(true)} variant='outline'>
+            <CalendarPlus className='mr-2 h-4 w-4' />
+            Xuất lịch
+          </Button>
+          <Button disabled={calendarData.length === 0} onClick={handleClearData} variant='destructive'>
+            <Trash2 className='mr-2 h-4 w-4' />
+            Xóa lịch
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Content: 40 / 60 split */}
+      <div className='flex flex-1 gap-6 overflow-hidden'>
+        {/* Left 40% - Upcoming Events */}
+        <div className='w-[40%] flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-card shadow-sm'>
+          <div className='border-b p-4'>
+            <h2 className='font-semibold'>Lịch học sắp tới</h2>
+          </div>
+          <div className='flex-1 p-4'>
+            <UpcomingEvents scheduleMap={scheduleMap} />
+          </div>
+        </div>
+
+        {/* Right 60% - Month View Calendar */}
+        <div className='flex-1 overflow-hidden'>
+          <MonthViewCalendar scheduleMap={scheduleMap} />
+        </div>
+      </div>
+
+      {/* Import Instruction Modal */}
+      <Dialog onOpenChange={setIsImportModalOpen} open={isImportModalOpen}>
+        <DialogContent className='max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='flex items-center gap-2'>
+              <Info className='h-5 w-5 text-blue-500' />
+              Hướng dẫn nhập lịch
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription className='space-y-4 pt-4 text-base text-foreground'>
+            <p>Hiện tại tính năng đồng bộ lịch tự động chưa được hỗ trợ trên trang Dashboard.</p>
+            <p>Để cập nhật lịch học mới nhất, vui lòng:</p>
+            <ol className='ml-4 list-decimal space-y-2'>
+              <li>Truy cập trang web đào tạo của trường.</li>
+              <li>
+                Mở <span className='font-semibold text-foreground'>popup tiện ích MPC</span> trên thanh công cụ trình
+                duyệt.
+              </li>
+              <li>
+                Chuyển sang tab <span className='font-semibold text-foreground'>Lịch</span>.
+              </li>
+              <li>
+                Nhấn nút <span className='font-semibold text-foreground'>"Cập nhật lịch"</span>.
+              </li>
+            </ol>
+            <p>Sau khi đồng bộ thành công, quay lại trang này và làm mới (F5) để xem lịch mới nhất.</p>
+          </DialogDescription>
+          <DialogFooter>
+            <Button onClick={() => setIsImportModalOpen(false)}>Đã hiểu</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Calendar Dialog */}
+      <ExportCalendarDialog
+        calendarData={calendarData}
+        onExport={handleExport}
+        onOpenChange={setIsExportModalOpen}
+        open={isExportModalOpen}
+      />
+    </div>
   );
 }

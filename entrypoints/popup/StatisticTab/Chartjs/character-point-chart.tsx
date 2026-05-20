@@ -26,7 +26,7 @@ const CharacterPointChart = ({ total, data }: Props) => {
   return (
     <div className='p-6'>
       <h3 className='mb-4 text-center font-semibold text-sm'>PHÂN BỐ ĐIỂM THEO THANG ĐIỂM CHỮ ({total} môn)</h3>
-      <ChartContainer className='aspect-auto h-[250px] w-full' config={chartConfig}>
+      <ChartContainer className='aspect-auto h-62.5 w-full' config={chartConfig}>
         <PieChart>
           <ChartTooltip content={<ChartTooltipContent hideLabel />} />
           <Pie data={chartData} dataKey='count' innerRadius={40} nameKey='grade' paddingAngle={2} strokeWidth={2}>

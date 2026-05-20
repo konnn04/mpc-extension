@@ -33,7 +33,7 @@ const SemesterAverageChart = ({ statistic }: Props) => {
   return (
     <div className='p-6'>
       <h3 className='mb-4 text-center font-semibold text-sm'>ĐIỂM TRUNG BÌNH QUA TỪNG HỌC KỲ</h3>
-      <ChartContainer className='aspect-auto h-[300px] w-full' config={chartConfig}>
+      <ChartContainer className='aspect-auto h-75 w-full' config={chartConfig}>
         <ComposedChart data={chartData} margin={{ left: -20, right: 10, top: 10, bottom: 20 }}>
           <CartesianGrid vertical={false} />
           <XAxis axisLine={false} dataKey='term' tick={false} tickLine={false} tickMargin={10} />
