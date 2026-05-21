@@ -18,7 +18,7 @@ type InfoState = {
   setCourseData: (courseData: CourseType) => void;
   setLastUpdate: (date: Date | null) => void;
   getData: () => Promise<void>;
-  saveData: () => Promise<void>;
+  saveData: (studentId?: string) => Promise<void>;
 };
 
 export const useInfoStore = create<InfoState>((set, get) => ({
@@ -31,7 +31,11 @@ export const useInfoStore = create<InfoState>((set, get) => ({
   setLastUpdate: (date: Date | null) => set({ lastUpdate: date }),
 
   getData: async () => {
-    const key = getUserInfoKey(useCurrentUserStore.getState().effectiveStudentId);
+    const sid = useCurrentUserStore.getState().studentId;
+    if (!sid) {
+      return;
+    }
+    const key = getUserInfoKey(sid);
     const savedData = await storage.getItem<InfoStorageType>(key);
 
     if (savedData?.userData) {
@@ -45,8 +49,8 @@ export const useInfoStore = create<InfoState>((set, get) => ({
     }
   },
 
-  saveData: async () => {
-    const key = getUserInfoKey(useCurrentUserStore.getState().effectiveStudentId);
+  saveData: async (studentIdParam?: string) => {
+    const key = getUserInfoKey(studentIdParam || useCurrentUserStore.getState().studentId);
     const data: InfoStorageType = {
       userData: get().userData,
       courseData: get().courseData,

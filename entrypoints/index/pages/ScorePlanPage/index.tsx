@@ -75,6 +75,15 @@ function ScorePlanPage() {
   const [semesterDialog, setSemesterDialog] = useState<SemesterDialogState>({ open: false, mode: "add" });
   const [guideOpen, setGuideOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [hideNonGPA, setHideNonGPA] = useState(false);
+
+  // Filter out non-GPA subjects when toggle is off
+  const displayScores = useMemo(() => {
+    if (!hideNonGPA) {
+      return scores;
+    }
+    return scores.map((sem) => ({ ...sem, data: sem.data.filter((sub) => !sub.isIgnore) }));
+  }, [scores, hideNonGPA]);
 
   const [originalSummary, setOriginalSummary] = useState<ScoreSummaryType | null>(null);
   const drlWarnings = useMemo(() => getDrlWarnings(scores, drlWarningThreshold), [scores, drlWarningThreshold]);
@@ -331,15 +340,17 @@ function ScorePlanPage() {
       <ScoreFiltersBar
         filterRange={filterRange}
         groupMode={groupMode}
+        hideNonGPA={hideNonGPA}
         onAddSemester={handleAutoAddSemester}
         onFilterOpen={() => setFilterOpen(true)}
         onGroupModeChange={setGroupMode}
         onSearchTextChange={setSearchText}
+        onToggleHideNonGPA={setHideNonGPA}
         searchText={searchText}
       />
 
       <ScoreDataTable
-        data={scores}
+        data={displayScores}
         filterRange={filterRange}
         fixedPoint={fixedPoint}
         groupMode={groupMode}

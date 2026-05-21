@@ -61,13 +61,16 @@ function App() {
   const effectiveStudentId = useCurrentUserStore((s) => s.effectiveStudentId);
 
   useLayoutEffect(() => {
-    loadCurrentUser();
-    getData();
-    getScoreData();
-    getInfoData();
-    getCalendarData();
-    getTuitionData();
-    getUserSettingsData();
+    const init = async () => {
+      await loadCurrentUser();
+      getData();
+      getScoreData();
+      getInfoData();
+      getCalendarData();
+      getTuitionData();
+      getUserSettingsData();
+    };
+    init();
     const unwatch = setupScoreWatcher();
     return () => {
       unwatch?.();

@@ -14,7 +14,7 @@
       "**/*.jsx",
       "!**/components/ui",
       "!**/*.d.ts",
-      "!utils/scrapers"
+      "!entrypoints/popup/scrapers"
     ]
   },
   "assist": {

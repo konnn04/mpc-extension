@@ -8,7 +8,7 @@ type UserSettingsState = {
   settings: UserSettingsType;
   setSettings: (s: Partial<UserSettingsType>) => void;
   getData: () => Promise<void>;
-  saveData: () => Promise<void>;
+  saveData: (studentId?: string) => Promise<void>;
 };
 
 export const useUserSettingsStore = create<UserSettingsState>((set, get) => ({
@@ -18,7 +18,11 @@ export const useUserSettingsStore = create<UserSettingsState>((set, get) => ({
     get().saveData();
   },
   getData: async () => {
-    const key = getUserSettingsKey(useCurrentUserStore.getState().effectiveStudentId);
+    const sid = useCurrentUserStore.getState().studentId;
+    if (!sid) {
+      return;
+    }
+    const key = getUserSettingsKey(sid);
     const raw = await storage.getItem<UserSettingsType>(key);
     if (raw) {
       set({ settings: { ..._DEFAULT_USER_SETTINGS, ...raw } });
@@ -26,8 +30,8 @@ export const useUserSettingsStore = create<UserSettingsState>((set, get) => ({
       set({ settings: { ..._DEFAULT_USER_SETTINGS } });
     }
   },
-  saveData: async () => {
-    const key = getUserSettingsKey(useCurrentUserStore.getState().effectiveStudentId);
+  saveData: async (studentIdParam?: string) => {
+    const key = getUserSettingsKey(studentIdParam || useCurrentUserStore.getState().studentId);
     await storage.setItem(key, get().settings);
   }
 }));

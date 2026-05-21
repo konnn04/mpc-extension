@@ -81,13 +81,11 @@ function App() {
   const ThemeIcon = themeIcons[theme];
 
   useEffect(() => {
-    const loadData = async () => {
-      await getInfoData();
-      await getScoreData();
-      await getCalendarData();
-      await getTuitionData();
+    const init = async () => {
+      await useCurrentUserStore.getState().load();
+      await Promise.all([getInfoData(), getScoreData(), getCalendarData(), getTuitionData()]);
     };
-    loadData();
+    init();
   }, [getInfoData, getScoreData, getCalendarData, getTuitionData]);
 
   // Auto-scrape basic info when portal site is detected
@@ -100,14 +98,14 @@ function App() {
         const data = await browser.runtime.sendMessage({ type: _GET_BASIC_INFO });
         if (data?.studentId) {
           setCurrentUser(data.studentId, data.displayName, data.avatar || "");
-          await Promise.all([getInfoData(), getScoreData(), getCalendarData()]);
+          await Promise.all([getInfoData(), getScoreData(), getCalendarData(), getTuitionData()]);
         }
       } catch {
         /* site may not be loaded yet */
       }
     };
     scrape();
-  }, [siteCurr, setCurrentUser, getInfoData, getScoreData, getCalendarData]);
+  }, [siteCurr, setCurrentUser, getInfoData, getScoreData, getCalendarData, getTuitionData]);
 
   useEffect(() => {
     const checkURL = async (tabId?: number) => {

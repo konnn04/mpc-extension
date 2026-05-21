@@ -16,7 +16,7 @@ type ScoreState = {
   setFilter: (filter: ScoreFilterType) => void;
   setLastUpdate: (date: Date | null) => void;
   getData: () => Promise<void>;
-  saveData: () => Promise<void>;
+  saveData: (studentId?: string) => Promise<void>;
   clearData: () => Promise<void>;
   setupWatcher: () => (() => void) | undefined;
 };
@@ -35,7 +35,11 @@ export const useScoreStore = create<ScoreState>((set, get) => ({
   },
   setLastUpdate: (date: Date | null) => set({ lastUpdate: date }),
   getData: async () => {
-    const key = getPointKey(useCurrentUserStore.getState().effectiveStudentId);
+    const sid = useCurrentUserStore.getState().studentId;
+    if (!sid) {
+      return;
+    }
+    const key = getPointKey(sid);
     let scoresData: unknown = await storage.getItem(key);
     if (typeof scoresData === "string") {
       try {
@@ -56,21 +60,23 @@ export const useScoreStore = create<ScoreState>((set, get) => ({
       });
     }
   },
-  saveData: async () => {
-    const scores = get().scores;
-    const key = getPointKey(useCurrentUserStore.getState().effectiveStudentId);
+  saveData: async (studentId?: string) => {
+    const gsid = useCurrentUserStore.getState();
+    const sid = studentId || gsid.studentId;
+    const allScores = get().scores;
+    const key = getPointKey(sid);
     const data: PointStorageType = {
       filter: get().filter,
-      data: scores,
+      data: allScores,
       originalData: get().originalScores,
       updatedAt: new Date().toISOString()
     };
 
     await storage.setItem(key, data);
-    set({ savedScoresHash: computeScoreHash(scores) });
+    set({ savedScoresHash: computeScoreHash(allScores) });
   },
   clearData: async () => {
-    const key = getPointKey(useCurrentUserStore.getState().effectiveStudentId);
+    const key = getPointKey(useCurrentUserStore.getState().studentId);
     await storage.removeItem(key);
     set({
       scores: [],

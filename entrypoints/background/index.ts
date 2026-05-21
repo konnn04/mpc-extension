@@ -9,11 +9,11 @@ import {
   _NAVIGATE_TO_URL,
   _OPEN_NEW_TAB
 } from "@/constants/chrome";
-import { getBasicInfo } from "@/utils/scrapers/basic-info-scraper";
-import { getCalendars, getExamCalendars } from "@/utils/scrapers/calendar-scraper";
-import { getUserData } from "@/utils/scrapers/info-scraper";
-import { getPointData } from "@/utils/scrapers/score-scraper";
-import { getTuitionData } from "@/utils/scrapers/tuition-scraper";
+import { getBasicInfo } from "@/entrypoints/popup/scrapers/basic-info-scraper";
+import { getCalendars, getExamCalendars } from "@/entrypoints/popup/scrapers/calendar-scraper";
+import { getUserData } from "@/entrypoints/popup/scrapers/info-scraper";
+import { getPointData } from "@/entrypoints/popup/scrapers/score-scraper";
+import { getTuitionData } from "@/entrypoints/popup/scrapers/tuition-scraper";
 
 export default defineBackground(() => {
   browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });

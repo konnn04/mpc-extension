@@ -49,12 +49,12 @@ type TrainingRank = Rank & { minPoint: number };
 
 export function getAcademicRank(gpa4: number): Rank {
   const found = _DEFAULT_ACADEMIC_RANKS.find((r) => gpa4 >= r.minGpa4);
-  return found?.rank ?? _DEFAULT_ACADEMIC_RANKS.at(-1).rank;
+  return (found?.rank ?? _DEFAULT_ACADEMIC_RANKS.at(-1)?.rank) as Rank;
 }
 
 export function getTrainingRank(point: number): TrainingRank {
   const found = _DEFAULT_TRAINING_RANKS.find((r) => point >= r.minPoint);
-  return found ?? _DEFAULT_TRAINING_RANKS.at(-1);
+  return (found ?? _DEFAULT_TRAINING_RANKS.at(-1)) as TrainingRank;
 }
 
 // ── Semester helpers ──

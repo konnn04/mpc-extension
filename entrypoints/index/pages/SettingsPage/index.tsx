@@ -148,8 +148,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
       for (let i = 0; i < path.length - 1; i++) {
         obj = obj[path[i]] as Record<string, unknown>;
       }
-      const lastKey = path.at(-1);
-      obj[lastKey] = value;
+      const lastKey = path.at(-1) ?? "";
+      if (lastKey) {
+        obj[lastKey] = value;
+      }
       return updated;
     });
   };

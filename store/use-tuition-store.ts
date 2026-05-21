@@ -7,10 +7,10 @@ type TuitionState = {
   summary: TuitionSummaryEntry[];
   details: Record<string, SemesterTuitionDetail>;
   lastUpdate: Date | null;
-  setData: (summary: TuitionSummaryEntry[], details: Record<string, SemesterTuitionDetail>) => void;
+  setData: (summary: TuitionSummaryEntry[], details: Record<string, SemesterTuitionDetail>, studentId?: string) => void;
   setLastUpdate: (date: Date | null) => void;
   getData: () => Promise<void>;
-  saveData: () => Promise<void>;
+  saveData: (studentId?: string) => Promise<void>;
   clearData: () => Promise<void>;
 };
 
@@ -19,15 +19,19 @@ export const useTuitionStore = create<TuitionState>((set, get) => ({
   details: {},
   lastUpdate: null,
 
-  setData: (summary: TuitionSummaryEntry[], details: Record<string, SemesterTuitionDetail>) => {
+  setData: (summary: TuitionSummaryEntry[], details: Record<string, SemesterTuitionDetail>, studentId?: string) => {
     set({ summary, details });
-    get().saveData();
+    get().saveData(studentId);
   },
 
   setLastUpdate: (date: Date | null) => set({ lastUpdate: date }),
 
   getData: async () => {
-    const key = getTuitionKey(useCurrentUserStore.getState().effectiveStudentId);
+    const sid = useCurrentUserStore.getState().studentId;
+    if (!sid) {
+      return;
+    }
+    const key = getTuitionKey(sid);
     const saved = await storage.getItem<TuitionStorageType>(key);
     if (saved?.summary) {
       set({
@@ -38,8 +42,9 @@ export const useTuitionStore = create<TuitionState>((set, get) => ({
     }
   },
 
-  saveData: async () => {
-    const key = getTuitionKey(useCurrentUserStore.getState().effectiveStudentId);
+  saveData: async (studentIdParam?: string) => {
+    const gsid = useCurrentUserStore.getState();
+    const key = getTuitionKey(studentIdParam || gsid.studentId);
     const data: TuitionStorageType = {
       summary: get().summary,
       details: get().details,
@@ -50,7 +55,7 @@ export const useTuitionStore = create<TuitionState>((set, get) => ({
   },
 
   clearData: async () => {
-    const key = getTuitionKey(useCurrentUserStore.getState().effectiveStudentId);
+    const key = getTuitionKey(useCurrentUserStore.getState().studentId);
     await storage.removeItem(key);
     set({ summary: [], details: {}, lastUpdate: null });
   }

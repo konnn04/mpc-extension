@@ -148,10 +148,19 @@ export const _DEFAULT_ACADEMIC_RANKS: { minGpa4: number; rank: AcademicRankType 
     }
   },
   {
-    minGpa4: 0,
+    minGpa4: 1.0,
     rank: {
       label: "Yếu",
       emoji: "⚠️",
+      color: "text-orange-500",
+      bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800"
+    }
+  },
+  {
+    minGpa4: 0,
+    rank: {
+      label: "Kém",
+      emoji: "❌",
       color: "text-red-500",
       bg: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800"
     }

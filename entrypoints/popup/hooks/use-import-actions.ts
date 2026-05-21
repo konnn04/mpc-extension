@@ -9,6 +9,7 @@ import {
 } from "@/constants/chrome";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useCalendarStore } from "@/store/use-calendar-store";
+import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useInfoStore } from "@/store/use-info-store";
 import { useScoreStore } from "@/store/use-score-store";
@@ -18,6 +19,7 @@ import { updateIgnoreSubject, updateScoreAvg } from "@/utils/score";
 export function useImportActions() {
   const [isLoading, setIsLoading] = useState(false);
   const confirm = useConfirm();
+  const studentId = useCurrentUserStore((s) => s.effectiveStudentId);
 
   const { userData } = useInfoStore();
   const { originalScores } = useScoreStore();
@@ -51,7 +53,7 @@ export function useImportActions() {
       if (data && !data.error) {
         useInfoStore.getState().setUserData(data.userData);
         useInfoStore.getState().setCourseData(data.courseData);
-        await useInfoStore.getState().saveData();
+        await useInfoStore.getState().saveData(studentId);
         toast.success("Lấy thông tin thành công!");
       } else {
         toast.error(`Lỗi: ${data?.error || "Không thể lấy dữ liệu"}`);
@@ -86,7 +88,7 @@ export function useImportActions() {
         useScoreStore.getState().setOriginalScores(withAvg);
         useScoreStore.getState().setScores(withAvg);
         useScoreStore.getState().setLastUpdate(new Date());
-        await useScoreStore.getState().saveData();
+        await useScoreStore.getState().saveData(studentId);
         toast.success("Lấy điểm thành công!");
       } else {
         toast.error(`Lỗi: ${data?.error || "Không thể lấy dữ liệu"}`);
@@ -134,7 +136,7 @@ export function useImportActions() {
       } else {
         setCalendarData(data);
       }
-      await saveCalendarData();
+      await saveCalendarData(studentId);
       toast.success(`Lấy lịch thành công ${data.length || 0} học kỳ!`);
     } catch (e) {
       toast.error("Lỗi khi lấy lịch");
@@ -161,7 +163,7 @@ export function useImportActions() {
     try {
       const data = await browser.runtime.sendMessage({ type: _GET_TUITION_DATA });
       if (data && !data.error) {
-        useTuitionStore.getState().setData(data.summary, data.details || {});
+        useTuitionStore.getState().setData(data.summary, data.details || {}, studentId);
         toast.success("Lấy học phí thành công!");
       } else {
         toast.error(`Lỗi: ${data?.error || "Không thể lấy dữ liệu"}`);

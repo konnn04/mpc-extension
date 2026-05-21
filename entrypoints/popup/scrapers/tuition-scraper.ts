@@ -13,7 +13,9 @@ async function getTuitionData(): Promise<{
 
   const parseSummaryRow = (cols: NodeListOf<Element>): TuitionSummaryEntry | null => {
     const name = (cols[1] as HTMLElement)?.innerText?.trim();
-    if (!name || !name.includes("Học kỳ")) return null;
+    if (!name?.includes("Học kỳ")) {
+      return null;
+    }
     return {
       semesterName: name,
       grossAmount: parseAmount((cols[2] as HTMLElement)?.innerText || ""),
@@ -36,20 +38,19 @@ async function getTuitionData(): Promise<{
   const RECEIPT_HEADER_REGEX = /^([AB]\d+)\.\s*(.+)/;
   // biome-ignore lint/performance/useTopLevelRegex: must be scoped for executeScript
   const RECEIPT_NUM_REGEX = /:\s*(\S+)/;
-  // biome-ignore lint/performance/useTopLevelRegex: must be scoped for executeScript
   const RECEIPT_DATE_REGEX = /(\d{2}\/\d{2}\/\d{2,4})/g;
 
   const parseReceiptHeader = (text: string) => {
     const mh = text.match(RECEIPT_HEADER_REGEX);
-    if (!mh) return null;
+    if (!mh) {
+      return null;
+    }
     const receiptType = mh[1].startsWith("A") ? ("A" as const) : ("B" as const);
     const numMatch = text.match(RECEIPT_NUM_REGEX);
     const dates = text.match(RECEIPT_DATE_REGEX);
     // For B receipts, extract the linked A receipt number (last number in text)
     const allNums = text.match(/(\d{6,})/g);
-    const linkedPaymentNumber = receiptType === "B" && allNums && allNums.length >= 2
-      ? allNums[allNums.length - 1]
-      : undefined;
+    const linkedPaymentNumber = receiptType === "B" && allNums && allNums.length >= 2 ? allNums.at(-1) : undefined;
     return {
       receiptLabel: text,
       receiptNumber: numMatch?.[1] || "",
@@ -67,9 +68,13 @@ async function getTuitionData(): Promise<{
     for (const table of tables) {
       for (const row of table.querySelectorAll("tbody > tr")) {
         const cols = row.querySelectorAll("td");
-        if (cols.length < 7) continue;
+        if (cols.length < 7) {
+          continue;
+        }
         const entry = parseSummaryRow(cols);
-        if (entry) entries.push(entry);
+        if (entry) {
+          entries.push(entry);
+        }
       }
     }
     return entries;
@@ -78,9 +83,17 @@ async function getTuitionData(): Promise<{
   // ── Scrape per-semester detail table ──
   const scrapeDetail = (): SemesterTuitionDetail | null => {
     const container = document.querySelector("app-hocphi");
-    if (!container) return null;
+    if (!container) {
+      return null;
+    }
     const semesterName = (container.querySelector(".ng-value-label") as HTMLElement)?.innerText?.trim() || "";
-    if (!semesterName || semesterName.toLowerCase().includes("tổng hợp") || semesterName.toLowerCase().includes("tất cả")) return null;
+    if (
+      !semesterName ||
+      semesterName.toLowerCase().includes("tổng hợp") ||
+      semesterName.toLowerCase().includes("tất cả")
+    ) {
+      return null;
+    }
 
     const tables = container.querySelectorAll("table");
     const groups: TuitionReceiptGroup[] = [];
@@ -96,14 +109,16 @@ async function getTuitionData(): Promise<{
         if (cols.length === 1 && cols[0].getAttribute("colspan")) {
           const h = parseReceiptHeader(rowText);
           if (h) {
-            if (cur) groups.push(cur);
+            if (cur) {
+              groups.push(cur);
+            }
             cur = {
               receiptLabel: h.receiptLabel,
               receiptNumber: h.receiptNumber,
               receiptType: h.receiptType,
               createdAt: h.createdAt,
-              contractDate: (h as any).contractDate,
-              linkedPaymentNumber: (h as any).linkedPaymentNumber,
+              contractDate: h.contractDate,
+              linkedPaymentNumber: h.linkedPaymentNumber,
               items: [],
               subtotal: 0
             };
@@ -113,7 +128,8 @@ async function getTuitionData(): Promise<{
 
         // Subtotal (antiquewhite bg): first td has colspan, text "TỔNG"; amount in last td
         if (rowText.startsWith("TỔNG") && cur) {
-          cur.subtotal = parseAmount((cols[cols.length - 1] as HTMLElement)?.innerText || "");
+          const allCols = [...cols] as HTMLElement[];
+          cur.subtotal = parseAmount(allCols.at(-1)?.innerText || "");
           groups.push(cur);
           cur = null;
           continue;
@@ -124,47 +140,73 @@ async function getTuitionData(): Promise<{
           cur.items.push(parseDetailRow(cols));
         }
       }
-      if (cur) groups.push(cur);
+      if (cur) {
+        groups.push(cur);
+      }
     }
 
     const bankEl = container.querySelector("h6");
-    return { semesterName, receiptGroups: groups, bankAccount: (bankEl as HTMLElement)?.innerText?.trim() || undefined };
+    return {
+      semesterName,
+      receiptGroups: groups,
+      bankAccount: (bankEl as HTMLElement)?.innerText?.trim() || undefined
+    };
   };
 
   const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
   const getOptions = async (): Promise<string[]> => {
     const container = document.querySelector("app-hocphi");
-    if (!container) return [];
+    if (!container) {
+      return [];
+    }
     const sel = container.querySelector(".ng-select-container") as HTMLElement;
-    if (!sel) return [];
+    if (!sel) {
+      return [];
+    }
 
     sel.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    if (AWAIT_ENABLE) await wait(300);
+    if (AWAIT_ENABLE) {
+      await wait(300);
+    }
 
     const opts: string[] = [];
     for (const o of document.querySelectorAll("ng-dropdown-panel .ng-option")) {
       const t = (o as HTMLElement).innerText?.trim();
-      if (t) opts.push(t);
+      if (t) {
+        opts.push(t);
+      }
     }
 
     sel.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    if (AWAIT_ENABLE) { await wait(200); document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); await wait(100); }
+    if (AWAIT_ENABLE) {
+      await wait(200);
+      document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      await wait(100);
+    }
     return opts;
   };
 
   const selectOption = async (text: string): Promise<boolean> => {
     const container = document.querySelector("app-hocphi");
-    if (!container) return false;
+    if (!container) {
+      return false;
+    }
 
     const currentLabel = (container.querySelector(".ng-value-label") as HTMLElement)?.innerText?.trim();
-    if (currentLabel === text) return true;
+    if (currentLabel === text) {
+      return true;
+    }
 
     const sel = container.querySelector(".ng-select-container") as HTMLElement;
-    if (!sel) return false;
+    if (!sel) {
+      return false;
+    }
 
     sel.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    if (AWAIT_ENABLE) await wait(300);
+    if (AWAIT_ENABLE) {
+      await wait(300);
+    }
 
     let found = false;
     for (const o of document.querySelectorAll("ng-dropdown-panel .ng-option")) {
@@ -186,14 +228,26 @@ async function getTuitionData(): Promise<{
   const waitTable = (ms = 500): Promise<void> =>
     new Promise((resolve) => {
       const container = document.querySelector("app-hocphi");
-      if (!container) { resolve(); return; }
+      if (!container) {
+        resolve();
+        return;
+      }
       const table = container.querySelector("table");
-      if (!table) { setTimeout(resolve, ms); return; }
+      if (!table) {
+        setTimeout(resolve, ms);
+        return;
+      }
       const obs = new MutationObserver((mutations, o) => {
-        if (mutations.some((m) => m.type === "childList" && m.addedNodes.length > 0)) { o.disconnect(); setTimeout(resolve, 500); }
+        if (mutations.some((m) => m.type === "childList" && m.addedNodes.length > 0)) {
+          o.disconnect();
+          setTimeout(resolve, 500);
+        }
       });
       obs.observe(table, { childList: true, subtree: true });
-      setTimeout(() => { obs.disconnect(); resolve(); }, ms);
+      setTimeout(() => {
+        obs.disconnect();
+        resolve();
+      }, ms);
     });
 
   // ── Overlay (progress UI) ──
@@ -256,7 +310,9 @@ async function getTuitionData(): Promise<{
 
   const showOverlay = (): void => {
     const existing = document.getElementById(OVERLAY_ID);
-    if (existing) existing.remove();
+    if (existing) {
+      existing.remove();
+    }
     document.body.appendChild(createOverlay());
     document.body.style.overflow = "hidden";
   };
@@ -265,14 +321,22 @@ async function getTuitionData(): Promise<{
     const bar = document.getElementById(PROGRESS_BAR_ID);
     const text = document.getElementById(PROGRESS_TEXT_ID);
     const msg = document.getElementById(MESSAGE_ID);
-    if (bar) bar.style.width = `${Math.min(Math.max(progress, 0), 100)}%`;
-    if (text) text.textContent = `${Math.round(progress)}%`;
-    if (msg) msg.textContent = message;
+    if (bar) {
+      bar.style.width = `${Math.min(Math.max(progress, 0), 100)}%`;
+    }
+    if (text) {
+      text.textContent = `${Math.round(progress)}%`;
+    }
+    if (msg) {
+      msg.textContent = message;
+    }
   };
 
   const updateSemesterInfo = (info: string): void => {
     const el = document.getElementById(SEMESTER_ID);
-    if (el) el.textContent = info;
+    if (el) {
+      el.textContent = info;
+    }
   };
 
   const hideOverlay = (): void => {
@@ -296,7 +360,9 @@ async function getTuitionData(): Promise<{
 
     updateOverlay(5, "Đang lấy danh sách học kỳ...");
     const allOptions = await getOptions();
-    const semesterOptions = allOptions.filter((o) => !o.toLowerCase().includes("tổng hợp") && !o.toLowerCase().includes("tất cả"));
+    const semesterOptions = allOptions.filter(
+      (o) => !(o.toLowerCase().includes("tổng hợp") || o.toLowerCase().includes("tất cả"))
+    );
     const total = semesterOptions.length;
     const details: Record<string, SemesterTuitionDetail> = {};
 
@@ -307,15 +373,21 @@ async function getTuitionData(): Promise<{
       updateOverlay(progress, `Đang đọc học kỳ ${i + 1}/${total}`);
       updateSemesterInfo(name);
 
-      if (!(await selectOption(name))) continue;
+      if (!(await selectOption(name))) {
+        continue;
+      }
       await waitTable();
       const d = scrapeDetail();
-      if (d) details[name] = d;
+      if (d) {
+        details[name] = d;
+      }
     }
 
     updateOverlay(97, "Đang quay lại tổng hợp...");
     const back = allOptions.find((o) => o.toLowerCase().includes("tổng hợp") || o.toLowerCase().includes("tất cả"));
-    if (back) await selectOption(back);
+    if (back) {
+      await selectOption(back);
+    }
 
     updateOverlay(100, "Hoàn tất!");
     await new Promise((r) => setTimeout(r, 500));

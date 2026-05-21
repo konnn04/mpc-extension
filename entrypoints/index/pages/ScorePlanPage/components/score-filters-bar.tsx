@@ -1,5 +1,6 @@
 import { FilterIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 
 export type GroupMode = "semester" | "all";
@@ -7,18 +8,22 @@ export type GroupMode = "semester" | "all";
 export function ScoreFiltersBar({
   filterRange,
   groupMode,
+  hideNonGPA,
   onAddSemester,
   onFilterOpen,
   onGroupModeChange,
   onSearchTextChange,
+  onToggleHideNonGPA,
   searchText
 }: {
   filterRange: [number, number];
   groupMode: GroupMode;
+  hideNonGPA: boolean;
   onAddSemester: () => void;
   onFilterOpen: () => void;
   onGroupModeChange: (mode: GroupMode) => void;
   onSearchTextChange: (value: string) => void;
+  onToggleHideNonGPA: (v: boolean) => void;
   searchText: string;
 }) {
   const isFilterActive = filterRange[0] !== 0 || filterRange[1] !== 4;
@@ -56,6 +61,13 @@ export function ScoreFiltersBar({
         <PlusIcon className='mr-2 h-4 w-4' />
         Thêm kỳ mới
       </Button>
+
+      <div className='flex cursor-pointer items-center gap-1.5 text-muted-foreground text-sm'>
+        <Checkbox checked={hideNonGPA} id='hide-non-gpa' onCheckedChange={(v) => onToggleHideNonGPA(!!v)} />
+        <label className='cursor-pointer' htmlFor='hide-non-gpa'>
+          Ẩn môn không tính GPA
+        </label>
+      </div>
     </div>
   );
 }
