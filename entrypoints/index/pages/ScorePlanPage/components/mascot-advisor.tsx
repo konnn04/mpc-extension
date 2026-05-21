@@ -1,5 +1,17 @@
-import { AlertCircle, BookOpen, GraduationCap, Shield, ShieldAlert, ShieldCheck, Star, Target } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRightIcon,
+  BookOpen,
+  GraduationCap,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Target
+} from "lucide-react";
 import { useMemo, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   _DEFAULT_ACADEMIC_RANKS,
@@ -16,6 +28,7 @@ import { getScoreSummary } from "@/utils/score";
 export function MascotAdvisor() {
   const [open, setOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [improvedSubjects, setImprovedSubjects] = useState<Set<string>>(new Set());
   const scores = useScoreStore((s) => s.scores);
   const { settings: userSettings } = useUserSettingsStore();
   const totalProgramCredits = userSettings.totalProgramCredits;
@@ -30,10 +43,11 @@ export function MascotAdvisor() {
     const maxPossibleGpa =
       remainingCredits > 0 ? (currentGpa * currentCredit + 4.0 * remainingCredits) / totalProgramCredits : currentGpa;
 
+    // Ưu tiên môn tín chỉ cao + điểm thấp: credit càng cao, điểm càng thấp → càng nên cải thiện
     const lowSubjects = scores
       .flatMap((s) => s.data)
       .filter((sub) => !sub.isIgnore && sub.point.scale10 !== null && sub.point.scale10 < 7.0 && sub.point.scale10 > 0)
-      .sort((a, b) => (a.point.scale10 ?? 0) - (b.point.scale10 ?? 0))
+      .sort((a, b) => b.credit / (b.point.scale10 ?? 1) - a.credit / (a.point.scale10 ?? 1))
       .slice(0, 4);
 
     const currentTrainingPoint = summary.avgTrainingPoint;
@@ -49,6 +63,39 @@ export function MascotAdvisor() {
       currentRank
     };
   }, [scores, currentGpa, currentCredit, summary.avgTrainingPoint, totalProgramCredits]);
+
+  // ── Mô phỏng GPA sau khi cải thiện các môn được tick ──
+  const simulation = useMemo(() => {
+    if (improvedSubjects.size === 0 || currentCredit === 0) {
+      return null;
+    }
+
+    let gainedPoints = 0;
+    for (const sub of analysis.lowSubjects) {
+      const key = `${sub.code}-${sub.name}`;
+      if (improvedSubjects.has(key)) {
+        const oldScale4 = sub.point.scale4 ?? 0;
+        gainedPoints += (4.0 - oldScale4) * sub.credit;
+      }
+    }
+
+    const simulatedGpa = (currentGpa * currentCredit + gainedPoints) / currentCredit;
+    const simulatedRank = getAcademicRank(simulatedGpa);
+    return { simulatedGpa, simulatedRank, gainedPoints };
+  }, [improvedSubjects, analysis.lowSubjects, currentGpa, currentCredit]);
+
+  const toggleSubject = (code: string, name: string) => {
+    const key = `${code}-${name}`;
+    setImprovedSubjects((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   return (
     <>
@@ -81,17 +128,25 @@ export function MascotAdvisor() {
         </div>
       </button>
 
-      <Dialog onOpenChange={setOpen} open={open}>
+      <Dialog
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) {
+            setImprovedSubjects(new Set());
+          }
+        }}
+        open={open}
+      >
         <DialogContent className='min-w-2xl overflow-hidden border-emerald-500/30 bg-background/95 p-0 shadow-2xl backdrop-blur-xl sm:max-w-md'>
           <div className='border-b bg-muted/30 p-5'>
             <DialogHeader>
               <div className='flex items-center gap-4'>
-                <div className='h-14 w-14 shrink-0 rounded-full border border-emerald-500/20 bg-white/50 p-1 shadow-sm dark:bg-black/50'>
+                <div className='h-14 w-14 shrink-0'>
                   <img alt='Mascot' className='h-full w-full object-contain' height={56} src='/imgs/1.png' width={56} />
                 </div>
                 <div>
                   <DialogTitle className='font-bold text-emerald-700 text-xl dark:text-emerald-400'>
-                    Góc Cố Vấn Học Tập
+                    Góc cố vấn học tập
                   </DialogTitle>
                   <DialogDescription className='mt-1 text-sm'>
                     Cùng xem xét lộ trình tốt nghiệp của bạn nhé!
@@ -180,36 +235,77 @@ export function MascotAdvisor() {
                         <AlertCircle className='h-4 w-4 text-amber-500' />
                         Gợi ý môn cải thiện
                       </h4>
+                      <p className='text-muted-foreground text-xs'>
+                        Tick vào môn bạn muốn cải thiện để xem GPA dự kiến. Mặc định giả định đạt <b>A+ (4.0)</b>.
+                      </p>
                       <div className='grid gap-2'>
-                        {analysis.lowSubjects.map((sub) => (
-                          <div
-                            className='flex items-center justify-between rounded-lg border bg-background/50 p-2.5 text-sm shadow-sm transition-colors hover:bg-muted/50'
-                            key={`${sub.code}-${sub.name}`}
-                          >
-                            <div className='flex min-w-0 items-center gap-2.5'>
-                              <div className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted'>
-                                <BookOpen className='h-3 w-3 text-muted-foreground' />
+                        {analysis.lowSubjects.map((sub) => {
+                          const key = `${sub.code}-${sub.name}`;
+                          const isChecked = improvedSubjects.has(key);
+                          return (
+                            <div
+                              className='flex items-center justify-between rounded-lg border bg-background/50 p-2.5 text-sm shadow-sm transition-colors hover:bg-muted/50'
+                              key={key}
+                            >
+                              <div className='flex min-w-0 items-center gap-2.5'>
+                                <Checkbox
+                                  checked={isChecked}
+                                  className='h-4 w-4'
+                                  onCheckedChange={() => toggleSubject(sub.code, sub.name)}
+                                />
+                                <span className='truncate font-medium' title={sub.name}>
+                                  {sub.name}
+                                </span>
                               </div>
-                              <span className='truncate font-medium' title={sub.name}>
-                                {sub.name}
-                              </span>
-                            </div>
-                            <div className='flex shrink-0 items-center gap-3'>
-                              <span className='whitespace-nowrap text-muted-foreground text-xs'>{sub.credit} TC</span>
-                              <span
-                                className={cn(
-                                  "min-w-8 rounded-md px-2 py-0.5 text-center font-bold font-mono",
-                                  (sub.point.scale10 ?? 0) < 5
-                                    ? "bg-red-500/10 text-red-600"
-                                    : "bg-amber-500/10 text-amber-600"
+                              <div className='flex shrink-0 items-center gap-3'>
+                                <span className='whitespace-nowrap text-muted-foreground text-xs'>{sub.credit} TC</span>
+                                <span
+                                  className={cn(
+                                    "min-w-8 rounded-md px-2 py-0.5 text-center font-bold font-mono",
+                                    (sub.point.scale10 ?? 0) < 5
+                                      ? "bg-red-500/10 text-red-600"
+                                      : "bg-amber-500/10 text-amber-600"
+                                  )}
+                                >
+                                  {sub.point.character}
+                                </span>
+                                {isChecked && (
+                                  <span className='whitespace-nowrap font-bold font-mono text-emerald-600 text-xs dark:text-emerald-400'>
+                                    → A+
+                                  </span>
                                 )}
-                              >
-                                {sub.point.character}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {simulation && (
+                        <div className='mt-3 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-linear-to-r from-emerald-500/10 to-teal-500/10 p-4'>
+                          <div>
+                            <p className='flex items-center gap-1.5 font-medium text-emerald-700 text-sm dark:text-emerald-300'>
+                              <Sparkles className='h-4 w-4' /> GPA sau cải thiện
+                            </p>
+                            <div className='mt-1 flex items-center gap-3'>
+                              <span className='font-mono text-muted-foreground line-through'>
+                                {currentGpa.toFixed(2)}
+                              </span>
+                              <ArrowRightIcon className='h-4 w-4 text-muted-foreground/60' />
+                              <span className='font-black font-mono text-2xl text-emerald-600 dark:text-emerald-400'>
+                                {simulation.simulatedGpa.toFixed(2)}
                               </span>
                             </div>
+                            <p className='mt-1 font-medium text-emerald-600/70 text-xs dark:text-emerald-400/70'>
+                              Xếp loại: {simulation.simulatedRank.label} {simulation.simulatedRank.emoji}
+                            </p>
                           </div>
-                        ))}
-                      </div>
+                          <div className='rounded-full bg-emerald-500/20 px-3 py-1.5'>
+                            <span className='font-bold font-mono text-emerald-600 text-xs dark:text-emerald-400'>
+                              +{simulation.gainedPoints.toFixed(1)} điểm
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
