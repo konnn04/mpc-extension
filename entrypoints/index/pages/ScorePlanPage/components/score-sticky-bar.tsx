@@ -1,0 +1,71 @@
+import { ArrowRightIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { ScoreSummaryType } from "@/types";
+
+export function ScoreStickyBar({
+  fixedPoint,
+  hasUnsavedChanges,
+  investedCredits,
+  isModifiedFromOriginal,
+  onCancelChanges,
+  onRestoreOriginal,
+  onSaveChanges,
+  originalSummary,
+  summary
+}: {
+  fixedPoint: number;
+  hasUnsavedChanges: boolean;
+  investedCredits: number;
+  isModifiedFromOriginal: boolean;
+  onCancelChanges: () => void;
+  onRestoreOriginal: () => void;
+  onSaveChanges: () => void;
+  originalSummary: ScoreSummaryType | null;
+  summary: ScoreSummaryType;
+}) {
+  if (!(originalSummary && (isModifiedFromOriginal || hasUnsavedChanges))) {
+    return null;
+  }
+
+  return (
+    <div className='sticky bottom-0 z-50'>
+      <div className='mx-auto flex max-w-5xl items-center justify-between rounded-2xl border bg-background/90 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] backdrop-blur-md'>
+        <div className='flex gap-6'>
+          <div>
+            <p className='font-medium text-muted-foreground text-sm'>GPA dự kiến</p>
+            <div className='flex items-center gap-2 font-bold text-xl'>
+              <span className='text-muted-foreground line-through'>{originalSummary.gpa4.toFixed(fixedPoint)}</span>
+              <ArrowRightIcon className='h-5 w-5 text-muted-foreground' />
+              <span className='text-primary'>{summary.gpa4.toFixed(fixedPoint)}</span>
+            </div>
+          </div>
+          <div className='border-l pl-6'>
+            <p className='font-medium text-muted-foreground text-sm'>Tín chỉ đầu tư</p>
+            <p className='font-bold text-amber-500 text-xl'>+{investedCredits} TC</p>
+          </div>
+        </div>
+        <div className='flex items-center gap-2'>
+          {hasUnsavedChanges ? (
+            <>
+              <Button onClick={onCancelChanges} size='sm' variant='outline'>
+                Hủy sửa đổi
+              </Button>
+              <Button onClick={onSaveChanges} size='sm'>
+                Lưu kế hoạch
+              </Button>
+            </>
+          ) : (
+            <Button
+              className='text-amber-500 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/30'
+              onClick={onRestoreOriginal}
+              size='sm'
+              variant='outline'
+            >
+              Khôi phục bản gốc
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

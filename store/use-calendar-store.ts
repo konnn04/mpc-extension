@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { _CHROME_STORAGE_CALENDAR_KEY, _CHROME_STORAGE_EXAM_KEY } from "@/constants/storage";
+import { getCalendarKey, getExamKey } from "@/constants/storage";
+import { useCurrentUserStore } from "@/store/use-current-user-store";
 import type { CalendarEntry, CalendarStorageType, SemesterData } from "@/types";
 import { buildScheduleMap } from "@/utils/calendar-format";
 
@@ -36,9 +37,10 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
 
   getData: async () => {
     try {
+      const studentId = useCurrentUserStore.getState().effectiveStudentId;
       const [storageData, examStorageData] = await Promise.all([
-        storage.getItem<CalendarStorageType>(_CHROME_STORAGE_CALENDAR_KEY),
-        storage.getItem<CalendarStorageType>(_CHROME_STORAGE_EXAM_KEY)
+        storage.getItem<CalendarStorageType>(getCalendarKey(studentId)),
+        storage.getItem<CalendarStorageType>(getExamKey(studentId))
       ]);
 
       const calendarData = storageData?.data || [];
@@ -62,19 +64,14 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
 
   saveData: async () => {
     try {
+      const studentId = useCurrentUserStore.getState().effectiveStudentId;
       const updatedAt = new Date().toISOString();
-      const data: CalendarStorageType = {
-        data: get().calendarData,
-        updatedAt
-      };
-      const examData: CalendarStorageType = {
-        data: get().examData,
-        updatedAt
-      };
+      const data: CalendarStorageType = { data: get().calendarData, updatedAt };
+      const examData: CalendarStorageType = { data: get().examData, updatedAt };
 
       await Promise.all([
-        storage.setItem(_CHROME_STORAGE_CALENDAR_KEY, data),
-        storage.setItem(_CHROME_STORAGE_EXAM_KEY, examData)
+        storage.setItem(getCalendarKey(studentId), data),
+        storage.setItem(getExamKey(studentId), examData)
       ]);
 
       set({ lastUpdate: new Date() });
@@ -85,10 +82,8 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
 
   clearData: async () => {
     try {
-      await Promise.all([
-        storage.removeItem(_CHROME_STORAGE_CALENDAR_KEY),
-        storage.removeItem(_CHROME_STORAGE_EXAM_KEY)
-      ]);
+      const studentId = useCurrentUserStore.getState().effectiveStudentId;
+      await Promise.all([storage.removeItem(getCalendarKey(studentId)), storage.removeItem(getExamKey(studentId))]);
       set({ calendarData: [], examData: [], lastUpdate: null, scheduleMap: new Map() });
     } catch (error) {
       console.error("[Calendar Store] Error clearing data:", error);

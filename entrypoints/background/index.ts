@@ -1,4 +1,5 @@
 import {
+  _GET_BASIC_INFO,
   _GET_CLASS_CALENDAR_DATA,
   _GET_CURRENT_URL,
   _GET_EXAM_CALENDAR_DATA,
@@ -7,6 +8,7 @@ import {
   _NAVIGATE_TO_URL,
   _OPEN_NEW_TAB
 } from "@/constants/chrome";
+import { getBasicInfo } from "@/utils/scrapers/basic-info-scraper";
 import { getCalendars, getExamCalendars } from "@/utils/scrapers/calendar-scraper";
 import { getUserData } from "@/utils/scrapers/info-scraper";
 import { getPointData } from "@/utils/scrapers/score-scraper";
@@ -75,6 +77,24 @@ export default defineBackground(() => {
           .then((results) => {
             const data = results[0].result;
             sendResponse(data);
+          });
+      });
+      return true;
+    }
+
+    if (msg.type === _GET_BASIC_INFO) {
+      browser.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+        if (!tab?.id) {
+          sendResponse(null);
+          return;
+        }
+        browser.scripting
+          .executeScript({
+            target: { tabId: tab.id },
+            func: getBasicInfo
+          })
+          .then((results) => {
+            sendResponse(results[0].result);
           });
       });
       return true;

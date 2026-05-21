@@ -9,8 +9,6 @@ Quản lý lịch học, lịch thi một cách trực quan, giúp bạn không 
 4. Bấm "Nhập lịch" trên popup của Extension (chỉ xuất hiện khi vào đúng trang)
 5. Khi thành công, mở Dashboard để xem
 
-## Tạo lịch thủ công
-Hoặc bạn có thể tải File lịch của trường về và bấm "Tải lịch thủ công" để nhập thủ công.
 
 ## Thao tác
 

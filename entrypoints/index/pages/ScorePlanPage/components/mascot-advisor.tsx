@@ -4,27 +4,31 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import {
   _DEFAULT_ACADEMIC_RANKS,
   _DEFAULT_EXCELLENT_GPA_THRESHOLD,
-  _DEFAULT_MAX_CREDITS,
   _DEFAULT_MIN_TRAINING_POINT_SCHOLARSHIP,
   _DEFAULT_MIN_TRAINING_POINT_WARNING
 } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import { useScoreStore } from "@/store/use-score-store";
-import { getAcademicRank, getScoreSummary, getTrainingRank } from "@/utils/score";
+import { useUserSettingsStore } from "@/store/use-user-settings-store";
+import { getAcademicRank, getTrainingRank } from "@/utils/academic-compute";
+import { getScoreSummary } from "@/utils/score";
 
 export function MascotAdvisor() {
   const [open, setOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const scores = useScoreStore((s) => s.scores);
+  const { settings: userSettings } = useUserSettingsStore();
+  const totalProgramCredits = userSettings.totalProgramCredits;
+  const trainingSemesters = userSettings.trainingSemesters;
 
-  const summary = useMemo(() => getScoreSummary(scores), [scores]);
+  const summary = useMemo(() => getScoreSummary(scores, trainingSemesters), [scores, trainingSemesters]);
   const currentGpa = summary.gpa4;
   const currentCredit = summary.totalCredit;
 
   const analysis = useMemo(() => {
-    const remainingCredits = Math.max(0, _DEFAULT_MAX_CREDITS - currentCredit);
+    const remainingCredits = Math.max(0, totalProgramCredits - currentCredit);
     const maxPossibleGpa =
-      remainingCredits > 0 ? (currentGpa * currentCredit + 4.0 * remainingCredits) / _DEFAULT_MAX_CREDITS : currentGpa;
+      remainingCredits > 0 ? (currentGpa * currentCredit + 4.0 * remainingCredits) / totalProgramCredits : currentGpa;
 
     const lowSubjects = scores
       .flatMap((s) => s.data)
@@ -44,7 +48,7 @@ export function MascotAdvisor() {
       trainingRank,
       currentRank
     };
-  }, [scores, currentGpa, currentCredit, summary.avgTrainingPoint]);
+  }, [scores, currentGpa, currentCredit, summary.avgTrainingPoint, totalProgramCredits]);
 
   return (
     <>
@@ -61,7 +65,7 @@ export function MascotAdvisor() {
             "relative h-36 w-36 transform transition-all duration-300",
             isHovered
               ? "-translate-x-2 -translate-y-4 scale-110 opacity-100 drop-shadow-2xl"
-              : "translate-x-2 translate-y-2 scale-90 opacity-50 drop-shadow-md hover:scale-100"
+              : "translate-x-10 translate-y-10 scale-90 opacity-50 drop-shadow-md hover:scale-100"
           )}
         >
           <img
@@ -134,7 +138,7 @@ export function MascotAdvisor() {
                       <p className='mb-1 font-medium text-muted-foreground text-xs'>Tín chỉ còn lại</p>
                       <p className='font-bold font-mono text-2xl'>
                         {analysis.remainingCredits}{" "}
-                        <span className='font-normal text-muted-foreground text-sm'>/ {_DEFAULT_MAX_CREDITS}</span>
+                        <span className='font-normal text-muted-foreground text-sm'>/ {totalProgramCredits}</span>
                       </p>
                     </div>
                     <div className='rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 transition-colors hover:bg-blue-500/10'>

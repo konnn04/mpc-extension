@@ -38,6 +38,7 @@ import { _DEFAULT_FORM_DATA } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import type { ScoreGroupType, ScoreRecordType } from "@/types";
 import { parseScale10ToCharacterAndScale4, removeVietnameseTones } from "@/utils";
+import { computeSummary, getAcademicRank, getTrainingRank } from "@/utils/academic-compute";
 
 type SortKey = "code" | "name" | "credit" | "scale10" | "scale4" | "character";
 type SortDir = "asc" | "desc";
@@ -48,7 +49,7 @@ type Props = {
   fixedPoint: number;
   groupMode: "semester" | "all";
   searchText: string;
-  filterGrades: string[];
+  filterRange: [number, number];
   handleDeleteSubject: (semesterIdx: number, subjectIdx: number) => void;
   handleAddSubject: (semesterIdx: number, subject: Omit<ScoreRecordType, "isIgnore" | "isHead">) => void;
   handleEditSubject: (
@@ -102,7 +103,7 @@ export function ScoreDataTable({
   fixedPoint,
   groupMode,
   searchText,
-  filterGrades,
+  filterRange,
   handleDeleteSubject,
   handleAddSubject,
   handleEditSubject,
@@ -136,7 +137,8 @@ export function ScoreDataTable({
     const q = removeVietnameseTones(searchText.toLowerCase());
     const nameMatch =
       q === "" || removeVietnameseTones(sub.name.toLowerCase()).includes(q) || sub.code.toLowerCase().includes(q);
-    const gradeMatch = filterGrades.length === 0 || filterGrades.includes(sub.point.character ?? "");
+    const gradeMatch =
+      sub.point.scale4 != null && sub.point.scale4 >= filterRange[0] && sub.point.scale4 <= filterRange[1];
     return nameMatch && gradeMatch;
   };
 
@@ -201,6 +203,8 @@ export function ScoreDataTable({
     );
   };
 
+  const getSemesterHeaderSummary = (semesterIdx: number) => computeSummary(data.slice(semesterIdx));
+
   const renderRows = (records: (ScoreRecordType & { _semIdx: number; _subIdx: number })[], showSemesterCol: boolean) =>
     // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: table rendering logic is inherently complex
     records.map((sub, _i) => {
@@ -238,13 +242,13 @@ export function ScoreDataTable({
           key={`${sub._semIdx}-${sub._subIdx}-${sub.code}`}
         >
           {showSemesterCol && (
-            <TableCell className='w-[150px] text-muted-foreground text-xs'>{data[sub._semIdx]?.title}</TableCell>
+            <TableCell className='w-37.5 text-muted-foreground text-xs'>{data[sub._semIdx]?.title}</TableCell>
           )}
-          <TableCell className='w-[120px] font-mono text-xs'>{sub.code}</TableCell>
+          <TableCell className='w-30 font-mono text-xs'>{sub.code}</TableCell>
           <TableCell>
             <div className='flex items-center gap-2'>
               <Tooltip>
-                <TooltipTrigger className='max-w-[400px] truncate text-left text-sm xl:max-w-none'>
+                <TooltipTrigger className='max-w-100 truncate text-left text-sm xl:max-w-none'>
                   {sub.name}
                 </TooltipTrigger>
                 <TooltipContent>{sub.name}</TooltipContent>
@@ -277,29 +281,29 @@ export function ScoreDataTable({
               )}
             </div>
           </TableCell>
-          <TableCell className='w-[80px] text-center'>{sub.credit}</TableCell>
-          <TableCell className='w-[140px] text-center'>
+          <TableCell className='w-20 text-center'>{sub.credit}</TableCell>
+          <TableCell className='w-35 text-center'>
             {isNew ? (
               <span className='font-bold text-amber-600 dark:text-amber-400'>{sub.point.scale10 ?? "-"}</span>
             ) : (
               renderDiff(oldSub?.point.scale10 ?? "-", sub.point.scale10 ?? "-")
             )}
           </TableCell>
-          <TableCell className='w-[140px] text-center'>
+          <TableCell className='w-35 text-center'>
             {isNew ? (
               <span className='font-bold text-amber-600 dark:text-amber-400'>{sub.point.scale4 ?? "-"}</span>
             ) : (
               renderDiff(oldSub?.point.scale4 ?? "-", sub.point.scale4 ?? "-")
             )}
           </TableCell>
-          <TableCell className='w-[140px] text-center'>
+          <TableCell className='w-35 text-center'>
             {isNew ? (
               <span className='font-bold text-amber-600 dark:text-amber-400'>{sub.point.character ?? "-"}</span>
             ) : (
               renderDiff(oldSub?.point.character ?? "-", sub.point.character ?? "-")
             )}
           </TableCell>
-          <TableCell className='w-[100px] text-center'>
+          <TableCell className='w-25 text-center'>
             <div className='flex items-center justify-center gap-2'>
               <EditIcon
                 className='h-4 w-4 cursor-pointer text-blue-500 hover:text-blue-700'
@@ -347,7 +351,7 @@ export function ScoreDataTable({
                 {renderSortHeader("Hệ 10", "scale10", "w-[140px] text-center")}
                 {renderSortHeader("Hệ 4", "scale4", "w-[140px] text-center")}
                 {renderSortHeader("Xếp loại", "character", "w-[140px] text-center")}
-                <TableHead className='w-[100px] text-right'>Thao tác</TableHead>
+                <TableHead className='w-25 text-right'>Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>{renderRows(allRecords, true)}</TableBody>
@@ -491,7 +495,14 @@ export function ScoreDataTable({
                 <p className='font-semibold'>{semester.title}</p>
                 <p className='text-muted-foreground text-xs'>
                   Hệ 10: {semester.avgPoint.scale10?.toFixed(fixedPoint) || "---"} · Hệ 4:{" "}
-                  {semester.avgPoint.scale4?.toFixed(fixedPoint) || "---"} · ĐRL: {semester.trainingPoint ?? "---"}
+                  {semester.avgPoint.scale4?.toFixed(fixedPoint) || "---"}
+                  {semester.avgPoint.scale4 !== null ? ` (${getAcademicRank(semester.avgPoint.scale4).label})` : ""} ·
+                  ĐRL: {semester.trainingPoint ?? "---"}
+                  {semester.trainingPoint !== null && semester.trainingPoint !== undefined
+                    ? ` (${getTrainingRank(semester.trainingPoint).label})`
+                    : ""}{" "}
+                  · Tích lũy: {getSemesterHeaderSummary(semesterIdx).gpa4.toFixed(fixedPoint)}
+                  {` (${getAcademicRank(getSemesterHeaderSummary(semesterIdx).gpa4).label})`}
                 </p>
               </div>
               <div className='flex items-center gap-2'>
@@ -532,7 +543,7 @@ export function ScoreDataTable({
                     {renderSortHeader("Hệ 10", "scale10", "w-[140px] text-center")}
                     {renderSortHeader("Hệ 4", "scale4", "w-[140px] text-center")}
                     {renderSortHeader("Xếp loại", "character", "w-[140px] text-center")}
-                    <TableHead className='w-[100px] text-right'>Thao tác</TableHead>
+                    <TableHead className='w-25 text-right'>Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>{renderRows(records, false)}</TableBody>

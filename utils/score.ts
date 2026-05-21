@@ -1,8 +1,6 @@
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import {
-  _DEFAULT_ACADEMIC_RANKS,
   _DEFAULT_GRADE_COLORS,
-  _DEFAULT_TRAINING_RANKS,
   _EXPORT_COL_WIDTHS,
   _EXPORT_FILE_PREFIX,
   _EXPORT_SHEET_NAME,
@@ -10,7 +8,8 @@ import {
   _SEMESTER_SHORT_REGEX,
   _SEMESTER_TITLE_REGEX
 } from "@/constants/default";
-import { ScoreGroupType, ScoreRecordType } from "@/types";
+import type { ScoreGroupType, ScoreRecordType, ScoreSummaryType } from "@/types";
+import { computeSummary as computeAcademicSummary } from "./academic-compute";
 
 const checkImproveSubject = (d: ScoreGroupType, map: Record<string, ScoreRecordType[]>) => {
   for (const item of d.data) {
@@ -130,59 +129,6 @@ const updateScoreAvg = (data: ScoreGroupType[]) => {
   return newData;
 };
 
-const getScoreSummary = (data: ScoreGroupType[]) => {
-  const totalCredit = data.reduce((acc, curr) => acc + curr.totalCredit, 0);
-
-  let sumScale10 = 0;
-  let sumScale4 = 0;
-  let sumCredit = 0;
-
-  for (const item of data) {
-    for (const curr of item.data) {
-      const { credit, point } = curr;
-
-      if (
-        curr.isIgnore ||
-        !curr.point.character ||
-        typeof credit !== "number" ||
-        typeof point.scale10 !== "number" ||
-        typeof point.scale4 !== "number" ||
-        Number.isNaN(credit) ||
-        Number.isNaN(point.scale10) ||
-        Number.isNaN(point.scale4)
-      ) {
-        continue;
-      }
-
-      sumScale10 += point.scale10 * credit;
-      sumScale4 += point.scale4 * credit;
-      sumCredit += credit;
-    }
-  }
-
-  const { totalTrainingPoint, trainingPointCount } = data.reduce(
-    (acc, curr) => {
-      if (curr.trainingPoint !== null && curr.trainingPoint !== undefined) {
-        return {
-          totalTrainingPoint: acc.totalTrainingPoint + curr.trainingPoint,
-          trainingPointCount: acc.trainingPointCount + 1
-        };
-      }
-      return acc;
-    },
-    { totalTrainingPoint: 0, trainingPointCount: 0 }
-  );
-
-  return {
-    semesterCount: data.length,
-    totalCredit,
-    totalSubject: data.reduce((acc, curr) => acc + curr.data.length, 0),
-    gpa10: sumCredit > 0 ? +(sumScale10 / sumCredit) : 0,
-    gpa4: sumCredit > 0 ? +(sumScale4 / sumCredit) : 0,
-    avgTrainingPoint: trainingPointCount > 0 ? +(totalTrainingPoint / trainingPointCount) : 0
-  };
-};
-
 const handleExportScoreData = (data: ScoreGroupType[]) => {
   const worksheetData: (string | number)[][] = [];
 
@@ -235,46 +181,34 @@ const formatSemesterShort = (title: string): string => {
   return title;
 };
 
-const GRADE_COLORS = _DEFAULT_GRADE_COLORS;
-
-function getAcademicRank(gpa4: number) {
-  const found = _DEFAULT_ACADEMIC_RANKS.find((r) => gpa4 >= r.minGpa4);
-  // biome-ignore lint/style/noNonNullAssertion: Guaranteed to exist
-  return found?.rank ?? _DEFAULT_ACADEMIC_RANKS.at(-1)!.rank;
-}
+const getScoreSummary = (data: ScoreGroupType[], trainingSemesters?: number): ScoreSummaryType =>
+  computeAcademicSummary(data, trainingSemesters);
 
 function getNextSemesterName(currentName: string): string | null {
   const match = currentName.match(_SEMESTER_TITLE_REGEX);
   if (!match) {
     return null;
   }
-
   let term = Number.parseInt(match[1], 10);
   let yearStart = Number.parseInt(match[2], 10);
   let yearEnd = Number.parseInt(match[3], 10);
-
   if (term === _MAX_SEMESTER_TERMS) {
     term = 1;
-    yearStart += 1;
-    yearEnd += 1;
+    yearStart++;
+    yearEnd++;
   } else {
-    term += 1;
+    term++;
   }
   return `Học kỳ ${term} - Năm học ${yearStart} - ${yearEnd}`;
 }
 
-function getTrainingRank(point: number) {
-  const found = _DEFAULT_TRAINING_RANKS.find((r) => point >= r.minPoint);
-  return found ?? _DEFAULT_TRAINING_RANKS.at(-1) ?? _DEFAULT_TRAINING_RANKS[0];
-}
+const GRADE_COLORS = _DEFAULT_GRADE_COLORS;
 
 export {
   formatSemesterShort,
-  GRADE_COLORS,
-  getAcademicRank,
-  getNextSemesterName,
   getScoreSummary,
-  getTrainingRank,
+  getNextSemesterName,
+  GRADE_COLORS,
   handleExportScoreData,
   updateIgnoreSubject,
   updateScoreAvg

@@ -1,4 +1,5 @@
 import { Menu, Monitor, Moon, Sun } from "lucide-react";
+import { UserMenu } from "@/components/custom/user-menu";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -55,6 +56,9 @@ export function Header({ currentRoute, onSidebarToggle, theme, onThemeChange }: 
 
       {/* Spacer */}
       <div className='flex-1' />
+
+      {/* User menu */}
+      <UserMenu />
 
       {/* Theme toggle */}
       <DropdownMenu>

@@ -35,23 +35,32 @@ import { _DEFAULT_SCORE_SUMMARY } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useScoreStore } from "@/store/use-score-store";
+import { useUserSettingsStore } from "@/store/use-user-settings-store";
 import type { ScoreGroupType, ScoreSummaryType } from "@/types";
+import { getAcademicRank } from "@/utils/academic-compute";
 import { computeScoreHash } from "@/utils/hash";
-import { formatSemesterShort, GRADE_COLORS, getAcademicRank, getScoreSummary } from "@/utils/score";
+import { formatSemesterShort, GRADE_COLORS, getScoreSummary } from "@/utils/score";
 
 function DashboardPage() {
   const scores = useScoreStore((s) => s.scores);
   const originalScores = useScoreStore((s) => s.originalScores);
   const savedScoresHash = useScoreStore((s) => s.savedScoresHash);
   const fixedPoint = useGlobalStore((s) => s.fixedPoint);
+  const { settings: userSettings } = useUserSettingsStore();
+  const trainingSemesters = userSettings.trainingSemesters;
+  const totalProgramCredits = userSettings.totalProgramCredits;
+  const targetCredit = totalProgramCredits;
   const [summary, setSummary] = useState<ScoreSummaryType>(_DEFAULT_SCORE_SUMMARY);
 
   // Dashboard luôn hiển thị theo điểm gốc (từ trường)
   const displayScores = originalScores.length > 0 ? originalScores : scores;
 
-  const updateSummary = useCallback((data: ScoreGroupType[]) => {
-    setSummary(getScoreSummary(data));
-  }, []);
+  const updateSummary = useCallback(
+    (data: ScoreGroupType[]) => {
+      setSummary(getScoreSummary(data, trainingSemesters));
+    },
+    [trainingSemesters]
+  );
 
   useEffect(() => {
     updateSummary(displayScores);
@@ -66,15 +75,15 @@ function DashboardPage() {
     if (!hasPlan) {
       return null;
     }
-    return getScoreSummary(scores);
-  }, [hasPlan, scores]);
+    return getScoreSummary(scores, trainingSemesters);
+  }, [hasPlan, scores, trainingSemesters]);
   const plannedRank = plannedSummary ? getAcademicRank(plannedSummary.gpa4) : null;
 
   const semestersReversed = [...displayScores].reverse();
 
   const chartDataTerm = semestersReversed.map((sem, idx) => {
     const slice = semestersReversed.slice(0, idx + 1);
-    const sum = getScoreSummary(slice);
+    const sum = getScoreSummary(slice, trainingSemesters);
 
     const validPts = slice.filter((s) => s.trainingPoint !== null && s.trainingPoint !== undefined);
     const cumulativeTraining =
@@ -119,7 +128,6 @@ function DashboardPage() {
   );
 
   const totalCredit = summary.totalCredit;
-  const targetCredit = 135;
 
   if (displayScores.length === 0) {
     return (
@@ -140,7 +148,7 @@ function DashboardPage() {
     <div className='space-y-6'>
       {/* ── Goal Alert Banner ──────────────────────────── */}
       {hasPlan && plannedSummary && (
-        <div className='relative overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-4'>
+        <div className='relative overflow-hidden rounded-xl border border-emerald-500/30 bg-linear-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-4'>
           <div className='flex items-center gap-4'>
             <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/20'>
               <RocketIcon className='h-5 w-5 text-emerald-500' />
@@ -207,7 +215,9 @@ function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className='font-bold text-3xl'>{summary.avgTrainingPoint.toFixed(fixedPoint)}</div>
-            <p className='mt-1 text-muted-foreground text-xs'>Điểm rèn luyện</p>
+            <p className='mt-1 text-muted-foreground text-xs'>
+              Tính trong {trainingSemesters > 0 ? `${trainingSemesters} học kì đầu` : "tất cả học kì"}
+            </p>
           </CardContent>
         </Card>
 
@@ -248,7 +258,7 @@ function DashboardPage() {
             </CardHeader>
             <CardContent>
               <ChartContainer
-                className='aspect-auto h-[300px] w-full'
+                className='aspect-auto h-75 w-full'
                 config={{
                   gpa4: { label: "ĐTB Hệ 4 (kỳ)", color: "oklch(0.6 0.2 260)" },
                   cumulativeGpa4: { label: "GPA tích lũy", color: "oklch(0.7 0.19 56)" }
@@ -289,7 +299,7 @@ function DashboardPage() {
             </CardHeader>
             <CardContent>
               <ChartContainer
-                className='aspect-auto h-[300px] w-full'
+                className='aspect-auto h-75 w-full'
                 config={{
                   training: { label: "ĐRL từng kỳ", color: "oklch(0.6 0.2 150)" },
                   cumulativeTraining: { label: "ĐRL tích lũy", color: "oklch(0.7 0.19 56)" }
@@ -322,7 +332,7 @@ function DashboardPage() {
               <CardTitle className='text-base'>Phân bổ điểm số</CardTitle>
             </CardHeader>
             <CardContent>
-              <ChartContainer className='aspect-auto h-[380px] w-full' config={chartConfigGrade}>
+              <ChartContainer className='aspect-auto h-95 w-full' config={chartConfigGrade}>
                 <PieChart>
                   <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                   <Pie
@@ -367,24 +377,24 @@ function DashboardPage() {
 
                 <div className='relative h-6 w-full overflow-hidden rounded-full bg-muted'>
                   <div
-                    className='h-full rounded-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-700'
+                    className='h-full rounded-full bg-linear-to-r from-primary/80 to-primary transition-all duration-700'
                     style={{ width: `${Math.min(100, (totalCredit / targetCredit) * 100)}%` }}
                   />
                   <div
                     className='absolute top-0 h-full w-0.5 bg-foreground/30'
-                    style={{ left: `${(120 / targetCredit) * 100}%` }}
+                    style={{ left: `${(totalProgramCredits / targetCredit) * 100}%` }}
                   />
                 </div>
 
                 <div className='flex justify-between text-muted-foreground text-xs'>
                   <span>0 TC</span>
-                  <span className='font-medium'>120 TC (tối thiểu)</span>
+                  <span className='font-medium'>{totalProgramCredits} TC (CTĐT)</span>
                   <span>135 TC</span>
                 </div>
 
                 <div className='mt-8'>
                   <ChartContainer
-                    className='aspect-auto h-[250px] w-full'
+                    className='aspect-auto h-62.5 w-full'
                     config={{
                       credit: { label: "TC từng kỳ", color: "oklch(0.6 0.2 200)" }
                     }}

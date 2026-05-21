@@ -1,3 +1,23 @@
+export type AcademicRankType = {
+  label: string;
+  emoji: string;
+  color: string;
+  bg: string;
+};
+
+export type TrainingRankType = {
+  label: string;
+  emoji: string;
+  color: string;
+  bg: string;
+  minPoint: number;
+};
+
+export type UserSettingsType = {
+  trainingSemesters: number;
+  totalProgramCredits: number;
+};
+
 export type PointCharacterType = "A+" | "A" | "B+" | "B" | "C+" | "C" | "D+" | "D" | "F" | "M";
 export type PointScale4Type = 4 | 3.5 | 3 | 2.5 | 2 | 1.5 | 1 | 0;
 

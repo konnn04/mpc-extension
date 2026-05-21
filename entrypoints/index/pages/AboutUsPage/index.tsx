@@ -1,9 +1,39 @@
-import { Bug, FacebookIcon, GithubIcon, ShieldCheck } from "lucide-react";
+import { BookOpenText, Bug, FacebookIcon, GithubIcon, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import cachTinhToanMd from "@/assets/docs/cach_tinh_toan.md?raw";
 import { ButtonNavSite } from "@/components/custom/button-nav-site";
+import { MarkdownModal } from "@/components/custom/markdown-modal";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { _FACEBOOK_URL, _GITHUB_URL, _REPORT_BUG_URL } from "@/constants";
+import { useGlobalStore } from "@/store/use-global-store";
+import { useUserSettingsStore } from "@/store/use-user-settings-store";
+
+import { buildCalcParams } from "@/utils/markdown-params";
 
 export function AboutUsPage() {
+  const [calcOpen, setCalcOpen] = useState(false);
+  const {
+    retakeRatioLimit,
+    maxCreditsPerSemester,
+    minCreditsPerSemester,
+    maxCreditsWarning,
+    maxCreditsSummer,
+    drlWarningThreshold
+  } = useGlobalStore();
+  const userSettings = useUserSettingsStore((s) => s.settings);
+
+  const calcParams = buildCalcParams({
+    retakeRatioLimit,
+    maxCreditsPerSemester,
+    minCreditsPerSemester,
+    maxCreditsWarning,
+    maxCreditsSummer,
+    drlWarningThreshold,
+    totalProgramCredits: userSettings.totalProgramCredits,
+    trainingSemesters: userSettings.trainingSemesters
+  });
+
   return (
     <div className='container mx-auto max-w-4xl p-4 lg:p-8'>
       <div className='mb-8 flex flex-col items-start gap-2'>
@@ -100,6 +130,21 @@ export function AboutUsPage() {
           </p>
         </CardContent>
       </Card>
+
+      <div className='mt-6 flex justify-center'>
+        <Button className='gap-2' onClick={() => setCalcOpen(true)} size='lg' variant='outline'>
+          <BookOpenText className='h-5 w-5' />
+          Cách tiện ích hoạt động
+        </Button>
+      </div>
+
+      <MarkdownModal
+        isOpen={calcOpen}
+        markdownContent={cachTinhToanMd}
+        onClose={() => setCalcOpen(false)}
+        params={calcParams}
+        title='Cách tính toán — MPC Extension'
+      />
     </div>
   );
 }

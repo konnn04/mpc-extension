@@ -5,9 +5,9 @@ export type DashboardRoute = "dashboard" | "score-plan" | "calendar" | "settings
 
 export const NAV_ITEMS: SidebarNavItem[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "personal-info", label: "Thông tin cá nhân", icon: UserCircle },
   { key: "score-plan", label: "Kế hoạch điểm số", icon: GraduationCap },
   { key: "calendar", label: "Lịch học tập", icon: CalendarDays },
+  { key: "personal-info", label: "Thông tin cá nhân", icon: UserCircle },
   { key: "settings", label: "Cài đặt", icon: Settings },
   { key: "about-us", label: "Về chúng tôi", icon: Info }
 ];

@@ -25,7 +25,9 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { _FACEBOOK_URL, _GITHUB_URL } from "@/constants";
+import { _GET_BASIC_INFO } from "@/constants/chrome";
 import { useCalendarStore } from "@/store/use-calendar-store";
+import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useInfoStore } from "@/store/use-info-store";
 import { useScoreStore } from "@/store/use-score-store";
@@ -43,6 +45,7 @@ function App() {
   const { getData: getInfoData } = useInfoStore();
   const { getData: getScoreData } = useScoreStore();
   const { getData: getCalendarData } = useCalendarStore();
+  const { setCurrentUser, studentId, displayName } = useCurrentUserStore();
 
   type ThemeMode = "light" | "dark" | "system";
 
@@ -83,6 +86,25 @@ function App() {
     loadData();
   }, [getInfoData, getScoreData, getCalendarData]);
 
+  // Auto-scrape basic info when portal site is detected
+  useEffect(() => {
+    if (!siteCurr) {
+      return;
+    }
+    const scrape = async () => {
+      try {
+        const data = await browser.runtime.sendMessage({ type: _GET_BASIC_INFO });
+        if (data?.studentId) {
+          setCurrentUser(data.studentId, data.displayName, data.avatar || "");
+          await Promise.all([getInfoData(), getScoreData(), getCalendarData()]);
+        }
+      } catch {
+        /* site may not be loaded yet */
+      }
+    };
+    scrape();
+  }, [siteCurr, setCurrentUser, getInfoData, getScoreData, getCalendarData]);
+
   useEffect(() => {
     const checkURL = async (tabId?: number) => {
       const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -94,7 +116,7 @@ function App() {
 
       let matchedSite: "sv" | "kcq" | null = null;
       for (const [key, site] of Object.entries(siteURLMapping)) {
-        if (isMatchURL(site.homepageRegex, site.homepage, url)) {
+        if (isMatchURL(site.homepage.regex, site.homepage.url, url)) {
           matchedSite = key as "sv" | "kcq";
           break;
         }
@@ -135,20 +157,28 @@ function App() {
     handleImportCalendar
   } = useImportActions();
 
-  const navToSchoolPage = async (path: string) => {
-    const hashIndex = currURL.indexOf("#/");
-    const baseUrl = hashIndex >= 0 ? currURL.substring(0, hashIndex) : currURL;
-    const url = `${baseUrl}#/${path}`;
-    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      browser.tabs.update(tab.id, { url });
-    } else {
-      navTo(url);
+  const _PAGE_ICONS: Record<_PAGE_CATE, React.FC<{ className?: string }>> = {
+    info: User,
+    point: CheckCircle2,
+    classCalendar: BookOpen,
+    examCalendar: CalendarClock
+  };
+
+  const navToSchoolPage = (pageKey: _PAGE_CATE) => {
+    if (!siteCurr) {
+      return;
     }
+    const pageConfig = siteURLMapping[siteCurr].pages[pageKey];
+    if (!pageConfig) {
+      return;
+    }
+    const hashIndex = currURL.indexOf("#/");
+    const baseUrl = hashIndex >= 0 ? currURL.substring(0, hashIndex) : siteURLMapping[siteCurr].homepage.url;
+    browser.tabs.update(undefined, { url: `${baseUrl}${pageConfig.tailUrl}` });
   };
 
   return (
-    <div className='flex min-h-[400px] w-[350px] flex-col bg-background'>
+    <div className='flex min-h-100 w-87.5 flex-col bg-background'>
       <header className='flex items-center justify-between border-b bg-muted/40 px-4 py-3'>
         <div className='flex items-center gap-2'>
           <img alt='MPC' className='h-7 w-7 rounded-md' height={28} src='icon/128.png' width={28} />
@@ -186,6 +216,14 @@ function App() {
         </div>
       </header>
 
+      {/* Current user greeting */}
+      {studentId && (
+        <div className='border-b bg-muted/20 px-4 py-1.5 text-muted-foreground text-xs'>
+          Chào <span className='font-medium text-foreground'>{displayName}</span> —{" "}
+          <span className='font-mono text-muted-foreground'>{studentId}</span>
+        </div>
+      )}
+
       <main className='flex flex-1 flex-col justify-center'>
         <PopupContent
           currURL={currURL}
@@ -197,11 +235,11 @@ function App() {
           hasInfo={hasInfo}
           hasScore={hasScore}
           isLoading={isLoading}
-          kcqHomepage={siteURLMapping.kcq.homepage}
+          kcqHomepage={siteURLMapping.kcq.homepage.url}
           navTo={navTo}
           openDashboard={openDashboard}
           siteCurr={siteCurr}
-          svHomepage={siteURLMapping.sv.homepage}
+          svHomepage={siteURLMapping.sv.homepage.url}
         />
       </main>
 
@@ -218,29 +256,22 @@ function App() {
             <DropdownMenuContent align='center' className='w-48'>
               <DropdownMenuLabel className='text-muted-foreground text-xs'>Mở trong tab hiện tại</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navToSchoolPage("home?mode=userinfo")}>
-                <User className='mr-2 h-4 w-4' />
-                Thông tin cá nhân
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navToSchoolPage("diem")}>
-                <CheckCircle2 className='mr-2 h-4 w-4' />
-                Điểm số
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navToSchoolPage("tkb-hocky")}>
-                <BookOpen className='mr-2 h-4 w-4' />
-                Lịch học
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navToSchoolPage("lichthi")}>
-                <CalendarClock className='mr-2 h-4 w-4' />
-                Lịch thi
-              </DropdownMenuItem>
+              {(Object.entries(siteURLMapping[siteCurr].pages) as [_PAGE_CATE, _PAGE_CONFIG][]).map(([key, page]) => {
+                const Icon = _PAGE_ICONS[key];
+                return (
+                  <DropdownMenuItem key={key} onClick={() => navToSchoolPage(key)}>
+                    <Icon className='mr-2 h-4 w-4' />
+                    {page.label}
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       )}
 
       <footer className='mt-auto flex flex-col items-center border-t bg-secondary py-3 text-muted-foreground text-xs'>
-        <div className='mb-1 flex items-center gap-2'>© 2025, 2026 by MPC. Made with ❤️</div>
+        <div className='mb-1 flex items-center gap-2'>© 2025, 2026 by MPC.</div>
         <div className='flex items-center gap-1'>
           <ButtonNavSite className='h-6 px-2' isBlank rel='noopener' size='sm' url={_FACEBOOK_URL} variant='link'>
             <FacebookIcon className='mr-1 h-4 w-4' /> Facebook

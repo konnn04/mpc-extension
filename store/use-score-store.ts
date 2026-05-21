@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { _DEFAULT_SCORE_FILTER } from "@/constants/default";
-import { _CHROME_STORAGE_POINT_KEY } from "@/constants/storage";
+import { _CHROME_STORAGE_POINT_KEY, getPointKey } from "@/constants/storage";
+import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { PointStorageType, ScoreFilterType, ScoreGroupType } from "@/types";
 import { computeScoreHash } from "@/utils/hash";
 
@@ -34,7 +35,8 @@ export const useScoreStore = create<ScoreState>((set, get) => ({
   },
   setLastUpdate: (date: Date | null) => set({ lastUpdate: date }),
   getData: async () => {
-    let scoresData: unknown = await storage.getItem(_CHROME_STORAGE_POINT_KEY);
+    const key = getPointKey(useCurrentUserStore.getState().effectiveStudentId);
+    let scoresData: unknown = await storage.getItem(key);
     if (typeof scoresData === "string") {
       try {
         scoresData = JSON.parse(scoresData);
@@ -56,6 +58,7 @@ export const useScoreStore = create<ScoreState>((set, get) => ({
   },
   saveData: async () => {
     const scores = get().scores;
+    const key = getPointKey(useCurrentUserStore.getState().effectiveStudentId);
     const data: PointStorageType = {
       filter: get().filter,
       data: scores,
@@ -63,12 +66,12 @@ export const useScoreStore = create<ScoreState>((set, get) => ({
       updatedAt: new Date().toISOString()
     };
 
-    await storage.setItem(_CHROME_STORAGE_POINT_KEY, data);
-    // Update the saved hash so hasUnsavedChanges becomes false
+    await storage.setItem(key, data);
     set({ savedScoresHash: computeScoreHash(scores) });
   },
   clearData: async () => {
-    await storage.removeItem(_CHROME_STORAGE_POINT_KEY);
+    const key = getPointKey(useCurrentUserStore.getState().effectiveStudentId);
+    await storage.removeItem(key);
     set({
       scores: [],
       originalScores: [],

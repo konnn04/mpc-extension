@@ -1,87 +1,94 @@
-import { format } from "date-fns";
-import {
-  ArrowRightIcon,
-  BookOpenIcon,
-  ClipboardCopyIcon,
-  DownloadIcon,
-  FileOutputIcon,
-  FilterIcon,
-  ImportIcon,
-  InfoIcon,
-  MonitorIcon,
-  PlusIcon,
-  SearchIcon,
-  Trash2
-} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import cachTinhToanMd from "@/assets/docs/cach_tinh_toan.md?raw";
 import { FormSemesterDialog } from "@/components/custom/form-semester-dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { _DEFAULT_SCORE_SUMMARY } from "@/constants/default";
+import { useConfirm } from "@/hooks/use-confirm";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useScoreStore } from "@/store/use-score-store";
+import { useUserSettingsStore } from "@/store/use-user-settings-store";
 import type { ScoreGroupType, ScoreRecordType, ScoreSummaryType } from "@/types";
+import { getDrlWarnings } from "@/utils/academic-compute";
 import { computeScoreHash } from "@/utils/hash";
+import { buildCalcParams } from "@/utils/markdown-params";
 import {
-  getAcademicRank,
   getNextSemesterName,
   getScoreSummary,
   handleExportScoreData,
   updateIgnoreSubject,
   updateScoreAvg
 } from "@/utils/score";
-import { FilterModal } from "./filter-modal";
-import { ImportScoreModal } from "./import-score-modal";
-import { ScoreDataTable } from "./score-data-table";
+import { FilterModal } from "./components/filter-modal";
+import { ImportScoreModal } from "./components/import-score-modal";
+import { MascotAdvisor } from "./components/mascot-advisor";
+import { ScoreDataTable } from "./components/score-data-table";
+import { ScoreEmptyState } from "./components/score-empty-state";
+import { type GroupMode, ScoreFiltersBar } from "./components/score-filters-bar";
+import { ScoreOverviewCards } from "./components/score-overview-cards";
+import { ScoreStickyBar } from "./components/score-sticky-bar";
+import { ScoreToolbar } from "./components/score-toolbar";
+import { ScoreWarnings } from "./components/score-warnings";
 
-type GroupMode = "semester" | "all";
+type SemesterDialogState = {
+  open: boolean;
+  mode: "add" | "edit";
+  semesterIdx?: number;
+};
 
-import keHoachDiemSoMd from "@/assets/docs/ke_hoach_diem_so.md?raw";
-import { MarkdownModal } from "@/components/custom/markdown-modal";
-import { useConfirm } from "@/hooks/use-confirm";
-import { MascotAdvisor } from "./mascot-advisor";
+function getInitialTrainingPoint(semesterDialog: SemesterDialogState, scores: ScoreGroupType[]) {
+  if (semesterDialog.mode === "edit" && semesterDialog.semesterIdx !== undefined) {
+    return scores[semesterDialog.semesterIdx]?.trainingPoint ?? null;
+  }
+
+  return null;
+}
+
+function getInitialSemesterValue(semesterDialog: SemesterDialogState, scores: ScoreGroupType[]) {
+  if (semesterDialog.mode === "edit" && semesterDialog.semesterIdx !== undefined) {
+    return scores[semesterDialog.semesterIdx]?.title || "";
+  }
+
+  return "Học kỳ mới";
+}
 
 function ScorePlanPage() {
   const confirm = useConfirm();
   const fixedPoint = useGlobalStore((s) => s.fixedPoint);
   const ignoreList = useGlobalStore((s) => s.ignoreList);
-  const siteURLMapping = useGlobalStore((s) => s.siteURLMapping);
-  const siteCurr = useGlobalStore((s) => s.siteCurr);
+  const drlWarningThreshold = useGlobalStore((s) => s.drlWarningThreshold);
+  const retakeRatioLimit = useGlobalStore((s) => s.retakeRatioLimit);
+  const maxCreditsPerSemester = useGlobalStore((s) => s.maxCreditsPerSemester);
+  const minCreditsPerSemester = useGlobalStore((s) => s.minCreditsPerSemester);
+  const maxCreditsWarning = useGlobalStore((s) => s.maxCreditsWarning);
+  const maxCreditsSummer = useGlobalStore((s) => s.maxCreditsSummer);
   const { setScores, scores, originalScores, setOriginalScores, lastUpdate, setLastUpdate, saveData, savedScoresHash } =
     useScoreStore();
+  const {
+    settings: { trainingSemesters, totalProgramCredits }
+  } = useUserSettingsStore();
   const [summary, setSummary] = useState<ScoreSummaryType>(_DEFAULT_SCORE_SUMMARY);
   const [searchText, setSearchText] = useState("");
   const [groupMode, setGroupMode] = useState<GroupMode>("semester");
-  const [filterGrades, setFilterGrades] = useState<string[]>([]);
+  const [filterRange, setFilterRange] = useState<[number, number]>([0, 4]);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [semesterDialog, setSemesterDialog] = useState<{
-    open: boolean;
-    mode: "add" | "edit";
-    semesterIdx?: number;
-  }>({ open: false, mode: "add" });
+  const [semesterDialog, setSemesterDialog] = useState<SemesterDialogState>({ open: false, mode: "add" });
   const [guideOpen, setGuideOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
 
   const [originalSummary, setOriginalSummary] = useState<ScoreSummaryType | null>(null);
+  const drlWarnings = useMemo(() => getDrlWarnings(scores, drlWarningThreshold), [scores, drlWarningThreshold]);
 
   useEffect(() => {
     if (originalScores.length > 0) {
-      setOriginalSummary(getScoreSummary(originalScores));
+      setOriginalSummary(getScoreSummary(originalScores, trainingSemesters));
     } else {
       setOriginalSummary(null);
     }
-  }, [originalScores]);
+  }, [originalScores, trainingSemesters]);
 
   const handleImportSuccess = async (data: ScoreGroupType[]) => {
-    setSummary(getScoreSummary(data));
+    setSummary(getScoreSummary(data, trainingSemesters));
     setScores(data);
     setOriginalScores(data);
     setLastUpdate(new Date());
@@ -94,6 +101,30 @@ function ScorePlanPage() {
 
   const originalHash = useMemo(() => computeScoreHash(originalScores), [originalScores]);
   const isModifiedFromOriginal = savedScoresHash !== "" && originalHash !== "" && savedScoresHash !== originalHash;
+
+  const calcParams = useMemo(
+    () =>
+      buildCalcParams({
+        retakeRatioLimit,
+        maxCreditsPerSemester,
+        minCreditsPerSemester,
+        maxCreditsWarning,
+        maxCreditsSummer,
+        drlWarningThreshold,
+        totalProgramCredits,
+        trainingSemesters
+      }),
+    [
+      retakeRatioLimit,
+      maxCreditsPerSemester,
+      minCreditsPerSemester,
+      maxCreditsWarning,
+      maxCreditsSummer,
+      drlWarningThreshold,
+      totalProgramCredits,
+      trainingSemesters
+    ]
+  );
 
   const investedCredits = useMemo(() => {
     if (!originalScores || originalScores.length === 0) {
@@ -149,7 +180,7 @@ function ScorePlanPage() {
 
   const saveCurrentData = (data: ScoreGroupType[]) => {
     const updatedData = updateIgnoreAndAvg(data);
-    setSummary(getScoreSummary(updatedData));
+    setSummary(getScoreSummary(updatedData, trainingSemesters));
     setScores(updatedData);
     setLastUpdate(new Date());
   };
@@ -171,7 +202,7 @@ function ScorePlanPage() {
     if (originalScores.length > 0) {
       const restored = structuredClone(originalScores);
       setScores(restored);
-      setSummary(getScoreSummary(restored));
+      setSummary(getScoreSummary(restored, trainingSemesters));
       await saveData();
       await useScoreStore.getState().getData();
       toast.success("Đã khôi phục dữ liệu gốc");
@@ -179,8 +210,8 @@ function ScorePlanPage() {
   };
 
   useEffect(() => {
-    setSummary(getScoreSummary(scores));
-  }, [scores]);
+    setSummary(getScoreSummary(scores, trainingSemesters));
+  }, [scores, trainingSemesters]);
 
   const handleImportAuto = () => {
     setGuideOpen(true);
@@ -261,194 +292,55 @@ function ScorePlanPage() {
     setSemesterDialog({ open: false, mode: "add" });
   };
 
-  const rank = getAcademicRank(summary.gpa4).label;
-
   if (scores.length === 0) {
     return (
-      <>
-        <div className='flex min-h-[60vh] flex-col items-center justify-center space-y-4'>
-          <div className='mb-4 rounded-full bg-muted p-6'>
-            <BookOpenIcon className='h-12 w-12 text-muted-foreground' />
-          </div>
-          <h2 className='font-semibold text-2xl'>Chưa có dữ liệu điểm số</h2>
-          <p className='mb-6 max-w-md text-center text-muted-foreground'>
-            Hệ thống chưa tìm thấy dữ liệu điểm của bạn. Vui lòng truy cập trang web Xem điểm của trường và mở tiện ích
-            (popup) để đồng bộ dữ liệu nhé!
-          </p>
-          <Button className='w-full max-w-sm' onClick={() => setImportModalOpen(true)} variant='outline'>
-            Tải bảng điểm thủ công
-          </Button>
-          <Button onClick={() => setGuideOpen(true)} variant='outline'>
-            <InfoIcon className='mr-2 h-4 w-4' />
-            Hướng dẫn đồng bộ điểm
-          </Button>
-        </div>
-        <MarkdownModal
-          isOpen={guideOpen}
-          markdownContent={keHoachDiemSoMd}
-          onClose={() => setGuideOpen(false)}
-          title='Hướng dẫn Kế hoạch điểm số'
-        />
-        <ImportScoreModal
-          onImportSuccess={handleImportSuccess}
-          onOpenChange={setImportModalOpen}
-          open={importModalOpen}
-        />
-      </>
+      <ScoreEmptyState
+        guideOpen={guideOpen}
+        importModalOpen={importModalOpen}
+        onGuideOpenChange={setGuideOpen}
+        onImportOpenChange={setImportModalOpen}
+        onImportSuccess={handleImportSuccess}
+        onOpenImportManual={() => setImportModalOpen(true)}
+      />
     );
   }
 
   return (
     <div className='space-y-6 pb-24'>
-      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-        <Card className='relative gap-2 overflow-hidden py-4'>
-          <CardHeader className='pb-2'>
-            <CardTitle className='font-medium text-muted-foreground text-sm'>GPA</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isModifiedFromOriginal && originalSummary ? (
-              <>
-                <div className='flex items-center gap-2 font-bold text-3xl'>
-                  <span className='text-muted-foreground'>{originalSummary.gpa4.toFixed(fixedPoint)}</span>
-                  <ArrowRightIcon className='h-5 w-5 text-muted-foreground/60' />
-                  <span className='text-emerald-600 dark:text-emerald-400'>{summary.gpa4.toFixed(fixedPoint)}</span>
-                </div>
-                <p className='mt-1 text-muted-foreground text-xs'>
-                  Hệ 10: {originalSummary.gpa10.toFixed(fixedPoint)} →{" "}
-                  <span className='font-semibold text-emerald-600 dark:text-emerald-400'>
-                    {summary.gpa10.toFixed(fixedPoint)}
-                  </span>
-                </p>
-              </>
-            ) : (
-              <>
-                <div className='font-bold text-3xl'>{summary.gpa4.toFixed(fixedPoint)}</div>
-                <p className='mt-1 text-muted-foreground text-xs'>
-                  Hệ 10: <b>{summary.gpa10.toFixed(fixedPoint)}</b>
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card className='relative gap-2 overflow-hidden py-4'>
-          <CardHeader className='pb-2'>
-            <CardTitle className='font-medium text-muted-foreground text-sm'>Tổng tín chỉ</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='font-bold text-3xl'>{summary.totalCredit}</div>
-          </CardContent>
-        </Card>
-        <Card className='relative gap-2 overflow-hidden py-4'>
-          <CardHeader className='pb-2'>
-            <CardTitle className='font-medium text-muted-foreground text-sm'>ĐRL trung bình</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='font-bold text-3xl'>{summary.avgTrainingPoint.toFixed(fixedPoint)}</div>
-          </CardContent>
-        </Card>
-        <Card className='relative gap-2 overflow-hidden py-4'>
-          <CardHeader className='pb-2'>
-            <CardTitle className='font-medium text-muted-foreground text-sm'>Học lực</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='font-bold text-3xl'>{rank}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <ScoreOverviewCards
+        fixedPoint={fixedPoint}
+        investedCredits={investedCredits}
+        isModifiedFromOriginal={isModifiedFromOriginal}
+        originalSummary={originalSummary}
+        summary={summary}
+        trainingSemesters={trainingSemesters}
+      />
 
-      <div className='flex flex-wrap items-center gap-2'>
-        {lastUpdate && (
-          <span className='mr-auto text-muted-foreground text-xs'>
-            Cập nhật: {format(lastUpdate, "dd/MM/yyyy HH:mm")}
-          </span>
-        )}
+      <ScoreWarnings warnings={drlWarnings} />
 
-        <Button className='text-muted-foreground' onClick={() => setGuideOpen(true)} size='sm' variant='ghost'>
-          <InfoIcon className='mr-2 h-4 w-4' />
-          Hướng dẫn
-        </Button>
+      <ScoreToolbar
+        lastUpdate={lastUpdate}
+        onClearData={handleClearData}
+        onCopyData={handleCopyData}
+        onExportData={() => handleExportScoreData(scores)}
+        onGuideOpen={() => setGuideOpen(true)}
+        onImportAuto={handleImportAuto}
+        onImportManual={() => setImportModalOpen(true)}
+      />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size='sm'>
-              <ImportIcon className='mr-2 h-4 w-4' />
-              Nhập điểm
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onSelect={handleImportAuto}>
-              <MonitorIcon className='mr-2 h-4 w-4 text-blue-500' />
-              Nhập tự động
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setImportModalOpen(true)}>
-              <DownloadIcon className='mr-2 h-4 w-4 text-green-500' />
-              Nhập thủ công
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size='sm' variant='outline'>
-              <FileOutputIcon className='mr-2 h-4 w-4' />
-              Xuất dữ liệu
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onSelect={() => handleExportScoreData(scores)}>
-              <FileOutputIcon className='mr-2 h-4 w-4 text-green-500' />
-              Xuất điểm (Excel)
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={handleCopyData}>
-              <ClipboardCopyIcon className='mr-2 h-4 w-4 text-blue-500' />
-              Sao chép dữ liệu
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Button onClick={handleClearData} size='sm' variant='destructive'>
-          <Trash2 className='mr-2 h-4 w-4' />
-          Xóa dữ liệu
-        </Button>
-      </div>
-
-      <div className='flex flex-wrap items-center gap-2'>
-        <div className='relative min-w-50 flex-1'>
-          <SearchIcon className='-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground' />
-          <Input
-            className='pl-9'
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder='Tìm kiếm môn học...'
-            value={searchText}
-          />
-        </div>
-        <select
-          className='h-9 rounded-md border bg-background px-3 text-sm'
-          onChange={(e) => setGroupMode(e.target.value as GroupMode)}
-          value={groupMode}
-        >
-          <option value='semester'>Nhóm theo học kỳ</option>
-          <option value='all'>Tất cả</option>
-        </select>
-        <Button onClick={() => setFilterOpen(true)} size='sm' variant='outline'>
-          <FilterIcon className='mr-2 h-4 w-4' />
-          Lọc
-          {filterGrades.length > 0 && (
-            <span className='ml-1 rounded-full bg-primary px-1.5 text-primary-foreground text-xs'>
-              {filterGrades.length}
-            </span>
-          )}
-        </Button>
-
-        <Button onClick={handleAutoAddSemester} size='sm' variant='outline'>
-          <PlusIcon className='mr-2 h-4 w-4' />
-          Thêm kỳ mới
-        </Button>
-      </div>
+      <ScoreFiltersBar
+        filterRange={filterRange}
+        groupMode={groupMode}
+        onAddSemester={handleAutoAddSemester}
+        onFilterOpen={() => setFilterOpen(true)}
+        onGroupModeChange={setGroupMode}
+        onSearchTextChange={setSearchText}
+        searchText={searchText}
+      />
 
       <ScoreDataTable
         data={scores}
-        filterGrades={filterGrades}
+        filterRange={filterRange}
         fixedPoint={fixedPoint}
         groupMode={groupMode}
         handleAddSubject={handleAddSubject}
@@ -461,16 +353,8 @@ function ScorePlanPage() {
       />
 
       <FormSemesterDialog
-        initialTrainingPoint={
-          semesterDialog.mode === "edit" && semesterDialog.semesterIdx !== undefined
-            ? (scores[semesterDialog.semesterIdx]?.trainingPoint ?? null)
-            : null
-        }
-        initialValue={
-          semesterDialog.mode === "edit" && semesterDialog.semesterIdx !== undefined
-            ? scores[semesterDialog.semesterIdx]?.title || ""
-            : "Học kỳ mới"
-        }
+        initialTrainingPoint={getInitialTrainingPoint(semesterDialog, scores)}
+        initialValue={getInitialSemesterValue(semesterDialog, scores)}
         mode={semesterDialog.mode}
         onOpenChange={(open) => setSemesterDialog({ ...semesterDialog, open })}
         onSubmit={handleSemesterSubmit}
@@ -478,61 +362,33 @@ function ScorePlanPage() {
       />
 
       <FilterModal
-        filterGrades={filterGrades}
-        onFilterChange={setFilterGrades}
+        filterRange={filterRange}
+        onFilterChange={setFilterRange}
         onOpenChange={setFilterOpen}
         open={filterOpen}
       />
 
-      {originalSummary && (isModifiedFromOriginal || hasUnsavedChanges) && (
-        <div className='sticky bottom-0 z-50'>
-          <div className='mx-auto flex max-w-5xl items-center justify-between rounded-2xl border bg-background/90 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] backdrop-blur-md'>
-            <div className='flex gap-6'>
-              <div>
-                <p className='font-medium text-muted-foreground text-sm'>GPA dự kiến</p>
-                <div className='flex items-center gap-2 font-bold text-xl'>
-                  <span className='text-muted-foreground line-through'>{originalSummary.gpa4.toFixed(fixedPoint)}</span>
-                  <ArrowRightIcon className='h-5 w-5 text-muted-foreground' />
-                  <span className='text-primary'>{summary.gpa4.toFixed(fixedPoint)}</span>
-                </div>
-              </div>
-              <div className='border-l pl-6'>
-                <p className='font-medium text-muted-foreground text-sm'>Tín chỉ đầu tư</p>
-                <p className='font-bold text-amber-500 text-xl'>+{investedCredits} TC</p>
-              </div>
-            </div>
-            <div className='flex items-center gap-2'>
-              {hasUnsavedChanges ? (
-                <>
-                  <Button onClick={handleCancelChanges} size='sm' variant='outline'>
-                    Hủy sửa đổi
-                  </Button>
-                  <Button onClick={handleSaveChanges} size='sm'>
-                    Lưu kế hoạch
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  className='text-amber-500 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/30'
-                  onClick={handleRestoreOriginal}
-                  size='sm'
-                  variant='outline'
-                >
-                  Khôi phục bản gốc
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ScoreStickyBar
+        fixedPoint={fixedPoint}
+        hasUnsavedChanges={hasUnsavedChanges}
+        investedCredits={investedCredits}
+        isModifiedFromOriginal={isModifiedFromOriginal}
+        onCancelChanges={handleCancelChanges}
+        onRestoreOriginal={handleRestoreOriginal}
+        onSaveChanges={handleSaveChanges}
+        originalSummary={originalSummary}
+        summary={summary}
+      />
       <MascotAdvisor />
 
       <MarkdownModal
         isOpen={guideOpen}
-        markdownContent={keHoachDiemSoMd}
+        markdownContent={cachTinhToanMd}
         onClose={() => setGuideOpen(false)}
+        params={calcParams}
         title='Hướng dẫn Kế hoạch điểm số'
       />
+
       <ImportScoreModal
         onImportSuccess={handleImportSuccess}
         onOpenChange={setImportModalOpen}

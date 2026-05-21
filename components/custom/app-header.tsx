@@ -1,4 +1,5 @@
 import { ChevronLeft, Monitor, Moon, PanelLeft, Sun } from "lucide-react";
+import { UserMenu } from "@/components/custom/user-menu";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -83,6 +84,8 @@ export function AppHeader({
       </nav>
 
       <div className='flex-1' />
+
+      <UserMenu />
 
       {actions}
 

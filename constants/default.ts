@@ -34,34 +34,56 @@ export const _DEFAULT_IGNORE_SUBJECT_DATA: string[] = [
   "_BHYT12T",
   "_BHYT6T"
 ];
+function _buildPageRegex(baseRegexPrefix: string, tailUrl: string): string {
+  const encoded = tailUrl.replace(/[/.*+?^${}()|[\]\\]/g, "\\$&");
+  return `${baseRegexPrefix}\\/?${encoded}.*$`;
+}
+
+function _createSiteConfig(
+  label: string,
+  homepageUrl: string,
+  baseRegexPrefix: string,
+  pages: Record<string, { tailUrl: string; label: string }>
+): _SITE_CONFIG {
+  const config: _SITE_CONFIG = {
+    label,
+    homepage: { url: homepageUrl, regex: `${baseRegexPrefix}.*$` },
+    baseRegexPrefix,
+    pages: {} as Record<_PAGE_CATE, _PAGE_CONFIG>
+  };
+  for (const [key, page] of Object.entries(pages)) {
+    config.pages[key as _PAGE_CATE] = {
+      tailUrl: page.tailUrl,
+      regex: _buildPageRegex(baseRegexPrefix, page.tailUrl),
+      label: page.label
+    };
+  }
+  return config;
+}
 
 export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
-  sv: {
-    label: "Tiện ích SV (Dành cho SV chính quy)",
-    homepage: "https://tienichsv.ou.edu.vn",
-    homepageRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?.*$",
-    point: "https://tienichsv.ou.edu.vn/#/diem",
-    pointRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/diem.*$",
-    classCalendar: "https://tienichsv.ou.edu.vn/#/tkb-hocky",
-    classCalendarRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/tkb-hocky.*$",
-    examCalendar: "https://tienichsv.ou.edu.vn/#/lichthi",
-    examCalendarRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/lichthi.*$",
-    info: "https://tienichsv.ou.edu.vn/#/home?mode=userinfo",
-    infoRegex: "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/home\\?mode=userinfo.*$"
-  },
-  kcq: {
-    label: "Tiện ích KCQ",
-    homepage: "https://tienichkcq.oude.edu.vn/",
-    homepageRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?.*$",
-    point: "https://tienichkcq.oude.edu.vn/#/diem",
-    pointRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/diem.*$",
-    classCalendar: "https://tienichkcq.oude.edu.vn/#/tkb-hocky",
-    classCalendarRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/tkb-hocky.*$",
-    examCalendar: "https://tienichkcq.oude.edu.vn/#/lichthi",
-    examCalendarRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/lichthi.*$",
-    info: "https://tienichkcq.oude.edu.vn/#/home?mode=userinfo",
-    infoRegex: "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?\\/?#\\/home\\?mode=userinfo.*$"
-  }
+  sv: _createSiteConfig(
+    "Tiện ích SV (Dành cho SV chính quy)",
+    "https://tienichsv.ou.edu.vn",
+    "^https:\\/\\/tienichsv\\.ou\\.edu\\.vn(?:\\/[^#]*)?",
+    {
+      point: { tailUrl: "#/diem", label: "Bảng điểm" },
+      classCalendar: { tailUrl: "#/tkb-hocky", label: "Lịch học" },
+      examCalendar: { tailUrl: "#/lichthi", label: "Lịch thi" },
+      info: { tailUrl: "#/home?mode=userinfo", label: "Thông tin cá nhân" }
+    }
+  ),
+  kcq: _createSiteConfig(
+    "Tiện ích KCQ",
+    "https://tienichkcq.oude.edu.vn/",
+    "^https:\\/\\/tienichkcq\\.oude\\.edu\\.vn(?:\\/[^#]*)?",
+    {
+      point: { tailUrl: "#/diem", label: "Bảng điểm" },
+      classCalendar: { tailUrl: "#/tkb-hocky", label: "Lịch học" },
+      examCalendar: { tailUrl: "#/lichthi", label: "Lịch thi" },
+      info: { tailUrl: "#/home?mode=userinfo", label: "Thông tin cá nhân" }
+    }
+  )
 };
 
 export const _DEFAULT_GRADE_COLORS: Record<string, string> = {
@@ -76,12 +98,7 @@ export const _DEFAULT_GRADE_COLORS: Record<string, string> = {
   F: "#ef4444"
 };
 
-export type AcademicRankType = {
-  label: string;
-  emoji: string;
-  color: string;
-  bg: string;
-};
+import type { AcademicRankType, TrainingRankType, UserSettingsType } from "@/types";
 
 export const _DEFAULT_ACADEMIC_RANKS: { minGpa4: number; rank: AcademicRankType }[] = [
   {
@@ -146,7 +163,21 @@ export const _EXPORT_COL_WIDTHS = [5, 30, 15, 50, 10, 10, 10, 10, 20];
 /** Excel export sheet name */
 export const _EXPORT_SHEET_NAME = "Bảng điểm";
 
-/** Excel export file prefix */
+export const _DEFAULT_USER_SETTINGS: UserSettingsType = {
+  trainingSemesters: 10,
+  totalProgramCredits: 130
+};
+
+/** School-wide: max retake credit ratio before degree downgrade */
+export const _DEFAULT_RETAKE_RATIO_LIMIT = 0.05;
+
+/** School-wide: credit limits per semester */
+export const _DEFAULT_MAX_CREDITS_PER_SEMESTER = 25;
+export const _DEFAULT_MIN_CREDITS_PER_SEMESTER = 14;
+export const _DEFAULT_MAX_CREDITS_WARNING = 14;
+export const _DEFAULT_MAX_CREDITS_SUMMER = 12;
+
+/** Default user settings for new users */
 export const _EXPORT_FILE_PREFIX = "bang_diem_mpc";
 
 /** Max credits required for graduation (used for score prediction) */
@@ -154,14 +185,6 @@ export const _DEFAULT_MAX_CREDITS = 135;
 
 /** Excellent GPA threshold (used for advisor mascot) */
 export const _DEFAULT_EXCELLENT_GPA_THRESHOLD = 3.6;
-
-export type TrainingRankType = {
-  label: string;
-  emoji: string;
-  color: string;
-  bg: string;
-  minPoint: number;
-};
 
 export const _DEFAULT_TRAINING_RANKS: TrainingRankType[] = [
   { minPoint: 90, label: "Xuất sắc", emoji: "💎", color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30" },
@@ -259,13 +282,3 @@ export const _DEFAULT_FORM_DATA = {
   credit: "",
   scale10: ""
 };
-
-export const URL_FIELD_LABELS: Record<string, string> = {
-  homepage: "Trang chủ",
-  point: "Bảng điểm",
-  classCalendar: "Lịch học",
-  examCalendar: "Lịch thi",
-  info: "Thông tin cá nhân"
-};
-
-export const URL_FIELDS: string[] = ["homepage", "point", "classCalendar", "examCalendar", "info"];

@@ -5,7 +5,7 @@ export const _GITHUB_URL: string = "https://github.com/mpc-ou/mpc-extension" as 
 export const _GITHUB_RELEASE_URL: string = "https://github.com/mpc-ou/mpc-extension/releases" as const;
 
 const _CHROME_STORAGE_TYPE: _CHROME_STORAGE_CATE = "local";
-export const _CHROME_STORAGE_GLOBAL_KEY = `${_CHROME_STORAGE_TYPE}:global` as const;
+export const _CHROME_STORAGE_GLOBAL_KEY = "sync:global" as const;
 export const _CHROME_STORAGE_POINT_KEY = `${_CHROME_STORAGE_TYPE}:pointData` as const;
 export const WEEK_YEAR_REGEX = /\d{2}\/\d{2}\/(\d{4})/;
 export const DATE_MATCH_REGEX = /\((\d{2})\/(\d{2})\)/;

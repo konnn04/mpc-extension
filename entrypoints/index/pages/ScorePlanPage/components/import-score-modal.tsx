@@ -11,12 +11,11 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { CSV_DELIMITER_REGEX, LIMIT_FILE_SIZE, TRAINING_POINT_REGEX } from "@/constants/io";
 import { useGlobalStore } from "@/store/use-global-store";
 import { PointCharacterType, ScoreGroupType } from "@/types";
+import { formatFileSize } from "@/utils/file";
 import { updateIgnoreSubject, updateScoreAvg } from "@/utils/score";
-
-const CSV_DELIMITER_REGEX = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-const TRAINING_POINT_REGEX = /Điểm rèn luyện học kỳ:(\d+)/;
 
 type ImportScoreModalProps = {
   open: boolean;
@@ -66,8 +65,8 @@ export function ImportScoreModal({ open, onOpenChange, onImportSuccess }: Import
       toast.error("Chỉ hỗ trợ file định dạng CSV hoặc XLSX.");
       return;
     }
-    if (selectedFile.size > 1024 * 1024) {
-      toast.error("Kích thước file không được vượt quá 1MB.");
+    if (selectedFile.size > LIMIT_FILE_SIZE) {
+      toast.error(`Kích thước file không được vượt quá ${formatFileSize(LIMIT_FILE_SIZE)}.`);
       return;
     }
     setFile(selectedFile);
@@ -185,7 +184,6 @@ export function ImportScoreModal({ open, onOpenChange, onImportSuccess }: Import
 
       let parsedSemesters = parseCSVToJSON(text);
 
-      // Update ignore list and avg scores like when fetching from API
       parsedSemesters = updateIgnoreSubject(parsedSemesters, ignoreList);
       parsedSemesters = updateScoreAvg(parsedSemesters);
 

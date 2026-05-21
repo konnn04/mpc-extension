@@ -1,5 +1,15 @@
 import { create } from "zustand";
-import { _DEFAULT_FIXED_POINT, _DEFAULT_IGNORE_SUBJECT_DATA, _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
+import {
+  _DEFAULT_FIXED_POINT,
+  _DEFAULT_IGNORE_SUBJECT_DATA,
+  _DEFAULT_MAX_CREDITS_PER_SEMESTER,
+  _DEFAULT_MAX_CREDITS_SUMMER,
+  _DEFAULT_MAX_CREDITS_WARNING,
+  _DEFAULT_MIN_CREDITS_PER_SEMESTER,
+  _DEFAULT_MIN_TRAINING_POINT_WARNING,
+  _DEFAULT_RETAKE_RATIO_LIMIT,
+  _DEFAULT_SITE_URL_MAPPING
+} from "@/constants/default";
 import { _CHROME_STORAGE_GLOBAL_KEY } from "@/entrypoints/popup/default";
 import { _TAB_CATE } from "@/types";
 
@@ -8,7 +18,43 @@ type GlobalStorageType = {
   fixedPoint: number;
   ignoreList: string[];
   siteURLMapping: _SITE_MAPPING;
+  retakeRatioLimit: number;
+  maxCreditsPerSemester: number;
+  minCreditsPerSemester: number;
+  maxCreditsWarning: number;
+  maxCreditsSummer: number;
+  drlWarningThreshold: number;
 };
+
+function applySavedGlobalData(savedData: Partial<GlobalStorageType>, set: (state: Partial<GlobalState>) => void) {
+  if (savedData.tab) {
+    set({ tab: savedData.tab });
+  }
+  if (savedData.fixedPoint !== undefined) {
+    set({ fixedPoint: savedData.fixedPoint });
+  }
+  if (savedData.ignoreList) {
+    set({ ignoreList: savedData.ignoreList });
+  }
+  if (savedData.retakeRatioLimit !== undefined) {
+    set({ retakeRatioLimit: savedData.retakeRatioLimit });
+  }
+  if (savedData.maxCreditsPerSemester !== undefined) {
+    set({ maxCreditsPerSemester: savedData.maxCreditsPerSemester });
+  }
+  if (savedData.minCreditsPerSemester !== undefined) {
+    set({ minCreditsPerSemester: savedData.minCreditsPerSemester });
+  }
+  if (savedData.maxCreditsWarning !== undefined) {
+    set({ maxCreditsWarning: savedData.maxCreditsWarning });
+  }
+  if (savedData.maxCreditsSummer !== undefined) {
+    set({ maxCreditsSummer: savedData.maxCreditsSummer });
+  }
+  if (savedData.drlWarningThreshold !== undefined) {
+    set({ drlWarningThreshold: savedData.drlWarningThreshold });
+  }
+}
 
 type GlobalState = {
   tab: _TAB_CATE;
@@ -17,9 +63,21 @@ type GlobalState = {
   fixedPoint: number;
   ignoreList: string[];
   siteURLMapping: _SITE_MAPPING;
+  retakeRatioLimit: number;
+  maxCreditsPerSemester: number;
+  minCreditsPerSemester: number;
+  maxCreditsWarning: number;
+  maxCreditsSummer: number;
+  drlWarningThreshold: number;
   setFixedPoint: (point: number) => void;
   setIgnoreList: (list: string[]) => void;
   setSiteURLMapping: (mapping: _SITE_MAPPING) => void;
+  setRetakeRatioLimit: (v: number) => void;
+  setMaxCreditsPerSemester: (v: number) => void;
+  setMinCreditsPerSemester: (v: number) => void;
+  setMaxCreditsWarning: (v: number) => void;
+  setMaxCreditsSummer: (v: number) => void;
+  setDrlWarningThreshold: (v: number) => void;
   setTab: (tab: _TAB_CATE) => void;
   setSiteCurr: (siteCurr: _SITE_CATE) => void;
   setSiteCurrURL: (siteCurrURL: string) => void;
@@ -34,6 +92,12 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   fixedPoint: _DEFAULT_FIXED_POINT,
   ignoreList: _DEFAULT_IGNORE_SUBJECT_DATA,
   siteURLMapping: _DEFAULT_SITE_URL_MAPPING,
+  retakeRatioLimit: _DEFAULT_RETAKE_RATIO_LIMIT,
+  maxCreditsPerSemester: _DEFAULT_MAX_CREDITS_PER_SEMESTER,
+  minCreditsPerSemester: _DEFAULT_MIN_CREDITS_PER_SEMESTER,
+  maxCreditsWarning: _DEFAULT_MAX_CREDITS_WARNING,
+  maxCreditsSummer: _DEFAULT_MAX_CREDITS_SUMMER,
+  drlWarningThreshold: _DEFAULT_MIN_TRAINING_POINT_WARNING,
   setTab: (tab: _TAB_CATE) => {
     set({ tab });
     get().saveData();
@@ -43,31 +107,41 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   setFixedPoint: (point: number) => set({ fixedPoint: point }),
   setIgnoreList: (list: string[]) => set({ ignoreList: list }),
   setSiteURLMapping: (mapping: _SITE_MAPPING) => set({ siteURLMapping: mapping }),
+  setRetakeRatioLimit: (v: number) => set({ retakeRatioLimit: v }),
+  setMaxCreditsPerSemester: (v: number) => set({ maxCreditsPerSemester: v }),
+  setMinCreditsPerSemester: (v: number) => set({ minCreditsPerSemester: v }),
+  setMaxCreditsWarning: (v: number) => set({ maxCreditsWarning: v }),
+  setMaxCreditsSummer: (v: number) => set({ maxCreditsSummer: v }),
+  setDrlWarningThreshold: (v: number) => set({ drlWarningThreshold: v }),
   saveData: async () => {
     const data: GlobalStorageType = {
       tab: get().tab,
       fixedPoint: get().fixedPoint,
       ignoreList: get().ignoreList,
-      siteURLMapping: get().siteURLMapping
+      siteURLMapping: get().siteURLMapping,
+      retakeRatioLimit: get().retakeRatioLimit,
+      maxCreditsPerSemester: get().maxCreditsPerSemester,
+      minCreditsPerSemester: get().minCreditsPerSemester,
+      maxCreditsWarning: get().maxCreditsWarning,
+      maxCreditsSummer: get().maxCreditsSummer,
+      drlWarningThreshold: get().drlWarningThreshold
     };
     await storage.setItem(_CHROME_STORAGE_GLOBAL_KEY, JSON.stringify(data));
   },
   getData: async () => {
-    const savedData = JSON.parse((await storage.getItem(_CHROME_STORAGE_GLOBAL_KEY)) || "{}");
-    if (savedData?.tab) {
-      set({ tab: savedData.tab });
-    }
-    if (savedData?.fixedPoint) {
-      set({ fixedPoint: savedData.fixedPoint });
-    }
-    if (savedData?.ignoreList) {
-      set({ ignoreList: savedData.ignoreList });
-    }
+    const raw = await storage.getItem<string>(_CHROME_STORAGE_GLOBAL_KEY);
+    const savedData = JSON.parse(raw || "{}") as Partial<GlobalStorageType>;
+    applySavedGlobalData(savedData, set);
+
     if (savedData?.siteURLMapping) {
-      const merged: _SITE_MAPPING = { ..._DEFAULT_SITE_URL_MAPPING };
+      const merged: _SITE_MAPPING = structuredClone(_DEFAULT_SITE_URL_MAPPING);
       for (const key of Object.keys(savedData.siteURLMapping) as _SITE_CATE[]) {
+        const saved = savedData.siteURLMapping[key];
+        if (!saved || "homepageRegex" in saved) {
+          continue;
+        }
         if (merged[key]) {
-          merged[key] = { ...merged[key], ...savedData.siteURLMapping[key] };
+          merged[key] = { ...merged[key], ...saved };
         }
       }
       set({ siteURLMapping: merged });

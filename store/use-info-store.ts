@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { _DEFAULT_COURSE_DATA, _DEFAULT_USER_DATA } from "@/constants/default";
-import { _CHROME_STORAGE_INFO_KEY } from "@/constants/storage";
+import { getUserInfoKey } from "@/constants/storage";
+import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { CourseType, UserType } from "@/types";
 
 type InfoStorageType = {
@@ -30,7 +31,8 @@ export const useInfoStore = create<InfoState>((set, get) => ({
   setLastUpdate: (date: Date | null) => set({ lastUpdate: date }),
 
   getData: async () => {
-    const savedData = await storage.getItem<InfoStorageType>(_CHROME_STORAGE_INFO_KEY);
+    const key = getUserInfoKey(useCurrentUserStore.getState().effectiveStudentId);
+    const savedData = await storage.getItem<InfoStorageType>(key);
 
     if (savedData?.userData) {
       set({ userData: savedData.userData });
@@ -44,13 +46,14 @@ export const useInfoStore = create<InfoState>((set, get) => ({
   },
 
   saveData: async () => {
+    const key = getUserInfoKey(useCurrentUserStore.getState().effectiveStudentId);
     const data: InfoStorageType = {
       userData: get().userData,
       courseData: get().courseData,
       updatedAt: new Date().toISOString()
     };
 
-    await storage.setItem(_CHROME_STORAGE_INFO_KEY, data);
+    await storage.setItem(key, data);
     set({ lastUpdate: new Date() });
   }
 }));

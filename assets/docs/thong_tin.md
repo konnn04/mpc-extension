@@ -15,7 +15,6 @@ Dữ liệu của bạn được lưu trữ an toàn ngay trên trình duyệt (
 Bạn có thể:
 - Xem thông tin cá nhân
 - Xem khen thưởng
-- Xem kỷ luật
 
 -------
 

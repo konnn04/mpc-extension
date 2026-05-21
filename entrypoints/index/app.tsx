@@ -3,8 +3,12 @@ import { AppHeader, type ThemeMode } from "@/components/custom/app-header";
 import { AppSidebar } from "@/components/custom/app-sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConfirmDialogProvider } from "@/hooks/use-confirm";
+import { useCalendarStore } from "@/store/use-calendar-store";
+import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
+import { useInfoStore } from "@/store/use-info-store";
 import { useScoreStore } from "@/store/use-score-store";
+import { useUserSettingsStore } from "@/store/use-user-settings-store";
 import { AboutUsPage } from "./pages/AboutUsPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -12,6 +16,8 @@ import { PersonalInfoPage } from "./pages/PersonalInfoPage";
 import { ScorePlanPage } from "./pages/ScorePlanPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { BREADCRUMB_MAP, type DashboardRoute, NAV_ITEMS } from "./types";
+
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "mpc-sidebar-collapsed";
 
 function getInitialRoute(): DashboardRoute {
   const hash = window.location.hash.replace("#", "");
@@ -33,8 +39,11 @@ function applyThemeClass(theme: ThemeMode) {
 
 function App() {
   const [route, setRoute] = useState<DashboardRoute>(getInitialRoute);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "1"
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = window.innerWidth < 768;
   const [theme, setTheme] = useState<ThemeMode>(() => {
     return (localStorage.getItem("mpc-theme") as ThemeMode) || "system";
   });
@@ -42,15 +51,32 @@ function App() {
   const getData = useGlobalStore((s) => s.getData);
   const getScoreData = useScoreStore((s) => s.getData);
   const setupScoreWatcher = useScoreStore((s) => s.setupWatcher);
+  const getInfoData = useInfoStore((s) => s.getData);
+  const getCalendarData = useCalendarStore((s) => s.getData);
+  const getUserSettingsData = useUserSettingsStore((s) => s.getData);
+  const loadCurrentUser = useCurrentUserStore((s) => s.load);
+  const effectiveStudentId = useCurrentUserStore((s) => s.effectiveStudentId);
 
   useLayoutEffect(() => {
+    loadCurrentUser();
     getData();
     getScoreData();
+    getInfoData();
+    getCalendarData();
+    getUserSettingsData();
     const unwatch = setupScoreWatcher();
     return () => {
       unwatch?.();
     };
-  }, [getData, getScoreData, setupScoreWatcher]);
+  }, [loadCurrentUser, getData, getScoreData, getInfoData, getCalendarData, getUserSettingsData, setupScoreWatcher]);
+
+  // Reload all per-user data when switching view student or current user changes
+  useEffect(() => {
+    if (!effectiveStudentId) {
+      return;
+    }
+    Promise.all([getScoreData(), getInfoData(), getCalendarData(), getUserSettingsData()]);
+  }, [effectiveStudentId, getScoreData, getInfoData, getCalendarData, getUserSettingsData]);
 
   const handleNavigate = useCallback((key: string) => {
     const r = key as DashboardRoute;
@@ -82,18 +108,8 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 768px)");
-    const handler = (e: MediaQueryListEvent) => {
-      if (e.matches) {
-        setSidebarCollapsed(true);
-      }
-    };
-    if (mq.matches) {
-      setSidebarCollapsed(true);
-    }
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+    localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, sidebarCollapsed ? "1" : "0");
+  }, [sidebarCollapsed]);
 
   const handleSidebarToggle = () => {
     const isMobile = window.innerWidth < 768;
@@ -128,11 +144,11 @@ function App() {
       <div className='flex h-screen overflow-hidden bg-background'>
         <AppSidebar
           activeKey={route}
-          collapsed={sidebarCollapsed && !mobileOpen}
+          collapsed={isMobile ? !mobileOpen : sidebarCollapsed}
           footer={
             <p className='text-center text-muted-foreground text-xs'>© 2025, 2026 MPC · Trường Đại học Mở TP.HCM</p>
           }
-          isMobile={window.innerWidth < 768}
+          isMobile={isMobile}
           logo={
             <div className='flex items-center gap-2'>
               <img alt='Logo' className='h-8 w-8' height={32} src='/icon/128.png' width={32} />
@@ -154,6 +170,7 @@ function App() {
             breadcrumbs={BREADCRUMB_MAP[route]}
             onSidebarToggle={handleSidebarToggle}
             onThemeChange={setTheme}
+            sidebarCollapsed={isMobile ? !mobileOpen : sidebarCollapsed}
             theme={theme}
           />
 
