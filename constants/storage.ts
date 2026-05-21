@@ -14,7 +14,14 @@ export const _CHROME_STORAGE_CALENDAR_KEY = `${_LOCAL}:calendarData` as const;
 export const _CHROME_STORAGE_EXAM_KEY = `${_LOCAL}:examData` as const;
 
 /** All data suffixes stored per student. Add new data types here — single source of truth. */
-export const DATA_SUFFIXES = ["userData", "pointData", "calendarData", "examData", "userSettings"] as const;
+export const DATA_SUFFIXES = [
+  "userData",
+  "pointData",
+  "calendarData",
+  "examData",
+  "tuitionData",
+  "userSettings"
+] as const;
 
 /** Build a local-scoped storage key for any suffix. */
 export const getScopedKey = (studentId: string, suffix: string) =>
@@ -31,4 +38,5 @@ export const getUserInfoKey = (studentId: string) => getScopedKey(studentId, "us
 export const getPointKey = (studentId: string) => getScopedKey(studentId, "pointData");
 export const getCalendarKey = (studentId: string) => getScopedKey(studentId, "calendarData");
 export const getExamKey = (studentId: string) => getScopedKey(studentId, "examData");
+export const getTuitionKey = (studentId: string) => getScopedKey(studentId, "tuitionData");
 export const getUserSettingsKey = (studentId: string) => getScopedKey(studentId, "userSettings");

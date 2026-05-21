@@ -2,4 +2,5 @@
 export * from "./calendar";
 export * from "./point";
 export * from "./site";
+export * from "./tuition";
 export * from "./user";

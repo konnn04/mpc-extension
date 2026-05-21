@@ -8,6 +8,7 @@ import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useInfoStore } from "@/store/use-info-store";
 import { useScoreStore } from "@/store/use-score-store";
+import { useTuitionStore } from "@/store/use-tuition-store";
 import { useUserSettingsStore } from "@/store/use-user-settings-store";
 import { AboutUsPage } from "./pages/AboutUsPage";
 import { CalendarPage } from "./pages/CalendarPage";
@@ -15,13 +16,14 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { PersonalInfoPage } from "./pages/PersonalInfoPage";
 import { ScorePlanPage } from "./pages/ScorePlanPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { TuitionPage } from "./pages/TuitionPage";
 import { BREADCRUMB_MAP, type DashboardRoute, NAV_ITEMS } from "./types";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "mpc-sidebar-collapsed";
 
 function getInitialRoute(): DashboardRoute {
   const hash = window.location.hash.replace("#", "");
-  if (["dashboard", "score-plan", "calendar", "settings", "personal-info", "about-us"].includes(hash)) {
+  if (["dashboard", "score-plan", "calendar", "tuition", "settings", "personal-info", "about-us"].includes(hash)) {
     return hash as DashboardRoute;
   }
   return "dashboard";
@@ -53,6 +55,7 @@ function App() {
   const setupScoreWatcher = useScoreStore((s) => s.setupWatcher);
   const getInfoData = useInfoStore((s) => s.getData);
   const getCalendarData = useCalendarStore((s) => s.getData);
+  const getTuitionData = useTuitionStore((s) => s.getData);
   const getUserSettingsData = useUserSettingsStore((s) => s.getData);
   const loadCurrentUser = useCurrentUserStore((s) => s.load);
   const effectiveStudentId = useCurrentUserStore((s) => s.effectiveStudentId);
@@ -63,20 +66,30 @@ function App() {
     getScoreData();
     getInfoData();
     getCalendarData();
+    getTuitionData();
     getUserSettingsData();
     const unwatch = setupScoreWatcher();
     return () => {
       unwatch?.();
     };
-  }, [loadCurrentUser, getData, getScoreData, getInfoData, getCalendarData, getUserSettingsData, setupScoreWatcher]);
+  }, [
+    loadCurrentUser,
+    getData,
+    getScoreData,
+    getInfoData,
+    getCalendarData,
+    getTuitionData,
+    getUserSettingsData,
+    setupScoreWatcher
+  ]);
 
   // Reload all per-user data when switching view student or current user changes
   useEffect(() => {
     if (!effectiveStudentId) {
       return;
     }
-    Promise.all([getScoreData(), getInfoData(), getCalendarData(), getUserSettingsData()]);
-  }, [effectiveStudentId, getScoreData, getInfoData, getCalendarData, getUserSettingsData]);
+    Promise.all([getScoreData(), getInfoData(), getCalendarData(), getTuitionData(), getUserSettingsData()]);
+  }, [effectiveStudentId, getScoreData, getInfoData, getCalendarData, getTuitionData, getUserSettingsData]);
 
   const handleNavigate = useCallback((key: string) => {
     const r = key as DashboardRoute;
@@ -87,7 +100,7 @@ function App() {
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.replace("#", "") as DashboardRoute;
-      if (["dashboard", "score-plan", "calendar", "settings", "personal-info", "about-us"].includes(hash)) {
+      if (["dashboard", "score-plan", "calendar", "tuition", "settings", "personal-info", "about-us"].includes(hash)) {
         setRoute(hash);
       }
     };
@@ -130,6 +143,8 @@ function App() {
         return <ScorePlanPage />;
       case "calendar":
         return <CalendarPage />;
+      case "tuition":
+        return <TuitionPage />;
       case "settings":
         return <SettingsPage onThemeChange={setTheme} theme={theme} />;
       case "about-us":

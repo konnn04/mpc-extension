@@ -1,10 +1,13 @@
 import type {
+  AcademicRankType,
   CourseLabelMappingType,
   CourseType,
   PointMappingType,
   ScoreFilterType,
   ScoreSummaryType,
+  TrainingRankType,
   UserLabelMappingType,
+  UserSettingsType,
   UserType
 } from "@/types";
 
@@ -34,6 +37,7 @@ export const _DEFAULT_IGNORE_SUBJECT_DATA: string[] = [
   "_BHYT12T",
   "_BHYT6T"
 ];
+
 function _buildPageRegex(baseRegexPrefix: string, tailUrl: string): string {
   const encoded = tailUrl.replace(/[/.*+?^${}()|[\]\\]/g, "\\$&");
   return `${baseRegexPrefix}\\/?${encoded}.*$`;
@@ -70,6 +74,7 @@ export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
       point: { tailUrl: "#/diem", label: "Bảng điểm" },
       classCalendar: { tailUrl: "#/tkb-hocky", label: "Lịch học" },
       examCalendar: { tailUrl: "#/lichthi", label: "Lịch thi" },
+      tuition: { tailUrl: "#/hocphi", label: "Học phí" },
       info: { tailUrl: "#/home?mode=userinfo", label: "Thông tin cá nhân" }
     }
   ),
@@ -81,6 +86,7 @@ export const _DEFAULT_SITE_URL_MAPPING: _SITE_MAPPING = {
       point: { tailUrl: "#/diem", label: "Bảng điểm" },
       classCalendar: { tailUrl: "#/tkb-hocky", label: "Lịch học" },
       examCalendar: { tailUrl: "#/lichthi", label: "Lịch thi" },
+      tuition: { tailUrl: "#/hocphi", label: "Học phí" },
       info: { tailUrl: "#/home?mode=userinfo", label: "Thông tin cá nhân" }
     }
   )
@@ -98,7 +104,11 @@ export const _DEFAULT_GRADE_COLORS: Record<string, string> = {
   F: "#ef4444"
 };
 
-import type { AcademicRankType, TrainingRankType, UserSettingsType } from "@/types";
+/** Course codes classified as dịch vụ (BHYT, etc.) rather than học phí học tập. */
+export const _TUITION_SERVICE_CODES = ["_BHYTTN1", "_BHYT12T", "_BHYT6T", "_BHYT12"];
+
+export const _TUITION_CATEGORIES = ["tất cả", "học phí", "dịch vụ"] as const;
+export type TuitionCategory = (typeof _TUITION_CATEGORIES)[number];
 
 export const _DEFAULT_ACADEMIC_RANKS: { minGpa4: number; rank: AcademicRankType }[] = [
   {

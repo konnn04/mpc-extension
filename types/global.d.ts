@@ -1,7 +1,7 @@
 type _CHROME_STORAGE_CATE = "local" | "session" | "sync" | "managed";
 
 type _SITE_CATE = "sv" | "kcq";
-type _PAGE_CATE = "point" | "classCalendar" | "examCalendar" | "info";
+type _PAGE_CATE = "point" | "classCalendar" | "examCalendar" | "info" | "tuition";
 
 type _PAGE_CONFIG = {
   tailUrl: string;

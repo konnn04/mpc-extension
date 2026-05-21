@@ -1,17 +1,4 @@
-import {
-  AlertCircle,
-  ChevronDown,
-  ChevronRight,
-  Globe,
-  HardDrive,
-  Monitor,
-  Moon,
-  RefreshCw,
-  Save,
-  Settings,
-  Sun,
-  UserCog
-} from "lucide-react";
+import { HardDrive, Monitor, Moon, RefreshCw, Save, Settings, Sun, UserCog } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,19 +6,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useUserSettingsStore } from "@/store/use-user-settings-store";
+import { PersonalSettings } from "./components/personal-settings";
+import { SchoolParams } from "./components/school-params";
+import { UrlConfig } from "./components/url-config";
 
 type ThemeMode = "light" | "dark" | "system";
-type SettingsPageProps = {
-  theme: ThemeMode;
-  onThemeChange: (mode: ThemeMode) => void;
-};
+type SettingsPageProps = { theme: ThemeMode; onThemeChange: (mode: ThemeMode) => void };
 
-const _THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.FC<{ className?: string }> }[] = [
+const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.FC<{ className?: string }> }[] = [
   { value: "light", label: "Sáng", icon: Sun },
   { value: "dark", label: "Tối", icon: Moon },
   { value: "system", label: "Hệ thống", icon: Monitor }
@@ -59,7 +45,6 @@ function SectionHeader({
   );
 }
 
-/** Format bytes to human readable */
 function formatBytes(bytes: number): string {
   if (bytes === 0) {
     return "0 KB";
@@ -103,13 +88,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
   const [ignoreListText, setIgnoreListText] = useState("");
   const [urlMapping, setURLMapping] = useState<_SITE_MAPPING>(siteURLMapping);
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // ── User settings local state ──
   const [trainingSemesters, setTrainingSemesters] = useState(userSettings.trainingSemesters);
   const [totalProgramCredits, setTotalProgramCredits] = useState(userSettings.totalProgramCredits);
 
-  // ── School params local state ──
   const [localRetakeRatio, setLocalRetakeRatio] = useState(retakeRatioLimit);
   const [localMaxCreditsPerSem, setLocalMaxCreditsPerSem] = useState(maxCreditsPerSemester);
   const [localMinCreditsPerSem, setLocalMinCreditsPerSem] = useState(minCreditsPerSemester);
@@ -117,11 +99,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
   const [localMaxCreditsSum, setLocalMaxCreditsSum] = useState(maxCreditsSummer);
   const [localDrlThreshold, setLocalDrlThreshold] = useState(drlWarningThreshold);
 
-  // ── Storage usage ──
-  const [storageUsage, setStorageUsage] = useState<{ localBytes: number; syncBytes: number }>({
-    localBytes: 0,
-    syncBytes: 0
-  });
+  const [storageUsage, setStorageUsage] = useState({ localBytes: 0, syncBytes: 0 });
 
   const refreshStorageUsage = useCallback(async () => {
     const [localData, syncData] = await Promise.all([browser.storage.local.get(null), browser.storage.sync.get(null)]);
@@ -132,20 +110,14 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
   }, []);
 
   useLayoutEffect(() => {
-    const load = async () => {
-      await Promise.all([getData(), getUserSettings(), refreshStorageUsage()]);
-    };
-    load();
+    Promise.all([getData(), getUserSettings(), refreshStorageUsage()]);
   }, [getData, getUserSettings, refreshStorageUsage]);
-
   useEffect(() => {
     setIgnoreListText(ignoreList.join(","));
   }, [ignoreList]);
-
   useEffect(() => {
     setURLMapping(siteURLMapping);
   }, [siteURLMapping]);
-
   useEffect(() => {
     setTrainingSemesters(userSettings.trainingSemesters);
     setTotalProgramCredits(userSettings.totalProgramCredits);
@@ -154,24 +126,18 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
   const handleSave = async () => {
     const list = ignoreListText
       .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item !== "");
+      .map((s) => s.trim())
+      .filter(Boolean);
     setIgnoreList(list);
     setSiteURLMapping(urlMapping);
-    await saveData();
-
-    // Save school-wide params
     setRetakeRatioLimit(localRetakeRatio);
     setMaxCreditsPerSemester(localMaxCreditsPerSem);
     setMinCreditsPerSemester(localMinCreditsPerSem);
     setMaxCreditsWarning(localMaxCreditsWarn);
     setMaxCreditsSummer(localMaxCreditsSum);
     setDrlWarningThreshold(localDrlThreshold);
-
-    // Save user settings
     setUserSettings({ trainingSemesters, totalProgramCredits });
-    await saveUserSettings();
-
+    await Promise.all([saveData(), saveUserSettings()]);
     toast.success("Đã lưu cài đặt!");
   };
 
@@ -182,22 +148,19 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
       for (let i = 0; i < path.length - 1; i++) {
         obj = obj[path[i]] as Record<string, unknown>;
       }
-      obj[path.at(-1)] = value;
+      const lastKey = path.at(-1);
+      obj[lastKey] = value;
       return updated;
     });
   };
 
   const handleResetSite = (siteKey: _SITE_CATE) => {
-    setURLMapping((prev) => ({
-      ...prev,
-      [siteKey]: structuredClone(_DEFAULT_SITE_URL_MAPPING[siteKey])
-    }));
+    setURLMapping((prev) => ({ ...prev, [siteKey]: structuredClone(_DEFAULT_SITE_URL_MAPPING[siteKey]) }));
     toast.success(`Đã đặt lại URL cho ${_DEFAULT_SITE_URL_MAPPING[siteKey].label}`);
   };
 
   return (
     <div className='mx-auto max-w-2xl space-y-6 pb-12'>
-      {/* Header */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-3'>
           <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10'>
@@ -214,50 +177,22 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
         </Button>
       </div>
 
-      {/*───────────────── Cài đặt cá nhân ─────────────────*/}
       <Card>
         <SectionHeader
           description='Cài đặt theo MSSV, ảnh hưởng đến tính toán học lực và dự đoán điểm'
           icon={UserCog}
           title='Cài đặt cá nhân'
         />
-        <CardContent className='space-y-4 pt-0'>
-          <div className='grid grid-cols-2 gap-4'>
-            <div className='space-y-1.5'>
-              <Label className='font-medium'>Tổng tín chỉ CTĐT</Label>
-              <p className='text-[10px] text-muted-foreground'>
-                Tổng tín chỉ toàn khóa ngành bạn. Không đúng?{" "}
-                <a
-                  className='font-medium text-amber-600'
-                  href='https://www.oucommunity.dev/tuyen-sinh/gioi-thieu-nganh/'
-                  rel='noopener noreferrer'
-                  target='_blank'
-                >
-                  Tra cứu ở đây
-                </a>
-              </p>
-              <Input
-                className='h-8 text-sm'
-                onChange={(e) => setTotalProgramCredits(Number(e.target.value) || 0)}
-                type='number'
-                value={totalProgramCredits}
-              />
-            </div>
-            <div className='space-y-1.5'>
-              <Label className='font-medium'>Số học kỳ tính DRL trung bình</Label>
-              <p className='text-[10px] text-muted-foreground'>Số học kỳ đầu dùng để tính trung bình điểm rèn luyện</p>
-              <Input
-                className='h-8 text-sm'
-                onChange={(e) => setTrainingSemesters(Number(e.target.value) || 10)}
-                type='number'
-                value={trainingSemesters}
-              />
-            </div>
-          </div>
+        <CardContent className='pt-0'>
+          <PersonalSettings
+            setTotalProgramCredits={setTotalProgramCredits}
+            setTrainingSemesters={setTrainingSemesters}
+            totalProgramCredits={totalProgramCredits}
+            trainingSemesters={trainingSemesters}
+          />
         </CardContent>
       </Card>
 
-      {/*───────────────── Cài đặt chung ─────────────────*/}
       <Card>
         <SectionHeader
           description='Áp dụng cho tất cả tài khoản, đồng bộ qua các thiết bị'
@@ -265,15 +200,12 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
           title='Cài đặt chung'
         />
         <CardContent className='space-y-6 pt-0'>
-          {/* Theme */}
           <div className='space-y-2'>
             <Label className='font-medium'>Chế độ màu sắc</Label>
             <div className='grid grid-cols-3 gap-2'>
-              {_THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+              {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
                 <button
-                  className={`flex flex-col items-center gap-1 rounded-lg border p-2 transition-all hover:border-primary/50 ${
-                    theme === value ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-card"
-                  }`}
+                  className={`flex flex-col items-center gap-1 rounded-lg border p-2 transition-all hover:border-primary/50 ${theme === value ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-card"}`}
                   key={value}
                   onClick={() => onThemeChange(value)}
                   type='button'
@@ -287,7 +219,6 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
             </div>
           </div>
 
-          {/* Fixed point */}
           <div className='flex items-center justify-between gap-4'>
             <div>
               <Label className='font-medium'>Số chữ số thập phân</Label>
@@ -298,13 +229,13 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
               max='10'
               min='1'
               onChange={(e) => {
-                const val = e.target.value;
-                if (val === "") {
+                const v = e.target.value;
+                if (v === "") {
                   return;
                 }
-                const num = Number(val);
-                if (!Number.isNaN(num)) {
-                  setFixedPoint(Math.min(10, Math.max(1, num)));
+                const n = Number(v);
+                if (!Number.isNaN(n)) {
+                  setFixedPoint(Math.min(10, Math.max(1, n)));
                 }
               }}
               type='number'
@@ -312,7 +243,6 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
             />
           </div>
 
-          {/* Ignore list */}
           <div className='space-y-1.5'>
             <Label className='font-medium'>Danh sách môn học loại khỏi GPA</Label>
             <p className='text-[10px] text-muted-foreground'>
@@ -327,180 +257,23 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
             />
           </div>
 
-          {/* School-wide params */}
-          <div className='rounded-lg border p-3'>
-            <div className='mb-2 flex items-center gap-2'>
-              <HardDrive className='h-4 w-4 text-muted-foreground' />
-              <span className='font-medium text-sm'>Tham số trường</span>
-            </div>
-            <div className='grid grid-cols-2 gap-x-4 gap-y-3 text-xs'>
-              <div className='space-y-1'>
-                <Label className='text-muted-foreground'>Tỉ lệ học lại tối đa (%)</Label>
-                <Input
-                  className='h-7 text-xs'
-                  min='0'
-                  onChange={(e) => setLocalRetakeRatio(Number(e.target.value) / 100 || 0)}
-                  step='1'
-                  type='number'
-                  value={(localRetakeRatio * 100).toFixed(0)}
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-muted-foreground'>TC tối đa/kỳ chính</Label>
-                <Input
-                  className='h-7 text-xs'
-                  min='1'
-                  onChange={(e) => setLocalMaxCreditsPerSem(Number(e.target.value) || 25)}
-                  type='number'
-                  value={localMaxCreditsPerSem}
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-muted-foreground'>TC tối thiểu/kỳ chính</Label>
-                <Input
-                  className='h-7 text-xs'
-                  min='0'
-                  onChange={(e) => setLocalMinCreditsPerSem(Number(e.target.value) || 14)}
-                  type='number'
-                  value={localMinCreditsPerSem}
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-muted-foreground'>TC tối đa (cảnh báo)</Label>
-                <Input
-                  className='h-7 text-xs'
-                  min='1'
-                  onChange={(e) => setLocalMaxCreditsWarn(Number(e.target.value) || 14)}
-                  type='number'
-                  value={localMaxCreditsWarn}
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-muted-foreground'>TC tối đa/kỳ hè</Label>
-                <Input
-                  className='h-7 text-xs'
-                  min='1'
-                  onChange={(e) => setLocalMaxCreditsSum(Number(e.target.value) || 12)}
-                  type='number'
-                  value={localMaxCreditsSum}
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-muted-foreground'>Ngưỡng ĐRL cảnh báo</Label>
-                <Input
-                  className='h-7 text-xs'
-                  min='0'
-                  onChange={(e) => setLocalDrlThreshold(Number(e.target.value) || 50)}
-                  type='number'
-                  value={localDrlThreshold}
-                />
-              </div>
-            </div>
-          </div>
+          <SchoolParams
+            localDrlThreshold={localDrlThreshold}
+            localMaxCreditsPerSem={localMaxCreditsPerSem}
+            localMaxCreditsSum={localMaxCreditsSum}
+            localMaxCreditsWarn={localMaxCreditsWarn}
+            localMinCreditsPerSem={localMinCreditsPerSem}
+            localRetakeRatio={localRetakeRatio}
+            setLocalDrlThreshold={setLocalDrlThreshold}
+            setLocalMaxCreditsPerSem={setLocalMaxCreditsPerSem}
+            setLocalMaxCreditsSum={setLocalMaxCreditsSum}
+            setLocalMaxCreditsWarn={setLocalMaxCreditsWarn}
+            setLocalMinCreditsPerSem={setLocalMinCreditsPerSem}
+            setLocalRetakeRatio={setLocalRetakeRatio}
+          />
 
-          {/* URL advanced toggle */}
-          <div className='rounded-lg border'>
-            <button
-              className='flex w-full items-center gap-3 p-3 text-left'
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              type='button'
-            >
-              <Globe className='h-4 w-4 text-muted-foreground' />
-              <span className='flex-1 font-medium text-sm'>Cấu hình URL nâng cao</span>
-              {showAdvanced ? <ChevronDown className='h-4 w-4' /> : <ChevronRight className='h-4 w-4' />}
-            </button>
+          <UrlConfig handleResetSite={handleResetSite} handleURLChange={handleURLChange} urlMapping={urlMapping} />
 
-            {showAdvanced && (
-              <div className='space-y-4 border-t px-3 py-3'>
-                <div className='flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-950/30'>
-                  <AlertCircle className='mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400' />
-                  <p className='text-[10px] text-amber-700 leading-tight dark:text-amber-300'>
-                    Trường <b>Regex</b> hỗ trợ biểu thức chính quy (RegExp). Extension sẽ so khớp URL hiện tại với regex
-                    để xác định trang. Để lại theo mặc định nếu bạn không chắc.
-                  </p>
-                </div>
-
-                {(["sv", "kcq"] as _SITE_CATE[]).map((siteKey) => (
-                  <div className='space-y-2 rounded-lg border p-3' key={siteKey}>
-                    <div className='flex items-center justify-between pb-2'>
-                      <div>
-                        <span className='font-medium text-sm'>{_DEFAULT_SITE_URL_MAPPING[siteKey].label}</span>
-                        <p className='font-mono text-[10px] text-muted-foreground'>
-                          {_DEFAULT_SITE_URL_MAPPING[siteKey].homepage.url}
-                        </p>
-                      </div>
-                      <Button
-                        className='h-6 gap-1 text-[10px]'
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleResetSite(siteKey);
-                        }}
-                        size='sm'
-                        type='button'
-                        variant='secondary'
-                      >
-                        <RefreshCw className='h-3 w-3' />
-                        Đặt lại
-                      </Button>
-                    </div>
-
-                    <div className='space-y-3'>
-                      <div className='grid grid-cols-[100px_1fr] items-start gap-2'>
-                        <Label className='pt-1.5 font-medium text-xs leading-tight'>Trang chủ</Label>
-                        <div className='relative'>
-                          <Input
-                            className='h-7 pr-6 font-mono text-xs'
-                            onChange={(e) => handleURLChange(siteKey, ["homepage", "regex"], e.target.value)}
-                            placeholder={"Regex nhận diện"}
-                            value={urlMapping[siteKey].homepage.regex}
-                          />
-                          <div className='-translate-y-1/2 absolute top-1/2 right-1.5'>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className='flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted text-[10px] text-muted-foreground'>
-                                  ?
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className='max-w-xs text-xs'>Pattern regex để nhận diện URL hiện tại.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        </div>
-                      </div>
-                      {Object.entries(urlMapping[siteKey].pages).map(([pageKey, page]) => (
-                        <div className='grid grid-cols-[100px_1fr] items-start gap-2' key={pageKey}>
-                          <Label className='pt-1.5 font-medium text-xs leading-tight'>{page.label}</Label>
-                          <div className='relative'>
-                            <Input
-                              className='h-7 pr-6 font-mono text-xs'
-                              onChange={(e) => handleURLChange(siteKey, ["pages", pageKey, "regex"], e.target.value)}
-                              placeholder={"Regex nhận diện"}
-                              value={page.regex}
-                            />
-                            <div className='-translate-y-1/2 absolute top-1/2 right-1.5'>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className='flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted text-[10px] text-muted-foreground'>
-                                    ?
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className='max-w-xs text-xs'>Pattern regex để nhận diện URL hiện tại.</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Storage usage bar */}
           <div className='space-y-2 rounded-lg border p-3'>
             <div className='flex items-center gap-2'>
               <HardDrive className='h-4 w-4 text-muted-foreground' />
@@ -510,42 +283,29 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 Làm mới
               </Button>
             </div>
-            <div className='space-y-1.5'>
-              <div>
-                <div className='mb-0.5 flex justify-between text-xs'>
-                  <span className='text-muted-foreground'>Local</span>
-                  <span className='font-mono'>{formatBytes(storageUsage.localBytes)} / 10 MB</span>
-                </div>
-                <div className='h-2 w-full overflow-hidden rounded-full bg-muted'>
-                  <div
-                    className='h-full rounded-full bg-primary transition-all'
-                    style={{ width: `${Math.min((storageUsage.localBytes / (10 * 1024 * 1024)) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className='mb-0.5 flex justify-between text-xs'>
-                  <span className='text-muted-foreground'>Sync</span>
-                  <span className='font-mono'>{formatBytes(storageUsage.syncBytes)} / 100 KB</span>
-                </div>
-                <div className='h-2 w-full overflow-hidden rounded-full bg-muted'>
-                  <div
-                    className='h-full rounded-full bg-emerald-500 transition-all'
-                    style={{ width: `${Math.min((storageUsage.syncBytes / (100 * 1024)) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
+            <StorageBar
+              bytes={storageUsage.localBytes}
+              color='bg-primary'
+              label='Local'
+              maxBytes={10 * 1024 * 1024}
+              maxLabel='10 MB'
+            />
+            <StorageBar
+              bytes={storageUsage.syncBytes}
+              color='bg-emerald-500'
+              label='Sync'
+              maxBytes={100 * 1024}
+              maxLabel='100 KB'
+            />
           </div>
 
-          {/* Delete all */}
           <div className='rounded-lg border border-destructive/50 p-3'>
             <p className='mb-2 font-medium text-destructive text-sm'>Vùng nguy hiểm</p>
             <p className='mb-3 text-[10px] text-muted-foreground'>Xóa toàn bộ dữ liệu extension trên trình duyệt</p>
             <Button
               className='w-full'
               onClick={async () => {
-                const isConfirmed = await confirm({
+                const ok = await confirm({
                   title: "Cảnh báo nguy hiểm",
                   description:
                     "Bạn có chắc chắn muốn xóa TOÀN BỘ dữ liệu (thông tin, điểm số, lịch học/thi)? Thao tác này không thể hoàn tác!",
@@ -553,7 +313,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   cancelText: "Hủy",
                   variant: "destructive"
                 });
-                if (isConfirmed) {
+                if (ok) {
                   await browser.storage.local.clear();
                   await browser.storage.sync.clear();
                   window.location.reload();
@@ -566,6 +326,37 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function StorageBar({
+  label,
+  maxLabel,
+  bytes,
+  maxBytes,
+  color
+}: {
+  label: string;
+  maxLabel: string;
+  bytes: number;
+  maxBytes: number;
+  color: string;
+}) {
+  return (
+    <div>
+      <div className='mb-0.5 flex justify-between text-xs'>
+        <span className='text-muted-foreground'>{label}</span>
+        <span className='font-mono'>
+          {formatBytes(bytes)} / {maxLabel}
+        </span>
+      </div>
+      <div className='h-2 w-full overflow-hidden rounded-full bg-muted'>
+        <div
+          className={`h-full rounded-full ${color} transition-all`}
+          style={{ width: `${Math.min((bytes / maxBytes) * 100, 100)}%` }}
+        />
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import {
+  Banknote,
   BookOpen,
   CalendarClock,
   CheckCircle2,
@@ -31,6 +32,7 @@ import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useInfoStore } from "@/store/use-info-store";
 import { useScoreStore } from "@/store/use-score-store";
+import { useTuitionStore } from "@/store/use-tuition-store";
 import { isMatchURL } from "@/utils";
 import { PopupContent } from "./components/popup-content";
 import { useImportActions } from "./hooks/use-import-actions";
@@ -45,6 +47,7 @@ function App() {
   const { getData: getInfoData } = useInfoStore();
   const { getData: getScoreData } = useScoreStore();
   const { getData: getCalendarData } = useCalendarStore();
+  const { getData: getTuitionData } = useTuitionStore();
   const { setCurrentUser, studentId, displayName } = useCurrentUserStore();
 
   type ThemeMode = "light" | "dark" | "system";
@@ -82,9 +85,10 @@ function App() {
       await getInfoData();
       await getScoreData();
       await getCalendarData();
+      await getTuitionData();
     };
     loadData();
-  }, [getInfoData, getScoreData, getCalendarData]);
+  }, [getInfoData, getScoreData, getCalendarData, getTuitionData]);
 
   // Auto-scrape basic info when portal site is detected
   useEffect(() => {
@@ -152,16 +156,19 @@ function App() {
     hasScore,
     hasCalendar,
     hasExam,
+    hasTuition,
     handleImportInfo,
     handleImportScore,
-    handleImportCalendar
+    handleImportCalendar,
+    handleImportTuition
   } = useImportActions();
 
   const _PAGE_ICONS: Record<_PAGE_CATE, React.FC<{ className?: string }>> = {
     info: User,
     point: CheckCircle2,
     classCalendar: BookOpen,
-    examCalendar: CalendarClock
+    examCalendar: CalendarClock,
+    tuition: Banknote
   };
 
   const navToSchoolPage = (pageKey: _PAGE_CATE) => {
@@ -230,10 +237,12 @@ function App() {
           handleImportCalendar={handleImportCalendar}
           handleImportInfo={handleImportInfo}
           handleImportScore={handleImportScore}
+          handleImportTuition={handleImportTuition}
           hasCalendar={hasCalendar}
           hasExam={hasExam}
           hasInfo={hasInfo}
           hasScore={hasScore}
+          hasTuition={hasTuition}
           isLoading={isLoading}
           kcqHomepage={siteURLMapping.kcq.homepage.url}
           navTo={navTo}

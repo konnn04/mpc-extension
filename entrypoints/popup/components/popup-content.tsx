@@ -1,4 +1,4 @@
-import { BookOpen, CalendarClock, CheckCircle2, GraduationCap, InfoIcon, User } from "lucide-react";
+import { Banknote, BookOpen, CalendarClock, CheckCircle2, GraduationCap, InfoIcon, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SharedSectionProps = {
@@ -147,6 +147,38 @@ function ScoreSection({
   );
 }
 
+function TuitionSection({
+  isLoading,
+  openDashboard,
+  handleImportTuition,
+  hasTuition
+}: {
+  isLoading: boolean;
+  openDashboard: (tab?: string) => void;
+  handleImportTuition: () => Promise<void>;
+  hasTuition: boolean;
+}) {
+  return (
+    <div className='flex flex-col space-y-4 p-6'>
+      <div className='mb-2 flex items-center gap-2'>
+        <Banknote className='h-5 w-5 text-primary' />
+        <h3 className='font-semibold'>Học phí</h3>
+      </div>
+      <Button className='w-full' disabled={isLoading} onClick={handleImportTuition} variant='default'>
+        {isLoading ? "Đang xử lý..." : "Nhập Học phí"}
+      </Button>
+      <Button
+        className='w-full'
+        disabled={!hasTuition}
+        onClick={() => openDashboard("tuition")}
+        variant={hasTuition ? "outline" : "secondary"}
+      >
+        {hasTuition ? "Xem học phí đã nhập" : "Chưa có học phí"}
+      </Button>
+    </div>
+  );
+}
+
 type PopupContentProps = {
   siteCurr: "sv" | "kcq" | null;
   currURL: string;
@@ -155,11 +187,13 @@ type PopupContentProps = {
   hasScore: boolean;
   hasCalendar: boolean;
   hasExam: boolean;
+  hasTuition: boolean;
   navTo: (url: string) => void;
   openDashboard: (tab?: string) => void;
   handleImportInfo: () => Promise<void>;
   handleImportScore: () => Promise<void>;
   handleImportCalendar: (isExam: boolean) => Promise<void>;
+  handleImportTuition: () => Promise<void>;
   svHomepage: string;
   kcqHomepage: string;
 };
@@ -173,11 +207,13 @@ export function PopupContent(props: PopupContentProps) {
     hasScore,
     hasCalendar,
     hasExam,
+    hasTuition,
     navTo,
     openDashboard,
     handleImportInfo,
     handleImportScore,
     handleImportCalendar,
+    handleImportTuition,
     svHomepage,
     kcqHomepage
   } = props;
@@ -220,6 +256,16 @@ export function PopupContent(props: PopupContentProps) {
       <ScoreSection
         handleImportScore={handleImportScore}
         hasScore={hasScore}
+        isLoading={isLoading}
+        openDashboard={openDashboard}
+      />
+    );
+  }
+  if (currURL.includes("#/hocphi")) {
+    return (
+      <TuitionSection
+        handleImportTuition={handleImportTuition}
+        hasTuition={hasTuition}
         isLoading={isLoading}
         openDashboard={openDashboard}
       />
