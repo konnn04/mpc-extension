@@ -16,7 +16,7 @@ function ChangeIndicator({
   newNum?: number;
   className?: string;
 }) {
-  const hasChange = oldValue !== newValue;
+  const hasChange = oldValue !== "" && newValue !== "" && oldValue !== newValue;
   const isUp = oldNum != null && newNum != null && newNum > oldNum;
   const isDown = oldNum != null && newNum != null && newNum < oldNum;
   let colorClass = "";
