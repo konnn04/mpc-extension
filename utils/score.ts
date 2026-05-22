@@ -132,7 +132,6 @@ const updateScoreAvg = (data: ScoreGroupType[]) => {
 const handleExportScoreData = (data: ScoreGroupType[]) => {
   const worksheetData: (string | number)[][] = [];
 
-  // Header
   worksheetData.push([
     "STT",
     "Học kỳ",

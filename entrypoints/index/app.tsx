@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { AppHeader, type ThemeMode } from "@/components/custom/app-header";
+import { AppHeader } from "@/components/custom/app-header";
 import { AppSidebar } from "@/components/custom/app-sidebar";
+import { OnboardingDialog } from "@/components/custom/onboarding-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConfirmDialogProvider } from "@/hooks/use-confirm";
+import { useTheme } from "@/lib/theme";
 import { useCalendarStore } from "@/store/use-calendar-store";
 import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
@@ -10,6 +12,7 @@ import { useInfoStore } from "@/store/use-info-store";
 import { useScoreStore } from "@/store/use-score-store";
 import { useTuitionStore } from "@/store/use-tuition-store";
 import { useUserSettingsStore } from "@/store/use-user-settings-store";
+import type { UserSettingsType } from "@/types";
 import { AboutUsPage } from "./pages/AboutUsPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -19,7 +22,8 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { TuitionPage } from "./pages/TuitionPage";
 import { BREADCRUMB_MAP, type DashboardRoute, NAV_ITEMS } from "./types";
 
-const SIDEBAR_COLLAPSED_STORAGE_KEY = "mpc-sidebar-collapsed";
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "local:mpc-sidebar-collapsed";
+const ONBOARDING_STORAGE_KEY = "local:mpc-onboarding-completed";
 
 function getInitialRoute(): DashboardRoute {
   const hash = window.location.hash.replace("#", "");
@@ -29,26 +33,23 @@ function getInitialRoute(): DashboardRoute {
   return "dashboard";
 }
 
-function getSystemTheme(): "light" | "dark" {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-function applyThemeClass(theme: ThemeMode) {
-  const root = document.documentElement;
-  const resolved = theme === "system" ? getSystemTheme() : theme;
-  root.classList.toggle("dark", resolved === "dark");
-}
-
 function App() {
   const [route, setRoute] = useState<DashboardRoute>(getInitialRoute);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "1"
-  );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = window.innerWidth < 768;
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    return (localStorage.getItem("mpc-theme") as ThemeMode) || "system";
-  });
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const { theme, changeTheme } = useTheme();
+
+  useEffect(() => {
+    Promise.all([
+      storage.getItem<string>(SIDEBAR_COLLAPSED_STORAGE_KEY),
+      storage.getItem<string>(ONBOARDING_STORAGE_KEY)
+    ]).then(([collapsed, onboarding]) => {
+      setSidebarCollapsed(collapsed === "1");
+      setShowOnboarding(onboarding !== "1");
+    });
+  }, []);
 
   const getData = useGlobalStore((s) => s.getData);
   const getScoreData = useScoreStore((s) => s.getData);
@@ -57,6 +58,7 @@ function App() {
   const getCalendarData = useCalendarStore((s) => s.getData);
   const getTuitionData = useTuitionStore((s) => s.getData);
   const getUserSettingsData = useUserSettingsStore((s) => s.getData);
+  const setUserSettings = useUserSettingsStore((s) => s.setSettings);
   const loadCurrentUser = useCurrentUserStore((s) => s.load);
   const effectiveStudentId = useCurrentUserStore((s) => s.effectiveStudentId);
 
@@ -86,7 +88,6 @@ function App() {
     setupScoreWatcher
   ]);
 
-  // Reload all per-user data when switching view student or current user changes
   useEffect(() => {
     if (!effectiveStudentId) {
       return;
@@ -112,19 +113,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    applyThemeClass(theme);
-    localStorage.setItem("mpc-theme", theme);
-
-    if (theme === "system") {
-      const mq = window.matchMedia("(prefers-color-scheme: dark)");
-      const handler = () => applyThemeClass("system");
-      mq.addEventListener("change", handler);
-      return () => mq.removeEventListener("change", handler);
-    }
-  }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, sidebarCollapsed ? "1" : "0");
+    storage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
 
   const handleSidebarToggle = () => {
@@ -134,6 +123,15 @@ function App() {
     } else {
       setSidebarCollapsed(!sidebarCollapsed);
     }
+  };
+
+  const handleOnboardingComplete = (settings: UserSettingsType) => {
+    setUserSettings(settings);
+    setShowOnboarding(false);
+  };
+
+  const handleOnboardingSkip = () => {
+    setShowOnboarding(false);
   };
 
   const renderPage = () => {
@@ -149,7 +147,7 @@ function App() {
       case "tuition":
         return <TuitionPage />;
       case "settings":
-        return <SettingsPage onThemeChange={setTheme} theme={theme} />;
+        return <SettingsPage onThemeChange={changeTheme} theme={theme} />;
       case "about-us":
         return <AboutUsPage />;
       default:
@@ -187,7 +185,7 @@ function App() {
           <AppHeader
             breadcrumbs={BREADCRUMB_MAP[route]}
             onSidebarToggle={handleSidebarToggle}
-            onThemeChange={setTheme}
+            onThemeChange={changeTheme}
             sidebarCollapsed={isMobile ? !mobileOpen : sidebarCollapsed}
             theme={theme}
           />
@@ -196,6 +194,7 @@ function App() {
         </div>
       </div>
       <ConfirmDialogProvider />
+      <OnboardingDialog onComplete={handleOnboardingComplete} onSkip={handleOnboardingSkip} open={showOnboarding} />
     </TooltipProvider>
   );
 }

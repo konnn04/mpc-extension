@@ -15,9 +15,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   _DEFAULT_ACADEMIC_RANKS,
+  _DEFAULT_DRL_WARNING_THRESHOLD,
   _DEFAULT_EXCELLENT_GPA_THRESHOLD,
-  _DEFAULT_MIN_TRAINING_POINT_SCHOLARSHIP,
-  _DEFAULT_MIN_TRAINING_POINT_WARNING
+  _DEFAULT_MIN_TRAINING_POINT_SCHOLARSHIP
 } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import { useScoreStore } from "@/store/use-score-store";
@@ -43,7 +43,6 @@ export function MascotAdvisor() {
     const maxPossibleGpa =
       remainingCredits > 0 ? (currentGpa * currentCredit + 4.0 * remainingCredits) / totalProgramCredits : currentGpa;
 
-    // Ưu tiên môn tín chỉ cao + điểm thấp: credit càng cao, điểm càng thấp → càng nên cải thiện
     const lowSubjects = scores
       .flatMap((s) => s.data)
       .filter((sub) => !sub.isIgnore && sub.point.scale10 !== null && sub.point.scale10 < 7.0 && sub.point.scale10 > 0)
@@ -64,7 +63,6 @@ export function MascotAdvisor() {
     };
   }, [scores, currentGpa, currentCredit, summary.avgTrainingPoint, totalProgramCredits]);
 
-  // ── Mô phỏng GPA sau khi cải thiện các môn được tick ──
   const simulation = useMemo(() => {
     if (improvedSubjects.size === 0 || currentCredit === 0) {
       return null;
@@ -318,7 +316,7 @@ export function MascotAdvisor() {
               </h3>
 
               {(() => {
-                if (analysis.currentTrainingPoint < _DEFAULT_MIN_TRAINING_POINT_WARNING) {
+                if (analysis.currentTrainingPoint < _DEFAULT_DRL_WARNING_THRESHOLD) {
                   return (
                     <div className='flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 shadow-sm'>
                       <ShieldAlert className='mt-0.5 h-6 w-6 shrink-0 text-red-500' />
@@ -327,9 +325,9 @@ export function MascotAdvisor() {
                           ĐRL đang ở mức {analysis.trainingRank.label} ({analysis.currentTrainingPoint.toFixed(2)})
                         </p>
                         <p className='leading-relaxed opacity-90'>
-                          Cảnh báo: Nếu bị xếp loại Yếu/Kém (dưới {_DEFAULT_MIN_TRAINING_POINT_WARNING}) trong 2 học kỳ
-                          liên tiếp, bạn sẽ bị buộc ngừng học 1 học kỳ. Hãy cải thiện bằng cách tích cực tham gia các
-                          hoạt động ngoại khóa ngay nhé!
+                          Cảnh báo: Nếu bị xếp loại Yếu/Kém (dưới {_DEFAULT_DRL_WARNING_THRESHOLD}) trong 2 học kỳ liên
+                          tiếp, bạn sẽ bị buộc ngừng học 1 học kỳ. Hãy cải thiện bằng cách tích cực tham gia các hoạt
+                          động ngoại khóa ngay nhé!
                         </p>
                       </div>
                     </div>

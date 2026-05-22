@@ -1,15 +1,9 @@
-import { ChevronLeft, Monitor, Moon, PanelLeft, Sun } from "lucide-react";
+import { ChevronLeft, PanelLeft } from "lucide-react";
+import { ThemeToggle } from "@/components/custom/theme-toggle";
 import { UserMenu } from "@/components/custom/user-menu";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { type ThemeMode } from "@/lib/theme";
 import { cn } from "@/lib/utils";
-
-export type ThemeMode = "light" | "dark" | "system";
 
 type AppHeaderProps = {
   breadcrumbs: string[];
@@ -18,16 +12,6 @@ type AppHeaderProps = {
   theme?: ThemeMode;
   onThemeChange?: (theme: ThemeMode) => void;
   actions?: React.ReactNode;
-};
-
-const ThemeIcon = ({ theme }: { theme: ThemeMode }) => {
-  if (theme === "light") {
-    return <Sun className='h-4 w-4' />;
-  }
-  if (theme === "dark") {
-    return <Moon className='h-4 w-4' />;
-  }
-  return <Monitor className='h-4 w-4' />;
 };
 
 export function AppHeader({
@@ -89,32 +73,7 @@ export function AppHeader({
 
       {actions}
 
-      {onThemeChange && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button aria-label='Đổi giao diện' className='h-8 w-8' size='icon' variant='ghost'>
-              <ThemeIcon theme={theme} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-36'>
-            <DropdownMenuItem onClick={() => onThemeChange("light")}>
-              <Sun className='mr-2 h-4 w-4' />
-              Sáng
-              {theme === "light" && <span className='ml-auto text-primary'>✓</span>}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onThemeChange("dark")}>
-              <Moon className='mr-2 h-4 w-4' />
-              Tối
-              {theme === "dark" && <span className='ml-auto text-primary'>✓</span>}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onThemeChange("system")}>
-              <Monitor className='mr-2 h-4 w-4' />
-              Hệ thống
-              {theme === "system" && <span className='ml-auto text-primary'>✓</span>}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+      {onThemeChange && <ThemeToggle onThemeChange={onThemeChange} theme={theme} />}
     </header>
   );
 }

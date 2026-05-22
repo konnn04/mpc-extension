@@ -1,7 +1,6 @@
 import type { PointCharacterType, ScoreGroupType } from "@/types";
 
 const getPointData = () => {
-  /** Parse overview row fields (training point, GPA, credits) and apply to the group. */
   function parseOverviewRow(r: Element, group: ScoreGroupType): void {
     const titleField = (r.querySelector("td:first-child") as HTMLElement)?.innerText.trim();
     const valueField = (r.querySelector("td:last-child") as HTMLElement)?.innerText.trim();
@@ -20,8 +19,7 @@ const getPointData = () => {
     }
   }
 
-  /** Parse a data row (subject score) and push it into the last group. */
-  function parseDataRow(columns: NodeListOf<Element>, data: ScoreGroupType[]): void {
+  function parseDataRow(columns: NodeListOf<HTMLElement>, data: ScoreGroupType[]): void {
     const character = columns[11].innerText as PointCharacterType;
     const scale10Raw = columns[9].innerText.trim();
     const scale4Raw = columns[10].innerText.trim();
@@ -41,7 +39,7 @@ const getPointData = () => {
   const data: ScoreGroupType[] = [];
 
   for (const [index, row] of Array.from(tableRows).entries()) {
-    const columns = row.querySelectorAll("td");
+    const columns = row.querySelectorAll("td") as NodeListOf<HTMLElement>;
     const isHead = !row.classList.contains("bg-white");
 
     if (isHead) {

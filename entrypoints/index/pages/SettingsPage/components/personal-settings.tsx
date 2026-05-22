@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { _OUCOMMUNITY_PROGRAM_URL } from "@/constants/default";
 
 export function PersonalSettings({
   totalProgramCredits,
@@ -20,7 +21,7 @@ export function PersonalSettings({
           Tổng tín chỉ toàn khóa ngành bạn. Không đúng?{" "}
           <a
             className='font-medium text-amber-600'
-            href='https://www.oucommunity.dev/tuyen-sinh/gioi-thieu-nganh/'
+            href={_OUCOMMUNITY_PROGRAM_URL}
             rel='noopener noreferrer'
             target='_blank'
           >

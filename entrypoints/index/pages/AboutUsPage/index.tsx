@@ -1,15 +1,32 @@
-import { BookOpenText, Bug, FacebookIcon, GithubIcon, ShieldCheck } from "lucide-react";
+import {
+  BookOpenText,
+  FacebookIcon,
+  GithubIcon,
+  MessageCircleIcon,
+  PackageIcon,
+  ShieldCheck,
+  UsersIcon
+} from "lucide-react";
 import { useState } from "react";
+import infoData from "@/assets/data/info.json";
 import cachTinhToanMd from "@/assets/docs/cach_tinh_toan.md?raw";
 import { ButtonNavSite } from "@/components/custom/button-nav-site";
 import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { _FACEBOOK_URL, _GITHUB_URL, _REPORT_BUG_URL } from "@/constants";
+import { Separator } from "@/components/ui/separator";
+import { _FACEBOOK_URL, _GITHUB_RELEASE_URL, _GITHUB_URL, _MESSENGER_URL } from "@/constants";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useUserSettingsStore } from "@/store/use-user-settings-store";
-
 import { buildCalcParams } from "@/utils/markdown-params";
+import packageJson from "../../../../package.json";
+
+type InfoData = {
+  credits: {
+    team: string;
+    contributors: string[];
+  };
+};
 
 export function AboutUsPage() {
   const [calcOpen, setCalcOpen] = useState(false);
@@ -22,6 +39,8 @@ export function AboutUsPage() {
     drlWarningThreshold
   } = useGlobalStore();
   const userSettings = useUserSettingsStore((s) => s.settings);
+  const data = infoData as InfoData;
+  const version = packageJson.version;
 
   const calcParams = buildCalcParams({
     retakeRatioLimit,
@@ -50,18 +69,49 @@ export function AboutUsPage() {
             <CardDescription>Trợ thủ đắc lực cho sinh viên OU</CardDescription>
           </CardHeader>
           <CardContent className='space-y-4 text-sm'>
-            <p>
-              MPC Extension là một tiện ích mở rộng trên trình duyệt được phát triển nhằm mục đích hỗ trợ sinh viên
-              Trường Đại học Mở TP.HCM (OU) trong việc theo dõi lịch học, tính toán điểm số và quản lý thông tin học tập
-              một cách hiệu quả và trực quan nhất.
-            </p>
-            <p>Dự án được mã nguồn mở và liên tục cập nhật dựa trên đóng góp từ cộng đồng sinh viên.</p>
-            <div className='flex gap-3 pt-4'>
-              <ButtonNavSite className='flex-1' isBlank rel='noopener' url={_GITHUB_URL} variant='outline'>
-                <GithubIcon className='mr-2 h-4 w-4' />
-                Mã nguồn Github
-              </ButtonNavSite>
+            <div>
+              <h3 className='mb-1 flex items-center gap-2 font-semibold text-sm'>
+                <PackageIcon className='h-4 w-4' />
+                Phiên bản
+              </h3>
+              <p className='text-muted-foreground'>
+                Hiện tại: <span className='font-medium font-mono'>v{version}</span>
+              </p>
             </div>
+
+            <Separator />
+
+            <div>
+              <h3 className='mb-1 font-semibold text-sm'>Lịch sử cập nhật</h3>
+              <p className='text-muted-foreground'>
+                Chi tiết tại{" "}
+                <ButtonNavSite isBlank url={_GITHUB_RELEASE_URL} variant='link'>
+                  Github Releases
+                </ButtonNavSite>
+              </p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className='mb-1 flex items-center gap-2 font-semibold text-sm'>
+                <UsersIcon className='h-4 w-4' />
+                Đóng góp
+              </h3>
+              <p className='text-muted-foreground'>
+                Được phát triển bởi <span className='font-medium'>{data.credits.team}</span>
+              </p>
+              {data.credits.contributors.length > 0 && (
+                <p className='mt-1 text-muted-foreground'>Đóng góp: {data.credits.contributors.join(", ")}</p>
+              )}
+            </div>
+
+            <Separator />
+
+            <ButtonNavSite className='w-full' isBlank rel='noopener' url={_GITHUB_URL} variant='outline'>
+              <GithubIcon className='mr-2 h-4 w-4' />
+              Mã nguồn Github
+            </ButtonNavSite>
           </CardContent>
         </Card>
 
@@ -95,11 +145,11 @@ export function AboutUsPage() {
         <CardContent>
           <p className='mb-4 text-sm'>
             Nếu bạn phát hiện lỗi (bug) trong quá trình sử dụng hoặc có ý tưởng muốn đóng góp thêm tính năng cho MPC
-            Extension, vui lòng để lại thông tin cho chúng tôi.
+            Extension, vui lòng để lại tin nhắn cho CLB.
           </p>
-          <ButtonNavSite className='bg-blue-600 text-white hover:bg-blue-700' url={_REPORT_BUG_URL}>
-            <Bug className='mr-2 h-4 w-4' />
-            Báo cáo lỗi / Góp ý
+          <ButtonNavSite className='flex-1' isBlank rel='noopener' url={_MESSENGER_URL} variant='outline'>
+            <MessageCircleIcon className='mr-2 h-4 w-4 text-blue-500' />
+            Messenger CLB
           </ButtonNavSite>
         </CardContent>
       </Card>

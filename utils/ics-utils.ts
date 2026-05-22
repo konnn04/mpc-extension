@@ -1,4 +1,4 @@
-import { DATE_MATCH_REGEX, ICS_METADATA, ICS_UID_DOMAIN, WEEK_YEAR_REGEX } from "@/constants";
+import { _DATE_MATCH_REGEX, _ICS_METADATA, _ICS_UID_DOMAIN, _WEEK_YEAR_REGEX } from "@/constants";
 import type { CalendarEntry, SemesterData } from "@/types";
 
 function parseDateTime(dateStr: string, timeStr: string): Date {
@@ -25,7 +25,7 @@ function formatICSDateTime(date: Date): string {
 }
 
 function generateUID(entry: CalendarEntry, dateKey: string): string {
-  return `${entry.code}-${dateKey}-${entry.startPeriod}@${ICS_UID_DOMAIN}`;
+  return `${entry.code}-${dateKey}-${entry.startPeriod}@${_ICS_UID_DOMAIN}`;
 }
 
 function escapeICSText(text: string): string {
@@ -79,11 +79,11 @@ const processWeeks = (weeks: SemesterData["weeks"]): string[] => {
   const calendarEvents: string[] = [];
 
   for (const weekData of weeks) {
-    const weekYearMatch = weekData.week.match(WEEK_YEAR_REGEX);
+    const weekYearMatch = weekData.week.match(_WEEK_YEAR_REGEX);
     const year = weekYearMatch ? weekYearMatch[1] : new Date().getFullYear().toString();
 
     for (const entry of weekData.schedule) {
-      const dateMatch = entry.day.match(DATE_MATCH_REGEX);
+      const dateMatch = entry.day.match(_DATE_MATCH_REGEX);
       if (!dateMatch) {
         continue;
       }
@@ -106,12 +106,12 @@ export function convertToICS(data: SemesterData[]): string {
 
   const icsContent = [
     "BEGIN:VCALENDAR",
-    `VERSION:${ICS_METADATA.VERSION}`,
-    `PRODID:${ICS_METADATA.PRODID}`,
-    `CALSCALE:${ICS_METADATA.CALSCALE}`,
-    `METHOD:${ICS_METADATA.METHOD}`,
-    `X-WR-CALNAME:${ICS_METADATA.CALENDAR_NAME}`,
-    `X-WR-TIMEZONE:${ICS_METADATA.TIMEZONE}`,
+    `VERSION:${_ICS_METADATA.VERSION}`,
+    `PRODID:${_ICS_METADATA.PRODID}`,
+    `CALSCALE:${_ICS_METADATA.CALSCALE}`,
+    `METHOD:${_ICS_METADATA.METHOD}`,
+    `X-WR-CALNAME:${_ICS_METADATA.CALENDAR_NAME}`,
+    `X-WR-TIMEZONE:${_ICS_METADATA.TIMEZONE}`,
     ...allEvents,
     "END:VCALENDAR"
   ].join("\r\n");

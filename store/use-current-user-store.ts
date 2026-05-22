@@ -41,7 +41,6 @@ export const useCurrentUserStore = create<CurrentUserState>((set, get) => ({
       if (typeof raw === "string") {
         const parsed = JSON.parse(raw);
         if (parsed.studentId) {
-          // Load avatar from separate key
           let avatar = "";
           try {
             avatar = (await storage.getItem<string>(getAvatarKey(parsed.studentId))) || "";

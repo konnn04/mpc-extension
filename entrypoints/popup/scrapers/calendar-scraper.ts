@@ -1,4 +1,3 @@
-// Only type imports are safe for functions injected via executeScript
 import type { CalendarEntry, ProgressCallback, SemesterData, WeekData } from "@/types";
 
 const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData[]> => {
@@ -50,24 +49,32 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
 
   // ==================== CONFIGURATION ====================
   const CONFIG = {
+    POLL_INTERVAL: 50,        // ms between condition checks
+    DROPDOWN_TIMEOUT: 3000,   // max ms to wait for dropdown open/close
+    TABLE_TIMEOUT: 10_000,    // max ms to wait for table data after semester switch
+    TABLE_EMPTY_TIMEOUT: 4000,// max ms to wait if table remains empty (no-data scenario)
+    SCROLL_RETRIES: 15,
+    ERROR_DISPLAY: 2000,
+    COMPLETION_DELAY: 500,
     selectors: {
-      semesterSelect: "div.col-lg-4 div.ng-input", // Updated based on DOM "col-lg-4 col-md-6 col-12 mb-2" for "Học kỳ"
-      semesterDropdown: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content",
+      semesterSelect: "div.col-lg-4 div.ng-input",
+      semesterDropdown: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
       semesterItems: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content > div",
       table: "#printArea > div.table-responsive-lg table.table",
       tableRows: "tbody tr"
     },
-    timeouts: {
-      dropdownOpen: 300,
-      dropdownClose: 200,
-      scrollWait: 100,
-      tableUpdateLong: 15_000,
-      tableUpdateShort: 1000,
-      errorDisplay: 2000,
-      completionDelay: 500
-    },
-    limits: {
-      maxScrollRetries: 15
+    // ── Legacy nested aliases for backward compat with getExamCalendars ──
+    get limits() { return { maxScrollRetries: this.SCROLL_RETRIES }; },
+    get timeouts() {
+      return {
+        get dropdownOpen() { return CONFIG.DROPDOWN_TIMEOUT; },
+        get dropdownClose() { return CONFIG.DROPDOWN_TIMEOUT; },
+        get scrollWait() { return CONFIG.POLL_INTERVAL; },
+        get tableUpdateLong() { return CONFIG.TABLE_TIMEOUT; },
+        tableUpdateShort: 500,
+        get errorDisplay() { return CONFIG.ERROR_DISPLAY; },
+        get completionDelay() { return CONFIG.COMPLETION_DELAY; }
+      };
     },
     overlayIds: {
       overlay: "mpc-crawl-overlay",
@@ -78,7 +85,38 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     }
   };
 
-  // ==================== HELPER FUNCTIONS ====================
+  // ── Smart polling: check condition every POLL_INTERVAL ms, resolve early, reject on timeout ──
+  const pollUntil = (
+    condition: () => boolean,
+    timeoutMs: number,
+    label?: string
+  ): Promise<void> =>
+    new Promise((resolve, reject) => {
+      if (condition()) {
+        resolve();
+        return;
+      }
+      const start = Date.now();
+      const timer = setInterval(() => {
+        if (condition()) {
+          clearInterval(timer);
+          resolve();
+        } else if (Date.now() - start >= timeoutMs) {
+          clearInterval(timer);
+          reject(new Error(label ? `Timeout: ${label}` : "Polling timeout"));
+        }
+      }, CONFIG.POLL_INTERVAL);
+    });
+
+  /** Poll until a selector matches an element in the DOM. */
+  const waitForSelector = (selector: string, timeoutMs: number): Promise<void> =>
+    pollUntil(() => !!document.querySelector(selector), timeoutMs, selector);
+
+  /** Poll until a selector NO LONGER matches (element removed). */
+  const waitForSelectorRemoved = (selector: string, timeoutMs: number): Promise<void> =>
+    pollUntil(() => !document.querySelector(selector), timeoutMs, `removed:${selector}`);
+
+  // ── Legacy wait kept only for non-DOM delays (overlay animations, completion) ──
   const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
   const createOverlay = (): HTMLDivElement => {
@@ -177,24 +215,9 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
   };
 
   const scrollDropdownToLoadAll = async (scrollableContent: Element): Promise<void> => {
-    let lastHeight = 0;
-    let retries = 0;
-
-    while (retries < CONFIG.limits.maxScrollRetries) {
-      scrollableContent.scrollTop = scrollableContent.scrollHeight;
-      await wait(CONFIG.timeouts.scrollWait);
-
-      const currentHeight = scrollableContent.scrollHeight;
-      if (currentHeight === lastHeight) {
-        break;
-      }
-
-      lastHeight = currentHeight;
-      retries++;
-    }
-
-    scrollableContent.scrollTop = 0;
-    await wait(CONFIG.timeouts.scrollWait);
+    const el = scrollableContent as HTMLElement;
+    el.scrollTop = el.scrollHeight;
+    await wait(250);
   };
 
   const getSemesters = async (): Promise<string[]> => {
@@ -219,20 +242,40 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     }
 
     semesterSelect.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    await wait(CONFIG.timeouts.dropdownOpen);
+    await waitForSelector(CONFIG.selectors.semesterDropdown, CONFIG.DROPDOWN_TIMEOUT);
 
-    const scrollableContent = document.querySelector(CONFIG.selectors.semesterDropdown);
-    if (scrollableContent) {
-      await scrollDropdownToLoadAll(scrollableContent);
+    // Collect items while scrolling — virtual scroll only keeps viewport items in DOM
+    const seen = new Set<string>();
+    const scrollEl = document.querySelector(CONFIG.selectors.semesterDropdown) as HTMLElement | null;
+    if (scrollEl) {
+      const step = scrollEl.clientHeight || 100;
+      let pos = 0;
+      while (pos < scrollEl.scrollHeight) {
+        scrollEl.scrollTop = pos;
+        await wait(150);
+        const items = document.querySelectorAll(CONFIG.selectors.semesterItems);
+        for (const item of items) {
+          const t = item.textContent?.trim();
+          if (t) seen.add(t);
+        }
+        pos += step;
+      }
+      // Final scroll to absolute bottom
+      scrollEl.scrollTop = scrollEl.scrollHeight;
+      await wait(200);
+      const items = document.querySelectorAll(CONFIG.selectors.semesterItems);
+      for (const item of items) {
+        const t = item.textContent?.trim();
+        if (t) seen.add(t);
+      }
     }
 
-    const items = document.querySelectorAll(CONFIG.selectors.semesterItems);
-    const semesters = Array.from(items).map((node) => node.textContent?.trim() || "");
+    const semesters = Array.from(seen);
 
     semesterSelect.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    await wait(CONFIG.timeouts.dropdownClose);
+    await waitForSelectorRemoved(CONFIG.selectors.semesterDropdown, CONFIG.DROPDOWN_TIMEOUT);
     document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    await wait(100);
+    await wait(50);
 
     if (semesters.length === 0 && savedCurrent) {
       console.warn("Dropdown không có items, fallback về học kỳ hiện tại:", savedCurrent);
@@ -242,44 +285,52 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     return semesters.reverse();
   };
 
-  const waitForTableUpdate = (): Promise<void> =>
-    new Promise((resolve) => {
-      const table = document.querySelector(CONFIG.selectors.table);
-      if (!table) {
-        setTimeout(() => resolve(), CONFIG.timeouts.tableUpdateLong);
-        return;
+  /** Two-phase spinner poll: wait for overlay to APPEAR (Angular started), then DISAPPEAR (done), then settle + verify. */
+  const waitForSpinnerThenSettle = async (settleMs = 500): Promise<void> => {
+    const spinnerSelector = "ngx-spinner .ngx-spinner-overlay";
+    const pollInterval = CONFIG.POLL_INTERVAL;
+    const maxWait = CONFIG.TABLE_TIMEOUT;
+
+    // Phase 1: Wait for spinner overlay to APPEAR (Angular may take a moment to start)
+    const phase1Start = Date.now();
+    while (Date.now() - phase1Start < maxWait) {
+      if (document.querySelector(spinnerSelector)) break;
+      await wait(pollInterval);
+    }
+
+    // Phase 2: Wait for spinner overlay to DISAPPEAR (loading done)
+    const phase2Start = Date.now();
+    while (Date.now() - phase2Start < maxWait) {
+      if (!document.querySelector(spinnerSelector)) break;
+      await wait(pollInterval);
+    }
+
+    // Angular renders data after spinner hides
+    await wait(settleMs);
+
+    // Verify table has actual data rows
+    const table = document.querySelector(CONFIG.selectors.table);
+    if (table) {
+      const verifyMax = 5000;
+      const verifyStart = Date.now();
+      while (Date.now() - verifyStart < verifyMax) {
+        const rows = table.querySelectorAll("tbody tr");
+        if (rows.length > 0 && !rows[0]?.textContent?.includes("Không tìm thấy")) break;
+        await wait(200);
       }
-
-      const observer = new MutationObserver((mutations, obs) => {
-        const hasChanges = mutations.some((m) => m.type === "childList" && m.addedNodes.length > 0);
-
-        if (hasChanges) {
-          obs.disconnect();
-          setTimeout(() => resolve(), CONFIG.timeouts.tableUpdateShort);
-        }
-      });
-
-      observer.observe(table, { childList: true, subtree: true });
-      setTimeout(() => {
-        observer.disconnect();
-        resolve();
-      }, CONFIG.timeouts.tableUpdateLong);
-    });
+    }
+  };
 
   const selectSemester = async (semesterText: string): Promise<void> => {
-    // If already showing the requested semester, skip dropdown interaction
     const currentLabel =
       document.querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label")?.textContent?.trim() ||
       document.querySelector("ng-select .ng-value-label")?.textContent?.trim();
-    if (currentLabel === semesterText) {
-      console.log(`Đang ở học kỳ "${semesterText}", bỏ qua bước chọn.`);
-      return;
-    }
 
-    const table = document.querySelector(CONFIG.selectors.table);
-    let originalHtml = "";
-    if (table) {
-      originalHtml = table.innerHTML;
+    // Already showing the requested semester — still wait for any pending render
+    if (currentLabel === semesterText) {
+      console.log(`Đang ở học kỳ "${semesterText}", đợi render nếu đang load dở.`);
+      await waitForSpinnerThenSettle();
+      return;
     }
 
     const semesterSelect = document.querySelector(CONFIG.selectors.semesterSelect);
@@ -288,7 +339,7 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     }
 
     semesterSelect.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    await wait(CONFIG.timeouts.dropdownOpen);
+    await waitForSelector(CONFIG.selectors.semesterDropdown, CONFIG.DROPDOWN_TIMEOUT);
 
     const scrollableContent = document.querySelector(CONFIG.selectors.semesterDropdown);
     if (scrollableContent) {
@@ -300,46 +351,19 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
 
     if (!targetItem) {
       semesterSelect.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      await wait(CONFIG.timeouts.dropdownClose);
+      await waitForSelectorRemoved(CONFIG.selectors.semesterDropdown, CONFIG.DROPDOWN_TIMEOUT);
       console.warn(`Không tìm thấy học kỳ "${semesterText}" trong dropdown, dùng dữ liệu hiện tại.`);
       return;
     }
 
     targetItem.scrollIntoView({ block: "nearest" });
-    await wait(CONFIG.timeouts.scrollWait);
+    await wait(CONFIG.POLL_INTERVAL);
     targetItem.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     targetItem.click();
-    await wait(CONFIG.timeouts.dropdownClose);
 
-    // Wait for table to update
-    const startTime = Date.now();
-    let isUpdated = false;
-    let isWarningFound = false;
-
-    while (Date.now() - startTime < CONFIG.timeouts.tableUpdateLong) {
-      const warningText = document.querySelector(".alert-warning")?.textContent || "";
-      if (
-        warningText.includes("Không tìm thấy dữ liệu") ||
-        document.body.textContent?.includes("Không tìm thấy dữ liệu")
-      ) {
-        isWarningFound = true;
-        break;
-      }
-
-      const currentTable = document.querySelector(CONFIG.selectors.table);
-      if (currentTable && currentTable.innerHTML !== originalHtml) {
-        isUpdated = true;
-        break;
-      }
-
-      await wait(CONFIG.timeouts.scrollWait);
-    }
-
-    if (!(isUpdated || isWarningFound)) {
-      console.warn(`Bảng dữ liệu có thể không được cập nhật cho học kỳ: ${semesterText}`);
-    }
-
-    await wait(CONFIG.timeouts.tableUpdateShort);
+    // Wait for Angular spinner to appear then disappear, then settle for data render.
+    // Don't wait for dropdown close separately — the spinner is the reliable loading signal.
+    await waitForSpinnerThenSettle();
   };
 
   const parseDateString = (dateStr: string): Date => {
@@ -762,7 +786,7 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
   const CONFIG = {
     selectors: {
       semesterSelect: "ng-select[bindlabel='ten_hoc_ky'] div.ng-input",
-      semesterDropdown: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content",
+      semesterDropdown: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
       semesterItems: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content > div",
       table: "#printArea div.table-responsive-lg table.table",
       tableRows: "tbody tr"
@@ -887,24 +911,9 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
   };
 
   const scrollDropdownToLoadAll = async (scrollableContent: Element): Promise<void> => {
-    let lastHeight = 0;
-    let retries = 0;
-
-    while (retries < CONFIG.limits.maxScrollRetries) {
-      scrollableContent.scrollTop = scrollableContent.scrollHeight;
-      await wait(CONFIG.timeouts.scrollWait);
-
-      const currentHeight = scrollableContent.scrollHeight;
-      if (currentHeight === lastHeight) {
-        break;
-      }
-
-      lastHeight = currentHeight;
-      retries++;
-    }
-
-    scrollableContent.scrollTop = 0;
-    await wait(CONFIG.timeouts.scrollWait);
+    const el = scrollableContent as HTMLElement;
+    el.scrollTop = el.scrollHeight;
+    await wait(250);
   };
 
   const getSemesters = async (): Promise<string[]> => {
@@ -934,43 +943,44 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
     inputDiv.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     await wait(CONFIG.timeouts.dropdownOpen);
 
+    // Find scroll container
     const dropdownSelectors = [
-      "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content",
-      "ng-select ng-dropdown-panel div.scrollable-content",
-      "ng-dropdown-panel div.scrollable-content"
+      "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
+      "ng-select ng-dropdown-panel .ng-dropdown-panel-items",
+      "ng-dropdown-panel .ng-dropdown-panel-items"
     ];
-    let scrollableContent: Element | null = null;
+    let scrollEl: HTMLElement | null = null;
     for (const sel of dropdownSelectors) {
-      scrollableContent = document.querySelector(sel);
-      if (scrollableContent) {
-        break;
+      scrollEl = document.querySelector(sel);
+      if (scrollEl) break;
+    }
+
+    // Collect items while scrolling — virtual scroll only keeps viewport items in DOM
+    const seen = new Set<string>();
+    if (scrollEl) {
+      const itemSelector = "ng-dropdown-panel .ng-option";
+      const step = scrollEl.clientHeight || 100;
+      let pos = 0;
+      while (pos < scrollEl.scrollHeight) {
+        scrollEl.scrollTop = pos;
+        await wait(150);
+        const items = document.querySelectorAll(itemSelector);
+        for (const item of items) {
+          const t = item.textContent?.trim();
+          if (t) seen.add(t);
+        }
+        pos += step;
+      }
+      scrollEl.scrollTop = scrollEl.scrollHeight;
+      await wait(200);
+      const items = document.querySelectorAll(itemSelector);
+      for (const item of items) {
+        const t = item.textContent?.trim();
+        if (t) seen.add(t);
       }
     }
 
-    if (scrollableContent) {
-      await scrollDropdownToLoadAll(scrollableContent);
-    }
-
-    const itemSelectors = [
-      "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content > div",
-      "ng-select ng-dropdown-panel div.scrollable-content > div",
-      "ng-dropdown-panel div.scrollable-content > div",
-      "ng-dropdown-panel .ng-option"
-    ];
-    let items: NodeListOf<Element> | null = null;
-    for (const sel of itemSelectors) {
-      const found = document.querySelectorAll(sel);
-      if (found.length > 0) {
-        items = found;
-        break;
-      }
-    }
-
-    const semesters = items
-      ? Array.from(items)
-          .map((item) => item.textContent?.trim())
-          .filter((text): text is string => Boolean(text))
-      : [];
+    const semesters = Array.from(seen);
 
     inputDiv.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     await wait(CONFIG.timeouts.dropdownClose);
@@ -991,14 +1001,22 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
       document.querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label")?.textContent?.trim() ||
       document.querySelector("ng-select .ng-value-label")?.textContent?.trim();
     if (currentLabel === semesterName) {
-      console.log(`Đang ở học kỳ "${semesterName}", bỏ qua bước chọn.`);
+      console.log(`Đang ở học kỳ "${semesterName}", đợi render nếu đang load dở.`);
+      // Still wait for spinner — page might still be loading
+      const spinnerSelector = "ngx-spinner .ngx-spinner-overlay";
+      const maxWait = CONFIG.timeouts.tableUpdateLong;
+      const p1Start = Date.now();
+      while (Date.now() - p1Start < maxWait) {
+        if (document.querySelector(spinnerSelector)) break;
+        await wait(100);
+      }
+      const p2Start = Date.now();
+      while (Date.now() - p2Start < maxWait) {
+        if (!document.querySelector(spinnerSelector)) break;
+        await wait(100);
+      }
+      await wait(500);
       return;
-    }
-
-    const table = document.querySelector(CONFIG.selectors.table);
-    let originalHtml = "";
-    if (table) {
-      originalHtml = table.innerHTML;
     }
 
     const inputDiv =
@@ -1014,9 +1032,9 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
     await wait(CONFIG.timeouts.dropdownOpen);
 
     const dropdownSelectors = [
-      "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content",
-      "ng-select ng-dropdown-panel div.scrollable-content",
-      "ng-dropdown-panel div.scrollable-content"
+      "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
+      "ng-select ng-dropdown-panel .ng-dropdown-panel-items",
+      "ng-dropdown-panel .ng-dropdown-panel-items"
     ];
     let scrollableContent: Element | null = null;
     for (const sel of dropdownSelectors) {
@@ -1058,37 +1076,39 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
     await wait(CONFIG.timeouts.scrollWait);
     (targetItem as HTMLElement).dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     (targetItem as HTMLElement).click();
-    await wait(CONFIG.timeouts.dropdownClose);
 
-    // Wait for table to update
-    const startTime = Date.now();
-    let isUpdated = false;
-    let isWarningFound = false;
+    // Two-phase spinner poll: wait for overlay to APPEAR, then DISAPPEAR, then settle + verify
+    const spinnerSelector = "ngx-spinner .ngx-spinner-overlay";
+    const pollMs = 100;
+    const maxWait = CONFIG.timeouts.tableUpdateLong;
 
-    while (Date.now() - startTime < CONFIG.timeouts.tableUpdateLong) {
-      const warningText = document.querySelector(".alert-warning")?.textContent || "";
-      if (
-        warningText.includes("Không tìm thấy dữ liệu") ||
-        document.body.textContent?.includes("Không tìm thấy dữ liệu")
-      ) {
-        isWarningFound = true;
-        break;
-      }
-
-      const currentTable = document.querySelector(CONFIG.selectors.table);
-      if (currentTable && currentTable.innerHTML !== originalHtml) {
-        isUpdated = true;
-        break;
-      }
-
-      await wait(CONFIG.timeouts.scrollWait);
+    // Phase 1: wait for spinner to appear (Angular may take a moment to start)
+    const p1Start = Date.now();
+    while (Date.now() - p1Start < maxWait) {
+      if (document.querySelector(spinnerSelector)) break;
+      await wait(pollMs);
     }
 
-    if (!(isUpdated || isWarningFound)) {
-      console.warn(`Bảng dữ liệu có thể không được cập nhật cho học kỳ: ${semesterName}`);
+    // Phase 2: wait for spinner to disappear (loading done)
+    const p2Start = Date.now();
+    while (Date.now() - p2Start < maxWait) {
+      if (!document.querySelector(spinnerSelector)) break;
+      await wait(pollMs);
     }
 
-    await wait(CONFIG.timeouts.tableUpdateShort);
+    await wait(500); // Settle for data render
+
+    // Verify table has actual data rows
+    const table = document.querySelector(CONFIG.selectors.table);
+    if (table) {
+      const verifyMax = 5000;
+      const verifyStart = Date.now();
+      while (Date.now() - verifyStart < verifyMax) {
+        const rows = table.querySelectorAll("tbody tr");
+        if (rows.length > 0 && !rows[0]?.textContent?.includes("Không tìm thấy")) break;
+        await wait(200);
+      }
+    }
   };
 
   const getWeekStartEnd = (dateStr: string): { start: Date; end: Date } => {
@@ -1110,22 +1130,11 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
     return `Tuần (${sStr} - ${eStr})`;
   };
 
-  const calculateEndTime = (startTime: string, durationInPeriods: number): string => {
-    const [hour, min] = startTime.split(":").map(Number);
-    // Assuming each period is 50 minutes, wait, let's just do hours and minutes
-    const totalMinutes = hour * 60 + min + durationInPeriods * 50; // Just a rough estimate
-    const endHour = Math.floor(totalMinutes / 60);
-    const endMin = totalMinutes % 60;
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    return `${pad(endHour)}:${pad(endMin)}`;
-  };
-
   const scrapeScheduleTable = () => {
     const rows = document.querySelectorAll(CONFIG.selectors.tableRows);
     const allEntries: { date: string; entry: any }[] = [];
 
-    // Skip the first row if it's the search/filter row
-    // Filter rows with class "bg-white text-center align-middle ng-star-inserted"
+    // Filter to data rows: bg-white with enough tds, skip search row & no-data row
     const dataRows = Array.from(rows).filter(
       (row) => row.classList.contains("bg-white") && row.querySelectorAll("td").length >= 10
     );
@@ -1134,26 +1143,64 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
       const row = dataRows[i];
       const cells = row.querySelectorAll("td");
 
-      // Based on DOM:
-      // 1: Mã MH, 2: Tên môn, 3: Nhóm, 4: Sĩ số, 5: Ngày, 6: Giờ bắt đầu, 7: Phòng, 8: Địa điểm, 11: Tiết bắt đầu (duration)
+      // Exam DOM: Stt(0) | Mã MH(1) | Tên môn(2) | [Nhóm thi(3)?] | [Sĩ số(?)] | Ngày thi | Giờ | Phòng | Địa điểm | ... | Tiết(11)
       const code = cells[1]?.textContent?.trim() || "";
       const title = cells[2]?.textContent?.trim() || "";
-      const group = cells[3]?.textContent?.trim() || "";
-      const date = cells[5]?.textContent?.trim() || "";
-      const startTime = cells[6]?.textContent?.trim() || "";
-      const roomStr = cells[7]?.textContent?.trim() || "";
-      const locationText = cells[8]?.innerText?.trim().replace(/\n/g, " - ") || cells[8]?.textContent?.trim() || "";
+
+      // Nhóm thi & Ngày thi — detect positions by content patterns
+      let group = "";
+      let date = "";
+      let startTime = "";
+      let roomStr = "";
+      let locationText = "";
+      let startPeriod = 1;
+
+      for (let j = 3; j < cells.length; j++) {
+        const text = cells[j]?.textContent?.trim() || "";
+        if (!text) continue;
+        // Date pattern: dd/mm/yyyy
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(text) && !date) {
+          date = text;
+        }
+        // Time pattern: HH:MM
+        else if (/^\d{2}:\d{2}$/.test(text) && !startTime) {
+          startTime = text;
+        }
+        // Nhóm thi: after Tên môn, before Ngày, not a number-only string
+        else if (!group && !/^\d+$/.test(text) && !date) {
+          group = text;
+        }
+      }
+
+      // Room & location: cells after startTime
+      let foundTime = false;
+      for (let j = 3; j < cells.length; j++) {
+        const text = cells[j]?.textContent?.trim() || "";
+        if (text === startTime) {
+          foundTime = true;
+          continue;
+        }
+        if (foundTime) {
+          if (!roomStr) {
+            roomStr = text;
+          } else if (!locationText) {
+            // Địa điểm thi: has HTML (br tags) or multi-line
+            const inner = (cells[j] as HTMLElement)?.innerText?.trim() || text;
+            locationText = inner.replace(/\n/g, " - ");
+            break;
+          }
+        }
+      }
+
+      // Tiết bắt đầu: last numeric cell
+      const lastCellText = cells[cells.length - 1]?.textContent?.trim() || "";
+      startPeriod = Number.parseInt(lastCellText, 10) || 1;
 
       const room = roomStr ? `${roomStr}${locationText ? ` - ${locationText}` : ""}` : locationText;
-
-      const durationStr = "2"; // Default 2 periods
 
       if (!(date && startTime)) {
         continue;
       }
-
-      const numPeriods = Number.parseInt(durationStr, 10);
-      const endTime = calculateEndTime(startTime, numPeriods);
 
       const [dayPart, monthPart, yearPart] = date.split("/");
       const dDate = new Date(Number(yearPart), Number(monthPart) - 1, Number(dayPart));
@@ -1168,10 +1215,10 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
         group,
         date,
         day: formattedDay,
-        startPeriod: 1,
-        numPeriods,
+        startPeriod,
+        numPeriods: 1, // Exam is typically a single period slot
         startTime,
-        endTime,
+        endTime: "",   // Cannot compute without period map; left for UI to display startTime
         room,
         teacher: "",
         link: "",

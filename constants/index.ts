@@ -1,23 +1,26 @@
 export const _REPORT_BUG_URL: string = "https://youtu.be/dQw4w9WgXcQ" as const;
 
 export const _FACEBOOK_URL: string = "https://www.facebook.com/CLBLapTrinhTrenThietBiDiDong" as const;
+export const _MESSENGER_URL: string = "https://m.me/168697773726618" as const;
 export const _GITHUB_URL: string = "https://github.com/mpc-ou/mpc-extension" as const;
 export const _GITHUB_RELEASE_URL: string = "https://github.com/mpc-ou/mpc-extension/releases" as const;
 
 const _CHROME_STORAGE_TYPE: _CHROME_STORAGE_CATE = "local";
-export const _CHROME_STORAGE_GLOBAL_KEY = "sync:global" as const;
+/** Sync-first global settings key — falls back to local if sync is unavailable. */
+export const _CHROME_STORAGE_GLOBAL_SYNC_KEY = "sync:global" as const;
+export const _CHROME_STORAGE_GLOBAL_LOCAL_KEY = "local:global" as const;
 export const _CHROME_STORAGE_POINT_KEY = `${_CHROME_STORAGE_TYPE}:pointData` as const;
-export const WEEK_YEAR_REGEX = /\d{2}\/\d{2}\/(\d{4})/;
-export const DATE_MATCH_REGEX = /\((\d{2})\/(\d{2})\)/;
-export const SUBJECT_CODE_REGEX = /\((.*?)\)/;
-export const WEEK_MATCH_REGEX = /Tuần \(\d{2}\/\d{2}\/(\d{4}) - \d{2}\/\d{2}\/(\d{4})\)/;
-export const WEEK_SORT_REGEX = /Tuần \((\d{2})\/(\d{2})\/(\d{4})/;
-export const DATE_RANGE_REGEX = /(\d{2}\/\d{2}\/\d{2})\s*đến\s*(\d{2}\/\d{2}\/\d{2})/;
-export const SINGLE_DATE_REGEX = /(\d{2}\/\d{2}\/\d{2})/;
+export const _WEEK_YEAR_REGEX = /\d{2}\/\d{2}\/(\d{4})/;
+export const _DATE_MATCH_REGEX = /\((\d{2})\/(\d{2})\)/;
+export const _SUBJECT_CODE_REGEX = /\((.*?)\)/;
+export const _WEEK_MATCH_REGEX = /Tuần \(\d{2}\/\d{2}\/(\d{4}) - \d{2}\/\d{2}\/(\d{4})\)/;
+export const _WEEK_SORT_REGEX = /Tuần \((\d{2})\/(\d{2})\/(\d{4})\)/;
+export const _DATE_RANGE_REGEX = /(\d{2}\/\d{2}\/\d{2})\s*đến\s*(\d{2}\/\d{2}\/\d{2})/;
+export const _SINGLE_DATE_REGEX = /(\d{2}\/\d{2}\/\d{2})/;
 
 // ==================== CATEGORY TYPES ====================
 
-export const CATEGORY_TYPES = {
+export const _CATEGORY_TYPES = {
   COURSE: "COURSE",
   LAB: "LAB",
   EXAM: "EXAM",
@@ -26,12 +29,12 @@ export const CATEGORY_TYPES = {
   OTHER: "OTHER"
 } as const;
 
-export type CategoryType = (typeof CATEGORY_TYPES)[keyof typeof CATEGORY_TYPES];
+export type CategoryType = (typeof _CATEGORY_TYPES)[keyof typeof _CATEGORY_TYPES];
 
 // ==================== CATEGORY LABELS ====================
 
 /** Vietnamese labels for calendar entry categories */
-export const CATEGORY_LABELS: Record<string, string> = {
+export const _CATEGORY_LABELS: Record<string, string> = {
   COURSE: "Học",
   LAB: "Thực hành",
   EXAM: "Thi",
@@ -45,13 +48,13 @@ export const CATEGORY_LABELS: Record<string, string> = {
  * @param category - Category type
  * @returns Vietnamese label or the original category if not found
  */
-export function getCategoryLabel(category: string): string {
-  return CATEGORY_LABELS[category] || category;
+export function _getCategoryLabel(category: string): string {
+  return _CATEGORY_LABELS[category] || category;
 }
 
 // ==================== CATEGORY COLORS ====================
 
-export const CATEGORY_COLORS: Record<string, string> = {
+export const _CATEGORY_COLORS: Record<string, string> = {
   COURSE: "bg-blue-500",
   LAB: "bg-green-500",
   EXAM: "bg-red-500",
@@ -62,7 +65,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
 
 // ==================== SUBJECT COLORS ====================
 
-export const SUBJECT_COLOR_PALETTE = [
+export const _SUBJECT_COLOR_PALETTE = [
   "border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-950",
   "border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-950",
   "border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-950",
@@ -71,9 +74,9 @@ export const SUBJECT_COLOR_PALETTE = [
   "border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950"
 ];
 
-export const SUBJECT_COLOR_DEFAULT = "border-gray-200 dark:border-gray-700";
+export const _SUBJECT_COLOR_DEFAULT = "border-gray-200 dark:border-gray-700";
 
-export const SUBJECT_HEX_PALETTE = [
+export const _SUBJECT_HEX_PALETTE = [
   "#3b82f6", // blue-500
   "#22c55e", // green-500
   "#a855f7", // purple-500
@@ -84,11 +87,11 @@ export const SUBJECT_HEX_PALETTE = [
   "#14b8a6" // teal-500
 ];
 
-export const SUBJECT_HEX_DEFAULT = "#6b7280"; // gray-500
+export const _SUBJECT_HEX_DEFAULT = "#6b7280"; // gray-500
 
 // ==================== EXCEL CONFIGURATION ====================
 
-export const EXCEL_COLUMN_CONFIG = [
+export const _EXCEL_COLUMN_CONFIG = [
   { header: "Tuần", width: 20 },
   { header: "Ngày", width: 15 },
   { header: "Tiết", width: 10 },
@@ -101,11 +104,11 @@ export const EXCEL_COLUMN_CONFIG = [
   { header: "Loại", width: 12 }
 ];
 
-export const EXCEL_MAX_SHEET_NAME_LENGTH = 31;
+export const _EXCEL_MAX_SHEET_NAME_LENGTH = 31;
 
 // ==================== ICS CONFIGURATION ====================
 
-export const ICS_METADATA = {
+export const _ICS_METADATA = {
   VERSION: "2.0",
   PRODID: "-//MPC Extension//Calendar//EN",
   CALSCALE: "GREGORIAN",
@@ -114,4 +117,4 @@ export const ICS_METADATA = {
   TIMEZONE: "Asia/Ho_Chi_Minh"
 };
 
-export const ICS_UID_DOMAIN = "mpc-extension";
+export const _ICS_UID_DOMAIN = "mpc-extension";

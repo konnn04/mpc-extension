@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { CSV_DELIMITER_REGEX, LIMIT_FILE_SIZE, TRAINING_POINT_REGEX } from "@/constants/io";
+import { _CSV_DELIMITER_REGEX, _LIMIT_FILE_SIZE, _TRAINING_POINT_REGEX } from "@/constants/io";
 import { useGlobalStore } from "@/store/use-global-store";
 import { PointCharacterType, ScoreGroupType } from "@/types";
 import { formatFileSize } from "@/utils/file";
@@ -65,8 +65,8 @@ export function ImportScoreModal({ open, onOpenChange, onImportSuccess }: Import
       toast.error("Chỉ hỗ trợ file định dạng CSV hoặc XLSX.");
       return;
     }
-    if (selectedFile.size > LIMIT_FILE_SIZE) {
-      toast.error(`Kích thước file không được vượt quá ${formatFileSize(LIMIT_FILE_SIZE)}.`);
+    if (selectedFile.size > _LIMIT_FILE_SIZE) {
+      toast.error(`Kích thước file không được vượt quá ${formatFileSize(_LIMIT_FILE_SIZE)}.`);
       return;
     }
     setFile(selectedFile);
@@ -103,7 +103,7 @@ export function ImportScoreModal({ open, onOpenChange, onImportSuccess }: Import
   };
 
   const parseTrainingPoint = (row: string[], firstCol: string): number | null => {
-    const trPointRaw = row[1] || firstCol.match(TRAINING_POINT_REGEX)?.[1] || "";
+    const trPointRaw = row[1] || firstCol.match(_TRAINING_POINT_REGEX)?.[1] || "";
     if (trPointRaw && !Number.isNaN(Number.parseInt(trPointRaw, 10))) {
       return Number.parseInt(trPointRaw, 10);
     }
@@ -135,7 +135,7 @@ export function ImportScoreModal({ open, onOpenChange, onImportSuccess }: Import
         continue;
       }
 
-      const row = line.split(CSV_DELIMITER_REGEX).map((col) => col.replace(/(^"|"$)/g, "").trim());
+      const row = line.split(_CSV_DELIMITER_REGEX).map((col) => col.replace(/(^"|"$)/g, "").trim());
       const firstCol = row[0] || "";
       const secondCol = row[1] || "";
 

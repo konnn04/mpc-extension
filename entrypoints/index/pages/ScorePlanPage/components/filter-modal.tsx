@@ -2,7 +2,6 @@ import { useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-/** scale4 → grade label for the slider track. A+ and A both map to 4.0; show A+. */
 const SCALE4_STOPS = [
   { value: 0, label: "F" },
   { value: 1, label: "D" },
@@ -55,7 +54,6 @@ export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }:
     onFilterChange([filterRange[0], val]);
   };
 
-  // ── slider track geometry ──
   const rangePercent = ((filterRange[1] - filterRange[0]) / (MAX - MIN)) * 100;
   const minPercent = ((filterRange[0] - MIN) / (MAX - MIN)) * 100;
 
@@ -70,7 +68,6 @@ export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }:
         </DialogHeader>
 
         <div className='space-y-6 py-4'>
-          {/* ── current range badge ── */}
           <div className='flex items-center justify-center gap-3'>
             <span className='rounded-full bg-primary/10 px-3 py-1 font-medium text-primary text-sm'>
               {currentMinLabel} ({filterRange[0].toFixed(1)})
@@ -81,11 +78,8 @@ export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }:
             </span>
           </div>
 
-          {/* ── dual range slider ── */}
           <div className='relative mx-auto w-full max-w-md'>
-            {/* track background */}
             <div className='relative h-2 rounded-full bg-muted'>
-              {/* active range */}
               <div
                 className='absolute h-full rounded-full bg-primary'
                 style={{
@@ -95,7 +89,6 @@ export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }:
               />
             </div>
 
-            {/* overlapping range inputs */}
             <div className='relative h-0'>
               <input
                 aria-label='Điểm thấp nhất'
@@ -121,7 +114,6 @@ export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }:
               />
             </div>
 
-            {/* grade labels below track */}
             <div className='relative mt-3 flex justify-between'>
               {SCALE4_STOPS.map((stop) => (
                 <span

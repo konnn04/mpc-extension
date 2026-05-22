@@ -1,13 +1,13 @@
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
-  CATEGORY_COLORS,
-  DATE_MATCH_REGEX,
-  SUBJECT_COLOR_DEFAULT,
-  SUBJECT_COLOR_PALETTE,
-  SUBJECT_HEX_DEFAULT,
-  SUBJECT_HEX_PALETTE,
-  WEEK_YEAR_REGEX
+  _CATEGORY_COLORS,
+  _DATE_MATCH_REGEX,
+  _SUBJECT_COLOR_DEFAULT,
+  _SUBJECT_COLOR_PALETTE,
+  _SUBJECT_HEX_DEFAULT,
+  _SUBJECT_HEX_PALETTE,
+  _WEEK_YEAR_REGEX
 } from "@/constants";
 import type { CalendarEntry, SemesterData } from "@/types";
 
@@ -17,12 +17,12 @@ export type DaySchedule = {
 };
 
 function extractYear(weekString: string): string {
-  const weekYearMatch = weekString.match(WEEK_YEAR_REGEX);
+  const weekYearMatch = weekString.match(_WEEK_YEAR_REGEX);
   return weekYearMatch ? weekYearMatch[1] : new Date().getFullYear().toString();
 }
 
 function extractDateParts(dayString: string): { day: string; month: string } | null {
-  const dateMatch = dayString.match(DATE_MATCH_REGEX);
+  const dateMatch = dayString.match(_DATE_MATCH_REGEX);
   if (!dateMatch) {
     return null;
   }
@@ -91,19 +91,19 @@ export function formatTime(time: string): string {
 
 export function getSubjectColor(code: string): string {
   const hash = code.split("").reduce((acc, char) => char.charCodeAt(0) + acc * 33, 0);
-  return SUBJECT_COLOR_PALETTE[Math.abs(hash) % SUBJECT_COLOR_PALETTE.length] || SUBJECT_COLOR_DEFAULT;
+  return _SUBJECT_COLOR_PALETTE[Math.abs(hash) % _SUBJECT_COLOR_PALETTE.length] || _SUBJECT_COLOR_DEFAULT;
 }
 
 export function getSubjectHexColor(code: string): string {
   if (!code) {
-    return SUBJECT_HEX_DEFAULT;
+    return _SUBJECT_HEX_DEFAULT;
   }
   const hash = code.split("").reduce((acc, char) => char.charCodeAt(0) + acc * 33, 0);
-  return SUBJECT_HEX_PALETTE[Math.abs(hash) % SUBJECT_HEX_PALETTE.length] || SUBJECT_HEX_DEFAULT;
+  return _SUBJECT_HEX_PALETTE[Math.abs(hash) % _SUBJECT_HEX_PALETTE.length] || _SUBJECT_HEX_DEFAULT;
 }
 
 export function getCategoryColor(category: string): string {
-  return CATEGORY_COLORS[category] || CATEGORY_COLORS.OTHER;
+  return _CATEGORY_COLORS[category] || _CATEGORY_COLORS.OTHER;
 }
 
 export function getCategoryLabel(category?: string): string {

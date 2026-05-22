@@ -1,16 +1,24 @@
-import { CalendarPlus, Download, Trash2 } from "lucide-react";
+import { CalendarPlus, Download, FileSpreadsheet, FileText, LayoutList, Trash2 } from "lucide-react";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import lichHocLichThiMd from "@/assets/docs/lich_hoc_lich_thi.md?raw";
 import { ExportCalendarDialog } from "@/components/custom/export-calendar-dialog";
 import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useCalendarStore } from "@/store/use-calendar-store";
 import type { CalendarEntry, SemesterData } from "@/types";
+import { convertToCSV, convertToExcel } from "@/utils/excel-utils";
 import { downloadICS } from "@/utils/ics-utils";
 import { MonthViewCalendar } from "./components/month-view-calendar";
+import { PeriodTimeView } from "./components/period-time-view";
 import { UpcomingEvents } from "./components/upcoming-events";
 
 export function CalendarPage() {
@@ -72,6 +80,23 @@ export function CalendarPage() {
     return map;
   }, [scheduleMap, filterType]);
 
+  const eventCounts = useMemo(() => {
+    let total = 0;
+    let study = 0;
+    let exam = 0;
+    for (const entries of filteredScheduleMap.values()) {
+      for (const e of entries) {
+        total++;
+        if (e.eventType === "EXAM" || e.category === "EXAM") {
+          exam++;
+        } else {
+          study++;
+        }
+      }
+    }
+    return { total, study, exam };
+  }, [filteredScheduleMap]);
+
   const handleClearConfirm = async () => {
     const isConfirmed = await confirm({
       title: "Xác nhận xóa dữ liệu",
@@ -96,23 +121,61 @@ export function CalendarPage() {
     }
   };
 
+  const handleExportExcel = () => {
+    if (mergedExportData.length === 0) {
+      return;
+    }
+    try {
+      convertToExcel(mergedExportData);
+      toast.success("Đã xuất Excel");
+    } catch (error) {
+      console.error(error);
+      toast.error("Có lỗi khi xuất Excel.");
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (mergedExportData.length === 0) {
+      return;
+    }
+    try {
+      convertToCSV(mergedExportData);
+      toast.success("Đã xuất CSV");
+    } catch (error) {
+      console.error(error);
+      toast.error("Có lỗi khi xuất CSV.");
+    }
+  };
+
   return (
     <div className='flex h-auto flex-col space-y-4 lg:h-full'>
       <div className='flex flex-col items-start justify-between gap-4 md:flex-row md:items-center'>
-        <p className='mt-1 text-muted-foreground text-sm'>
-          Cập nhật lúc:{" "}
-          {lastUpdate ? (
-            <span className='font-medium text-foreground'>
-              {lastUpdate.toLocaleTimeString()} {lastUpdate.toLocaleDateString()}
-            </span>
-          ) : (
-            "Chưa có dữ liệu"
+        <div className='flex flex-col gap-1'>
+          <p className='text-muted-foreground text-sm'>
+            Cập nhật lúc:{" "}
+            {lastUpdate ? (
+              <span className='font-medium text-foreground'>
+                {lastUpdate.toLocaleTimeString()} {lastUpdate.toLocaleDateString()}
+              </span>
+            ) : (
+              "Chưa có dữ liệu"
+            )}
+          </p>
+          {eventCounts.total > 0 && (
+            <p className='flex items-center gap-1 text-muted-foreground text-xs'>
+              <LayoutList className='h-3.5 w-3.5' />
+              <span>
+                {eventCounts.total} sự kiện
+                {eventCounts.study > 0 && ` (${eventCounts.study} học, `}
+                {eventCounts.exam > 0 && `${eventCounts.exam} thi)`}
+              </span>
+            </p>
           )}
-        </p>
+        </div>
 
         <div className='flex w-full flex-wrap items-center gap-2 md:w-auto'>
           <Select onValueChange={setFilterType} value={filterType}>
-            <SelectTrigger className='w-[140px]'>
+            <SelectTrigger className='w-35'>
               <SelectValue placeholder='Loại lịch' />
             </SelectTrigger>
             <SelectContent>
@@ -122,14 +185,33 @@ export function CalendarPage() {
               <SelectItem value='OTHER'>Khác</SelectItem>
             </SelectContent>
           </Select>
+          <PeriodTimeView />
           <Button onClick={() => setIsImportModalOpen(true)} variant='outline'>
             <Download className='mr-2 h-4 w-4' />
             Nhập lịch
           </Button>
-          <Button disabled={calendarData.length === 0} onClick={() => setIsExportModalOpen(true)} variant='outline'>
-            <CalendarPlus className='mr-2 h-4 w-4' />
-            Xuất lịch
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={calendarData.length === 0} variant='outline'>
+                <CalendarPlus className='mr-2 h-4 w-4' />
+                Xuất lịch
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuItem onClick={() => setIsExportModalOpen(true)}>
+                <CalendarPlus className='mr-2 h-4 w-4' />
+                Xuất ICS (Lịch)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportExcel}>
+                <FileSpreadsheet className='mr-2 h-4 w-4' />
+                Xuất Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportCSV}>
+                <FileText className='mr-2 h-4 w-4' />
+                Xuất CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button disabled={calendarData.length === 0} onClick={handleClearConfirm} variant='destructive'>
             <Trash2 className='mr-2 h-4 w-4' />
             Xóa lịch

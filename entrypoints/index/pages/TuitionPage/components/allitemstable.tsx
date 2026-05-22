@@ -50,7 +50,7 @@ export function flattenDetails(details: Record<string, SemesterTuitionDetail>, c
   for (const detail of Object.values(details)) {
     for (const group of detail.receiptGroups) {
       if (group.receiptType === "B") {
-        continue; // B receipts are just totals, no course items
+        continue;
       }
       for (const item of group.items) {
         const cat = isService(item.courseCode) ? ("dịch vụ" as const) : ("học phí" as const);

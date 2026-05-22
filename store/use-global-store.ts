@@ -1,16 +1,16 @@
 import { create } from "zustand";
+import { _CHROME_STORAGE_GLOBAL_LOCAL_KEY, _CHROME_STORAGE_GLOBAL_SYNC_KEY } from "@/constants";
 import {
+  _DEFAULT_DRL_WARNING_THRESHOLD,
   _DEFAULT_FIXED_POINT,
   _DEFAULT_IGNORE_SUBJECT_DATA,
   _DEFAULT_MAX_CREDITS_PER_SEMESTER,
   _DEFAULT_MAX_CREDITS_SUMMER,
   _DEFAULT_MAX_CREDITS_WARNING,
   _DEFAULT_MIN_CREDITS_PER_SEMESTER,
-  _DEFAULT_MIN_TRAINING_POINT_WARNING,
   _DEFAULT_RETAKE_RATIO_LIMIT,
   _DEFAULT_SITE_URL_MAPPING
 } from "@/constants/default";
-import { _CHROME_STORAGE_GLOBAL_KEY } from "@/entrypoints/popup/default";
 import { _TAB_CATE } from "@/types";
 
 type GlobalStorageType = {
@@ -97,7 +97,7 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   minCreditsPerSemester: _DEFAULT_MIN_CREDITS_PER_SEMESTER,
   maxCreditsWarning: _DEFAULT_MAX_CREDITS_WARNING,
   maxCreditsSummer: _DEFAULT_MAX_CREDITS_SUMMER,
-  drlWarningThreshold: _DEFAULT_MIN_TRAINING_POINT_WARNING,
+  drlWarningThreshold: _DEFAULT_DRL_WARNING_THRESHOLD,
   setTab: (tab: _TAB_CATE) => {
     set({ tab });
     get().saveData();
@@ -126,10 +126,23 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
       maxCreditsSummer: get().maxCreditsSummer,
       drlWarningThreshold: get().drlWarningThreshold
     };
-    await storage.setItem(_CHROME_STORAGE_GLOBAL_KEY, JSON.stringify(data));
+    const payload = JSON.stringify(data);
+    try {
+      await storage.setItem(_CHROME_STORAGE_GLOBAL_SYNC_KEY, payload);
+    } catch {
+      await storage.setItem(_CHROME_STORAGE_GLOBAL_LOCAL_KEY, payload);
+    }
   },
   getData: async () => {
-    const raw = await storage.getItem<string>(_CHROME_STORAGE_GLOBAL_KEY);
+    let raw: string | null = null;
+    try {
+      raw = await storage.getItem<string>(_CHROME_STORAGE_GLOBAL_SYNC_KEY);
+    } catch {
+      /* sync storage unavailable, fallback to local */
+    }
+    if (!raw) {
+      raw = await storage.getItem<string>(_CHROME_STORAGE_GLOBAL_LOCAL_KEY);
+    }
     const savedData = JSON.parse(raw || "{}") as Partial<GlobalStorageType>;
     applySavedGlobalData(savedData, set);
 

@@ -1,8 +1,11 @@
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ScoreSummaryType } from "@/types";
+import { formatVNDCompact } from "@/utils/tuition-compute";
 
 export function ScoreStickyBar({
+  estimatedTuition,
   fixedPoint,
   hasUnsavedChanges,
   investedCredits,
@@ -13,6 +16,7 @@ export function ScoreStickyBar({
   originalSummary,
   summary
 }: {
+  estimatedTuition: number | null;
   fixedPoint: number;
   hasUnsavedChanges: boolean;
   investedCredits: number;
@@ -43,6 +47,24 @@ export function ScoreStickyBar({
             <p className='font-medium text-muted-foreground text-sm'>Tín chỉ đầu tư</p>
             <p className='font-bold text-amber-500 text-xl'>+{investedCredits} TC</p>
           </div>
+          {estimatedTuition !== null && investedCredits > 0 && (
+            <div className='border-l pl-6'>
+              <p className='flex items-center gap-1 font-medium text-muted-foreground text-sm'>
+                Chi phí ước tính
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className='h-3 w-3 cursor-help' />
+                  </TooltipTrigger>
+                  <TooltipContent side='top'>
+                    <p className='max-w-56 text-xs'>
+                      Ước tính dựa trên tín chỉ trung bình gần nhất ({formatVNDCompact(estimatedTuition)}/TC)
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </p>
+              <p className='font-bold text-blue-500 text-xl'>~{formatVNDCompact(estimatedTuition * investedCredits)}</p>
+            </div>
+          )}
         </div>
         <div className='flex items-center gap-2'>
           {hasUnsavedChanges ? (

@@ -8,14 +8,12 @@ import {
   ExternalLinkIcon,
   FacebookIcon,
   GithubIcon,
-  Monitor,
-  Moon,
-  Sun,
   User
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ButtonNavSite } from "@/components/custom/button-nav-site";
 import { InfoDialog } from "@/components/custom/info-dialog";
+import { ThemeToggle } from "@/components/custom/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { _FACEBOOK_URL, _GITHUB_URL } from "@/constants";
 import { _GET_BASIC_INFO } from "@/constants/chrome";
+import { useTheme } from "@/lib/theme";
 import { useCalendarStore } from "@/store/use-calendar-store";
 import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
@@ -50,35 +49,7 @@ function App() {
   const { getData: getTuitionData } = useTuitionStore();
   const { setCurrentUser, studentId, displayName } = useCurrentUserStore();
 
-  type ThemeMode = "light" | "dark" | "system";
-
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    return (localStorage.getItem("mpc-theme") as ThemeMode) || "system";
-  });
-
-  const getSystemTheme = useCallback((): "light" | "dark" => {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }, []);
-
-  const applyTheme = useCallback(
-    (mode: ThemeMode) => {
-      const resolved = mode === "system" ? getSystemTheme() : mode;
-      document.documentElement.classList.toggle("dark", resolved === "dark");
-    },
-    [getSystemTheme]
-  );
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme, applyTheme]);
-
-  const handleThemeChange = useCallback((mode: ThemeMode) => {
-    setTheme(mode);
-    localStorage.setItem("mpc-theme", mode);
-  }, []);
-
-  const themeIcons = { light: Sun, dark: Moon, system: Monitor } as const;
-  const ThemeIcon = themeIcons[theme];
+  const { theme, changeTheme: handleThemeChange } = useTheme();
 
   useEffect(() => {
     const init = async () => {
@@ -88,7 +59,6 @@ function App() {
     init();
   }, [getInfoData, getScoreData, getCalendarData, getTuitionData]);
 
-  // Auto-scrape basic info when portal site is detected
   useEffect(() => {
     if (!siteCurr) {
       return;
@@ -190,30 +160,7 @@ function App() {
           <h1 className='font-bold text-base text-primary tracking-tight'>MPC Extension</h1>
         </div>
         <div className='flex items-center gap-1'>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button aria-label='Đổi giao diện' className='h-8 w-8' size='icon' variant='ghost'>
-                <ThemeIcon className='h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-36'>
-              <DropdownMenuItem onClick={() => handleThemeChange("light")}>
-                <Sun className='mr-2 h-4 w-4' />
-                Sáng
-                {theme === "light" && <span className='ml-auto text-primary'>✓</span>}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleThemeChange("dark")}>
-                <Moon className='mr-2 h-4 w-4' />
-                Tối
-                {theme === "dark" && <span className='ml-auto text-primary'>✓</span>}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleThemeChange("system")}>
-                <Monitor className='mr-2 h-4 w-4' />
-                Hệ thống
-                {theme === "system" && <span className='ml-auto text-primary'>✓</span>}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ThemeToggle onThemeChange={handleThemeChange} theme={theme} />
           <Button className='h-8 gap-1.5 px-3' onClick={() => openDashboard()} size='sm'>
             <ExternalLinkIcon className='h-3.5 w-3.5' />
             Dashboard
@@ -221,7 +168,6 @@ function App() {
         </div>
       </header>
 
-      {/* Current user greeting */}
       {studentId && (
         <div className='border-b bg-muted/20 px-4 py-1.5 text-muted-foreground text-xs'>
           Chào <span className='font-medium text-foreground'>{displayName}</span> —{" "}

@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { useConfirm } from "@/hooks/use-confirm";
+import { type ThemeMode } from "@/lib/theme";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useUserSettingsStore } from "@/store/use-user-settings-store";
 import { PersonalSettings } from "./components/personal-settings";
 import { SchoolParams } from "./components/school-params";
 import { UrlConfig } from "./components/url-config";
 
-type ThemeMode = "light" | "dark" | "system";
 type SettingsPageProps = { theme: ThemeMode; onThemeChange: (mode: ThemeMode) => void };
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.FC<{ className?: string }> }[] = [

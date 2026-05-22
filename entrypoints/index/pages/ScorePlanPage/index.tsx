@@ -5,6 +5,7 @@ import { FormSemesterDialog } from "@/components/custom/form-semester-dialog";
 import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { _DEFAULT_SCORE_SUMMARY } from "@/constants/default";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useScoreStore } from "@/store/use-score-store";
 import { useUserSettingsStore } from "@/store/use-user-settings-store";
@@ -76,8 +77,21 @@ function ScorePlanPage() {
   const [guideOpen, setGuideOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [hideNonGPA, setHideNonGPA] = useState(false);
+  const [estimatedTuition, setEstimatedTuition] = useState<number | null>(null);
 
-  // Filter out non-GPA subjects when toggle is off
+  useEffect(() => {
+    const sid = useCurrentUserStore.getState().effectiveStudentId;
+    if (!sid) {
+      return;
+    }
+    (async () => {
+      const raw = await storage.getItem<number>(`local:${sid}:latestAvgCreditCost`);
+      if (typeof raw === "number" && raw > 0) {
+        setEstimatedTuition(raw);
+      }
+    })();
+  }, []);
+
   const displayScores = useMemo(() => {
     if (!hideNonGPA) {
       return scores;
@@ -195,14 +209,12 @@ function ScorePlanPage() {
   };
 
   const handleCancelChanges = async () => {
-    // Reload from storage to restore the last saved state
     await useScoreStore.getState().getData();
     toast.info("Đã hủy các thay đổi chưa lưu");
   };
 
   const handleSaveChanges = async () => {
     await saveData();
-    // Re-sync from storage to ensure hash consistency (JSON round-trip strips undefined fields)
     await useScoreStore.getState().getData();
     toast.success("Đã lưu kế hoạch điểm!");
   };
@@ -380,6 +392,7 @@ function ScorePlanPage() {
       />
 
       <ScoreStickyBar
+        estimatedTuition={estimatedTuition}
         fixedPoint={fixedPoint}
         hasUnsavedChanges={hasUnsavedChanges}
         investedCredits={investedCredits}

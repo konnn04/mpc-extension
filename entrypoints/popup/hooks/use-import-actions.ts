@@ -14,7 +14,11 @@ import { useGlobalStore } from "@/store/use-global-store";
 import { useInfoStore } from "@/store/use-info-store";
 import { useScoreStore } from "@/store/use-score-store";
 import { useTuitionStore } from "@/store/use-tuition-store";
+import type { SemesterTuitionDetail, TuitionSummaryEntry } from "@/types";
 import { updateIgnoreSubject, updateScoreAvg } from "@/utils/score";
+import { getLatestAvgCreditCost } from "@/utils/tuition-compute";
+
+const LATEST_AVG_CREDIT_KEY = "latestAvgCreditCost";
 
 export function useImportActions() {
   const [isLoading, setIsLoading] = useState(false);
@@ -145,6 +149,21 @@ export function useImportActions() {
     }
   };
 
+  const saveTuitionData = async (data: {
+    summary: TuitionSummaryEntry[];
+    details?: Record<string, SemesterTuitionDetail>;
+  }) => {
+    useTuitionStore.getState().setData(data.summary, data.details || {}, studentId);
+
+    const latestAvg = getLatestAvgCreditCost(data.summary, data.details || {});
+    if (latestAvg !== null) {
+      const sid = useCurrentUserStore.getState().effectiveStudentId;
+      if (sid) {
+        await storage.setItem(`local:${sid}:${LATEST_AVG_CREDIT_KEY}`, latestAvg);
+      }
+    }
+  };
+
   const handleImportTuition = async () => {
     if (hasTuition) {
       const isConfirmed = await confirm({
@@ -163,7 +182,7 @@ export function useImportActions() {
     try {
       const data = await browser.runtime.sendMessage({ type: _GET_TUITION_DATA });
       if (data && !data.error) {
-        useTuitionStore.getState().setData(data.summary, data.details || {}, studentId);
+        await saveTuitionData(data);
         toast.success("Lấy học phí thành công!");
       } else {
         toast.error(`Lỗi: ${data?.error || "Không thể lấy dữ liệu"}`);

@@ -1,14 +1,20 @@
-import { InfoIcon, Landmark } from "lucide-react";
+import { Download, InfoIcon, Landmark } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { _DEFAULT_IGNORE_SUBJECT_DATA } from "@/constants/default";
 import { useTuitionStore } from "@/store/use-tuition-store";
 import type { SemesterTuitionDetail } from "@/types";
 import { computeTuitionStats } from "@/utils/tuition-compute";
+import { handleExportTuitionData } from "@/utils/tuition-export";
 import { flattenDetails } from "./components/allitemstable";
 import { CreditCostChart } from "./components/creditcostchart";
 import { DetailSection } from "./components/detailsection";
 import { TuitionStatCards } from "./components/statcards";
 import { TuitionBarChart } from "./components/tuitionbarchart";
+
+const isIgnoredForCredit = (code: string) =>
+  code.startsWith("_") || _DEFAULT_IGNORE_SUBJECT_DATA.some((p) => code.includes(p));
 
 type SortKey = "courseCode" | "courseName" | "credits" | "amount" | "semesterName";
 type SortDir = "asc" | "desc";
@@ -29,7 +35,7 @@ function buildCreditCostData(
         continue;
       }
       for (const item of group.items) {
-        if (item.courseCode.startsWith("_") || !(item.credits > 0 && item.amount > 0)) {
+        if (isIgnoredForCredit(item.courseCode) || !(item.credits > 0 && item.amount > 0)) {
           continue;
         }
         rates.push(item.amount / item.credits);
@@ -122,20 +128,26 @@ export function TuitionPage() {
   return (
     <div className='space-y-6'>
       <div>
-        <h1 className='flex items-center gap-2 font-bold text-2xl tracking-tight'>
-          Học phí
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <InfoIcon className='h-4 w-4 cursor-help text-muted-foreground' />
-            </TooltipTrigger>
-            <TooltipContent side='right'>
-              <p className='max-w-64 text-xs'>
-                Dữ liệu được thu thập tự động từ cổng tiện ích sinh viên. Các số liệu chỉ mang tính tương đối, có thể
-                không chính xác tuyệt đối do cách phân loại và tính toán của extension.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </h1>
+        <div className='flex items-center justify-between'>
+          <h1 className='flex items-center gap-2 font-bold text-2xl tracking-tight'>
+            Học phí
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <InfoIcon className='h-4 w-4 cursor-help text-muted-foreground' />
+              </TooltipTrigger>
+              <TooltipContent side='right'>
+                <p className='max-w-64 text-xs'>
+                  Dữ liệu được thu thập tự động từ cổng tiện ích sinh viên. Các số liệu chỉ mang tính tương đối, có thể
+                  không chính xác tuyệt đối do cách phân loại và tính toán của extension.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </h1>
+          <Button onClick={() => handleExportTuitionData(summary, details)} size='sm' variant='outline'>
+            <Download className='mr-2 h-4 w-4' />
+            Xuất Excel
+          </Button>
+        </div>
         {lastUpdate && (
           <p className='mt-1 text-muted-foreground text-sm'>
             Cập nhật lần cuối:{" "}

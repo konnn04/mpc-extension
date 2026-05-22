@@ -7,14 +7,16 @@ import {
   format,
   isSameDay,
   isSameMonth,
+  setYear,
   startOfMonth,
   startOfWeek,
   subMonths
 } from "date-fns";
 import { vi } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { CalendarEntry } from "@/types";
 import { getSubjectHexColor } from "@/utils/calendar-format";
@@ -26,25 +28,56 @@ type MonthViewCalendarProps = {
 
 const WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
+/** Generate a range of years: from min year in schedule data to current year + 1. */
+function useYearOptions(scheduleMap: Map<string, CalendarEntry[]>): number[] {
+  return useMemo(() => {
+    let minYear = new Date().getFullYear();
+    let maxYear = minYear;
+    for (const dateKey of scheduleMap.keys()) {
+      const y = Number.parseInt(dateKey.split("-")[0], 10);
+      if (!Number.isNaN(y)) {
+        if (y < minYear) {
+          minYear = y;
+        }
+        if (y > maxYear) {
+          maxYear = y;
+        }
+      }
+    }
+    const now = new Date().getFullYear();
+    if (minYear > now) {
+      minYear = now;
+    }
+    if (maxYear < now + 1) {
+      maxYear = now + 1;
+    }
+    const years: number[] = [];
+    for (let y = minYear; y <= maxYear; y++) {
+      years.push(y);
+    }
+    return years;
+  }, [scheduleMap]);
+}
+
 export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
+  const yearOptions = useYearOptions(scheduleMap);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const goToYear = (year: string) => setCurrentDate(setYear(currentDate, Number.parseInt(year, 10)));
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
 
-  // Week starts on Monday (1)
   const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
   const dateFormat = "d";
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
-  // Ensure exactly 42 days (6 weeks) are rendered to keep grid height consistent
   while (days.length < 42) {
     // biome-ignore lint/style/useAtIndex: using at(-1) requires non-null assertion which biome also complains about sometimes, but let's just use it safely
     const lastDay = days[days.length - 1];
@@ -68,13 +101,24 @@ export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
 
   return (
     <div className='flex h-full flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow'>
-      {/* Header */}
       <div className='flex items-center justify-between border-b px-6 py-4'>
         <h2 className='font-semibold text-lg capitalize'>{format(currentDate, "MMMM, yyyy", { locale: vi })}</h2>
         <div className='flex items-center gap-2'>
           <Button onClick={() => setCurrentDate(new Date())} size='sm' variant='outline'>
             Hôm nay
           </Button>
+          <Select onValueChange={goToYear} value={String(currentDate.getFullYear())}>
+            <SelectTrigger className='h-8 w-24 text-xs'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className='flex items-center gap-1'>
             <Button className='h-8 w-8' onClick={prevMonth} size='icon' variant='ghost'>
               <ChevronLeft className='h-4 w-4' />
@@ -86,7 +130,6 @@ export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
         </div>
       </div>
 
-      {/* Days header */}
       <div className='grid grid-cols-7 border-b bg-muted/50'>
         {WEEKDAYS.map((day) => (
           <div className='py-2 text-center font-medium text-muted-foreground text-sm' key={day}>
@@ -95,7 +138,6 @@ export function MonthViewCalendar({ scheduleMap }: MonthViewCalendarProps) {
         ))}
       </div>
 
-      {/* Calendar Grid */}
       <div className='grid flex-1 grid-cols-7 grid-rows-6 lg:grid-rows-auto'>
         {days.map((day, i) => {
           const isCurrentMonth = isSameMonth(day, monthStart);

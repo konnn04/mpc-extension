@@ -5,9 +5,7 @@ type _PAGE_CATE = "point" | "classCalendar" | "examCalendar" | "info" | "tuition
 
 type _PAGE_CONFIG = {
   tailUrl: string;
-  /** Full regex pattern for matching this page URL */
   regex: string;
-  /** Display label in Vietnamese */
   label: string;
 };
 

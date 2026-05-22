@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DATA_SUFFIXES, getAvatarKey, getStudentKeys } from "@/constants/storage";
+import { _DATA_SUFFIXES, getAvatarKey, getStudentKeys } from "@/constants/storage";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useCalendarStore } from "@/store/use-calendar-store";
 import { useCurrentUserStore } from "@/store/use-current-user-store";
@@ -33,7 +33,7 @@ async function scanStudentIds(): Promise<string[]> {
   const ids = new Set<string>();
   const raw = await browser.storage.local.get(null);
   const keys = Object.keys(raw);
-  const pattern = new RegExp(`^local:(\\d+):(${DATA_SUFFIXES.join("|")})$`);
+  const pattern = new RegExp(`^local:(\\d+):(${_DATA_SUFFIXES.join("|")})$`);
   for (const k of keys) {
     const m = k.match(pattern);
     if (m?.[1]) {
@@ -54,7 +54,6 @@ export function UserMenu() {
   const [switchOpen, setSwitchOpen] = useState(false);
   const [switchInput, setSwitchInput] = useState("");
 
-  // ── Delete data dialog ──
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [ids, setIds] = useState<string[]>([]);
   const [checked, setChecked] = useState<Set<string>>(new Set());
@@ -128,7 +127,6 @@ export function UserMenu() {
         useCalendarStore.getState().setExamData([]);
       }
       toast.success(`Đã xóa dữ liệu của ${checked.size} MSSV`);
-      // Refresh list
       const remaining = await scanStudentIds();
       setIds(remaining);
       setChecked(new Set());
@@ -191,7 +189,6 @@ export function UserMenu() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Switch account dialog */}
       <Dialog onOpenChange={setSwitchOpen} open={switchOpen}>
         <DialogContent className='sm:max-w-sm'>
           <form onSubmit={handleSwitchSubmit}>
@@ -220,7 +217,6 @@ export function UserMenu() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete data dialog */}
       <Dialog onOpenChange={setDeleteOpen} open={deleteOpen}>
         <DialogContent className='sm:max-w-sm'>
           <DialogHeader>

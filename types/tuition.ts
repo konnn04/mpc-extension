@@ -21,13 +21,11 @@ export type TuitionReceiptGroup = {
   receiptType: "A" | "B";
   createdAt: string;
   contractDate?: string;
-  /** For B receipts: the A receipt number this collection pays for. */
   linkedPaymentNumber?: string;
   items: TuitionReceiptItem[];
   subtotal: number;
 };
 
-/** A receipt paired with its linked collection (B) receipt. */
 export type PairedReceiptGroup = TuitionReceiptGroup & {
   linkedReceiptNumber?: string;
   linkedReceiptDate?: string;

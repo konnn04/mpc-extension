@@ -220,11 +220,14 @@ export const _DEFAULT_TRAINING_RANKS: TrainingRankType[] = [
   { minPoint: 0, label: "Kém", emoji: "❌", color: "text-red-500", bg: "bg-red-50 dark:bg-red-950/30" }
 ];
 
-/** Threshold for minimum training point to avoid suspension warning */
-export const _DEFAULT_MIN_TRAINING_POINT_WARNING = 50;
+/** Threshold for DRL (Điểm rèn luyện) below which triggers a warning (2 consecutive semesters). */
+export const _DEFAULT_DRL_WARNING_THRESHOLD = 50;
 
 /** Threshold for minimum training point required for scholarship */
 export const _DEFAULT_MIN_TRAINING_POINT_SCHOLARSHIP = 65;
+
+/** OUCommunity program reference URL — used in Settings & Onboarding */
+export const _OUCOMMUNITY_PROGRAM_URL = "https://www.oucommunity.dev/tuyen-sinh/gioi-thieu-nganh/";
 
 export const _DEFAULT_USER_DATA: UserType = {
   userId: "",

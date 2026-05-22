@@ -1,6 +1,7 @@
-import { Check, Copy, Eye, EyeOff, GraduationCap, InfoIcon, Mail, MapPin, Phone, User } from "lucide-react";
+import { GraduationCap, InfoIcon, Mail, MapPin, Phone, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import thongTinMd from "@/assets/docs/thong_tin.md?raw";
+import { CopyableField } from "@/components/custom/copyable-field";
 import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,45 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { _COURSE_LABEL_MAPPING, _USER_LABEL_MAPPING } from "@/constants/default";
 import { useInfoStore } from "@/store/use-info-store";
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    if (!text) {
-      return;
-    }
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <Button className='ml-2 h-6 w-6' onClick={handleCopy} size='icon' title='Copy' variant='ghost'>
-      {copied ? <Check className='h-3 w-3 text-green-500' /> : <Copy className='h-3 w-3' />}
-    </Button>
-  );
-}
-
-function HiddenField({ value, label }: { value: string; label: string }) {
-  const [visible, setVisible] = useState(false);
-
-  return (
-    <div className='flex items-center'>
-      <span className='mr-2 font-medium text-sm'>{visible ? value : "••••••••"}</span>
-      <Button
-        className='h-6 w-6'
-        onClick={() => setVisible(!visible)}
-        size='icon'
-        title={visible ? `Ẩn ${label}` : `Hiện ${label}`}
-        variant='ghost'
-      >
-        {visible ? <EyeOff className='h-3 w-3' /> : <Eye className='h-3 w-3' />}
-      </Button>
-      <CopyButton text={value} />
-    </div>
-  );
-}
 
 export function PersonalInfoPage() {
   const { userData, courseData, getData } = useInfoStore();
@@ -107,20 +69,15 @@ export function PersonalInfoPage() {
           <CardContent className='space-y-4 pt-4'>
             <div className='flex items-center gap-3 text-sm'>
               <Mail className='h-4 w-4 text-muted-foreground' />
-              <div className='flex items-center'>
-                <span>{userData.email}</span>
-                <CopyButton text={userData.email} />
-              </div>
+              <CopyableField copyable hideable={false} value={userData.email} />
             </div>
             <div className='flex items-center gap-3 text-sm'>
               <Phone className='h-4 w-4 text-muted-foreground' />
-              <HiddenField label={_USER_LABEL_MAPPING.phone} value={userData.phone} />
+              <CopyableField value={userData.phone} />
             </div>
             <div className='flex items-center gap-3 text-sm'>
-              <MapPin className='h-4 w-4 text-muted-foreground' />
-              <span className='line-clamp-2' title={userData.residentialAddress}>
-                {userData.residentialAddress}
-              </span>
+              <MapPin className='h-4 w-4 shrink-0 text-muted-foreground' />
+              <CopyableField value={userData.residentialAddress} />
             </div>
           </CardContent>
         </Card>
@@ -135,7 +92,7 @@ export function PersonalInfoPage() {
             <CardContent className='grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2'>
               <div>
                 <p className='text-muted-foreground text-xs'>{_USER_LABEL_MAPPING.dateOfBirth}</p>
-                <p className='font-medium text-sm'>{userData.dateOfBirth}</p>
+                <CopyableField value={userData.dateOfBirth} />
               </div>
               <div>
                 <p className='text-muted-foreground text-xs'>{_USER_LABEL_MAPPING.gender}</p>
@@ -143,11 +100,11 @@ export function PersonalInfoPage() {
               </div>
               <div>
                 <p className='text-muted-foreground text-xs'>{_USER_LABEL_MAPPING.identityNumber}</p>
-                <HiddenField label={_USER_LABEL_MAPPING.identityNumber} value={userData.identityNumber} />
+                <CopyableField value={userData.identityNumber} />
               </div>
               <div>
                 <p className='text-muted-foreground text-xs'>{_USER_LABEL_MAPPING.placeOfBirth}</p>
-                <p className='font-medium text-sm'>{userData.placeOfBirth}</p>
+                <CopyableField value={userData.placeOfBirth} />
               </div>
               <div>
                 <p className='text-muted-foreground text-xs'>{_USER_LABEL_MAPPING.ethnicity}</p>

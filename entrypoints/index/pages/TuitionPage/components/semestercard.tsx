@@ -14,7 +14,6 @@ function ReceiptGroupBlock({ group, showNonCredit }: { group: PairedReceiptGroup
 
   return (
     <div>
-      {/* ── Header: 2 lines — payment + collection ── */}
       <div className='mb-2 space-y-0.5'>
         <div className='flex items-center gap-2'>
           <span className='rounded bg-blue-100 px-1.5 py-0.5 font-medium text-blue-700 text-xs dark:bg-blue-900/30 dark:text-blue-400'>
@@ -88,10 +87,8 @@ export function SemesterCard({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  // Filter only A-type receipts (payment requests with actual course items)
   const aReceipts = useMemo(() => detail.receiptGroups.filter((g) => g.receiptType === "A"), [detail.receiptGroups]);
 
-  // Pair each A receipt with its matching B receipt
   const pairedReceipts: PairedReceiptGroup[] = useMemo(() => {
     const bReceipts = detail.receiptGroups.filter((g) => g.receiptType === "B");
     return aReceipts.map((aGroup) => {
@@ -103,7 +100,6 @@ export function SemesterCard({
     });
   }, [aReceipts, detail.receiptGroups]);
 
-  // Apply filters
   const filteredGroups = useMemo(() => {
     let groups = pairedReceipts;
     if (categoryFilter !== "tất cả") {

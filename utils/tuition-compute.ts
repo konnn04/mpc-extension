@@ -1,7 +1,9 @@
+import { _DEFAULT_IGNORE_SUBJECT_DATA } from "@/constants/default";
 import type { SemesterTuitionDetail, TuitionStatsType, TuitionSummaryEntry } from "@/types";
 
-/** Items with course codes starting with "_" are non-credit (BHYT, adjustments, refunds). */
-const isNonCreditItem = (code: string) => code.startsWith("_");
+function isIgnoredSubject(code: string): boolean {
+  return code.startsWith("_") || _DEFAULT_IGNORE_SUBJECT_DATA.some((p) => code.includes(p));
+}
 
 type CreditStats = { totalCredits: number; avgPerCredit: number; minPerCredit: number; maxPerCredit: number };
 
@@ -13,7 +15,7 @@ function collectRates(groups: SemesterTuitionDetail["receiptGroups"]): { credits
       continue;
     }
     for (const item of group.items) {
-      if (isNonCreditItem(item.courseCode) || item.credits <= 0) {
+      if (isIgnoredSubject(item.courseCode) || item.credits <= 0) {
         continue;
       }
       credits += item.credits;
@@ -44,7 +46,6 @@ function computeCreditStats(details: Record<string, SemesterTuitionDetail>): Cre
   };
 }
 
-/** Compute aggregate statistics from tuition summary data and details. */
 export function computeTuitionStats(
   summary: TuitionSummaryEntry[],
   details: Record<string, SemesterTuitionDetail>
@@ -84,12 +85,10 @@ export function computeTuitionStats(
   };
 }
 
-/** Format amount to VND with thousand separators. */
 export function formatVND(amount: number): string {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 }
 
-/** Compact VND format: 1.2tr, 500k */
 export function formatVNDCompact(amount: number): string {
   if (amount >= 1_000_000) {
     const mils = amount / 1_000_000;
@@ -99,4 +98,34 @@ export function formatVNDCompact(amount: number): string {
     return `${Math.round(amount / 1000)}k`;
   }
   return `${amount}`;
+}
+
+export function getLatestAvgCreditCost(
+  summary: TuitionSummaryEntry[],
+  details: Record<string, SemesterTuitionDetail>
+): number | null {
+  if (summary.length === 0) {
+    return null;
+  }
+  const latest = summary[0];
+  const detail = details[latest.semesterName];
+  if (!detail) {
+    return null;
+  }
+
+  let totalCredits = 0;
+  let totalAmount = 0;
+  for (const group of detail.receiptGroups) {
+    if (group.receiptType === "B") {
+      continue;
+    }
+    for (const item of group.items) {
+      if (isIgnoredSubject(item.courseCode) || item.credits <= 0 || item.amount <= 0) {
+        continue;
+      }
+      totalCredits += item.credits;
+      totalAmount += item.amount;
+    }
+  }
+  return totalCredits > 0 ? Math.round(totalAmount / totalCredits) : null;
 }
