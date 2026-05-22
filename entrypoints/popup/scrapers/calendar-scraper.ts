@@ -776,7 +776,7 @@ export type {
   WeekData
 } from "@/types";
 export { getCalendars };
-export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
+export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData[]> => {
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
   const WEEK_MATCH_REGEX = /Tuần \(\d{2}\/\d{2}\/(\d{4}) - \d{2}\/\d{2}\/(\d{4})\)/;
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
@@ -943,7 +943,7 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
     inputDiv.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     await wait(CONFIG.timeouts.dropdownOpen);
 
-    // Find scroll container
+    // Find scroll container — exam dropdown uses .ng-dropdown-panel-items
     const dropdownSelectors = [
       "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
       "ng-select ng-dropdown-panel .ng-dropdown-panel-items",
@@ -955,13 +955,14 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
       if (scrollEl) break;
     }
 
-    // Collect items while scrolling — virtual scroll only keeps viewport items in DOM
+    // ── Scroll from TOP down — newest semesters are at the top; stop after 15 ──
+    const MAX_EXAM_SEMESTERS = 15;
     const seen = new Set<string>();
     if (scrollEl) {
       const itemSelector = "ng-dropdown-panel .ng-option";
       const step = scrollEl.clientHeight || 100;
       let pos = 0;
-      while (pos < scrollEl.scrollHeight) {
+      while (pos < scrollEl.scrollHeight && seen.size < MAX_EXAM_SEMESTERS) {
         scrollEl.scrollTop = pos;
         await wait(150);
         const items = document.querySelectorAll(itemSelector);
@@ -971,10 +972,9 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
         }
         pos += step;
       }
-      scrollEl.scrollTop = scrollEl.scrollHeight;
-      await wait(200);
-      const items = document.querySelectorAll(itemSelector);
-      for (const item of items) {
+    } else {
+      const staticItems = document.querySelectorAll("ng-dropdown-panel .ng-option");
+      for (const item of staticItems) {
         const t = item.textContent?.trim();
         if (t) seen.add(t);
       }
@@ -992,17 +992,15 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
       return [savedCurrent];
     }
 
-    return semesters.reverse();
+    return semesters;
   };
 
-  const selectSemester = async (semesterName: string): Promise<void> => {
-    // If already showing the requested semester, skip dropdown interaction
+  const selectSemester = async (semesterName: string, _index: number): Promise<void> => {
     const currentLabel =
       document.querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label")?.textContent?.trim() ||
       document.querySelector("ng-select .ng-value-label")?.textContent?.trim();
     if (currentLabel === semesterName) {
       console.log(`Đang ở học kỳ "${semesterName}", đợi render nếu đang load dở.`);
-      // Still wait for spinner — page might still be loading
       const spinnerSelector = "ngx-spinner .ngx-spinner-overlay";
       const maxWait = CONFIG.timeouts.tableUpdateLong;
       const p1Start = Date.now();
@@ -1028,75 +1026,84 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
       throw new Error("Không tìm thấy bộ chọn học kỳ để tải dữ liệu");
     }
 
+    // Open dropdown
     clickTarget.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     await wait(CONFIG.timeouts.dropdownOpen);
 
-    const dropdownSelectors = [
+    // Find virtual-scroll host (.ng-dropdown-panel-items)
+    const scrollHostSelectors = [
       "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
       "ng-select ng-dropdown-panel .ng-dropdown-panel-items",
       "ng-dropdown-panel .ng-dropdown-panel-items"
     ];
-    let scrollableContent: Element | null = null;
-    for (const sel of dropdownSelectors) {
-      scrollableContent = document.querySelector(sel);
-      if (scrollableContent) {
-        break;
-      }
-    }
-    if (scrollableContent) {
-      await scrollDropdownToLoadAll(scrollableContent);
+    let scrollHost: HTMLElement | null = null;
+    for (const sel of scrollHostSelectors) {
+      scrollHost = document.querySelector(sel);
+      if (scrollHost) break;
     }
 
-    const itemSelectors = [
-      "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content > div",
-      "ng-select ng-dropdown-panel div.scrollable-content > div",
-      "ng-dropdown-panel div.scrollable-content > div",
-      "ng-dropdown-panel .ng-option"
-    ];
+    // ── Scroll step-by-step (like getSemesters) until target item appears in DOM ──
     let targetItem: Element | undefined;
-    for (const sel of itemSelectors) {
-      const found = document.querySelectorAll(sel);
-      if (found.length > 0) {
+    if (scrollHost) {
+      const step = scrollHost.clientHeight || 120;
+      let pos = 0;
+      while (pos < scrollHost.scrollHeight) {
+        scrollHost.scrollTop = pos;
+        await wait(150);
+
+        const options = document.querySelectorAll("ng-dropdown-panel .ng-option");
+        targetItem = Array.from(options).find((item) => item.textContent?.trim() === semesterName);
+        if (targetItem) break;
+
+        pos += step;
+      }
+    }
+
+    // Fallback: static selectors (if scrollHost wasn't found)
+    if (!targetItem) {
+      const itemSelectors = [
+        "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-option",
+        "ng-select ng-dropdown-panel .ng-option",
+        "ng-dropdown-panel .ng-option"
+      ];
+      for (const sel of itemSelectors) {
+        const found = document.querySelectorAll(sel);
         targetItem = Array.from(found).find((item) => item.textContent?.trim() === semesterName);
-        if (targetItem) {
-          break;
-        }
+        if (targetItem) break;
       }
     }
 
     if (!targetItem) {
-      // Close dropdown and give up - assume data is already correct
       clickTarget.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
       await wait(CONFIG.timeouts.dropdownClose);
       console.warn(`Không tìm thấy học kỳ "${semesterName}" trong dropdown, dùng dữ liệu hiện tại.`);
       return;
     }
 
+    console.log(`🔍 Tìm thấy "${semesterName}", đang click...`);
     (targetItem as HTMLElement).scrollIntoView({ block: "nearest" });
     await wait(CONFIG.timeouts.scrollWait);
     (targetItem as HTMLElement).dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     (targetItem as HTMLElement).click();
 
-    // Two-phase spinner poll: wait for overlay to APPEAR, then DISAPPEAR, then settle + verify
+    // Two-phase spinner poll: wait for overlay to APPEAR, then DISAPPEAR
     const spinnerSelector = "ngx-spinner .ngx-spinner-overlay";
     const pollMs = 100;
     const maxWait = CONFIG.timeouts.tableUpdateLong;
 
-    // Phase 1: wait for spinner to appear (Angular may take a moment to start)
     const p1Start = Date.now();
     while (Date.now() - p1Start < maxWait) {
       if (document.querySelector(spinnerSelector)) break;
       await wait(pollMs);
     }
 
-    // Phase 2: wait for spinner to disappear (loading done)
     const p2Start = Date.now();
     while (Date.now() - p2Start < maxWait) {
       if (!document.querySelector(spinnerSelector)) break;
       await wait(pollMs);
     }
 
-    await wait(500); // Settle for data render
+    await wait(500);
 
     // Verify table has actual data rows
     const table = document.querySelector(CONFIG.selectors.table);
@@ -1130,9 +1137,9 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
     return `Tuần (${sStr} - ${eStr})`;
   };
 
-  const scrapeScheduleTable = () => {
+  const scrapeScheduleTable = (): WeekData[] => {
     const rows = document.querySelectorAll(CONFIG.selectors.tableRows);
-    const allEntries: { date: string; entry: any }[] = [];
+    const allEntries: { date: string; entry: CalendarEntry }[] = [];
 
     // Filter to data rows: bg-white with enough tds, skip search row & no-data row
     const dataRows = Array.from(rows).filter(
@@ -1208,28 +1215,25 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
       const dayNames = ["CN", "2", "3", "4", "5", "6", "7"];
       const formattedDay = `Thứ ${dayNames[dayOfWeek]} (${dayPart.padStart(2, "0")}/${monthPart.padStart(2, "0")})`;
 
-      const entry = {
-        id: `exam-${code}-${date.replace(/\//g, "")}`,
+      const entry: CalendarEntry = {
         code,
         title,
         group,
-        date,
         day: formattedDay,
         startPeriod,
-        numPeriods: 1, // Exam is typically a single period slot
         startTime,
         endTime: "",   // Cannot compute without period map; left for UI to display startTime
         room,
         teacher: "",
         link: "",
-        category: "EXAM",
-        eventType: "EXAM"
+        category: "EXAM" as const,
+        eventType: "EXAM" as const
       };
 
       allEntries.push({ date, entry });
     }
 
-    const weekMap = new Map<string, any[]>();
+    const weekMap = new Map<string, CalendarEntry[]>();
 
     for (const { date, entry } of allEntries) {
       const { start, end } = getWeekStartEnd(date);
@@ -1281,15 +1285,12 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
     onProgress?.(0, "Đang lấy danh sách học kỳ...");
     updateOverlay(0, "Đang lấy danh sách học kỳ...");
 
-    let semesters = await getSemesters();
+    const semesters = await getSemesters();
     if (semesters.length === 0) {
       throw new Error("Không tìm thấy học kỳ nào");
     }
 
-    // Giới hạn 15 học kỳ mới nhất
-    semesters = semesters.slice(0, 15);
-
-    const allData: any[] = [];
+    const allData: SemesterData[] = [];
     const totalSemesters = semesters.length;
 
     for (let semesterIndex = 0; semesterIndex < semesters.length; semesterIndex++) {
@@ -1300,7 +1301,7 @@ export const getExamCalendars = async (onProgress?: any): Promise<any[]> => {
       updateOverlay(semesterProgress, `Đang xử lý học kỳ: ${semester}`);
       updateSemesterInfo(`${semesterIndex + 1}/${totalSemesters}`);
 
-      await selectSemester(semester);
+      await selectSemester(semester, semesterIndex);
 
       console.log(`📋 Crawl lịch thi: ${semester}`);
       const weeks = scrapeScheduleTable();
