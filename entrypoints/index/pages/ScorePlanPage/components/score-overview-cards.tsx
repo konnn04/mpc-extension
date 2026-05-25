@@ -1,6 +1,7 @@
 import { ArrowRightIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ScoreSummaryType } from "@/types";
+import { formatFixed } from "@/utils";
 import { getAcademicRank, getTrainingRank } from "@/utils/academic-compute";
 
 function ChangeIndicator({
@@ -58,31 +59,38 @@ export function ScoreOverviewCards({
   const originalRank = originalSummary ? getAcademicRank(originalSummary.gpa4).label : null;
   const showComparison = isModifiedFromOriginal && originalSummary != null;
 
+  const oldTrainingValue = (() => {
+    if (!showComparison) {
+      return "";
+    }
+    return originalSummary.avgTrainingPoint != null ? formatFixed(originalSummary.avgTrainingPoint, fixedPoint) : "N/A";
+  })();
+
   return (
     <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
       <Card className='relative gap-2 overflow-hidden py-4'>
         <CardHeader className='pb-2'>
-          <CardTitle className='font-medium text-muted-foreground text-sm'>GPA</CardTitle>
+          <CardTitle className='font-medium text-muted-foreground text-sm'>GPA tích lũy</CardTitle>
         </CardHeader>
         <CardContent>
           <ChangeIndicator
             className='font-bold text-3xl'
             newNum={showComparison ? summary.gpa4 : undefined}
-            newValue={summary.gpa4.toFixed(fixedPoint)}
-            oldNum={showComparison ? originalSummary.gpa4 : undefined}
-            oldValue={showComparison ? originalSummary.gpa4.toFixed(fixedPoint) : ""}
+            newValue={formatFixed(summary.gpa4, fixedPoint)}
+            oldNum={showComparison ? summary.gpa4 : undefined}
+            oldValue={showComparison ? formatFixed(originalSummary.gpa4, fixedPoint) : ""}
           />
           <p className='mt-1 text-muted-foreground text-xs'>
             Hệ 10:{" "}
             {showComparison ? (
               <ChangeIndicator
                 newNum={summary.gpa10}
-                newValue={summary.gpa10.toFixed(fixedPoint)}
+                newValue={formatFixed(summary.gpa10, fixedPoint)}
                 oldNum={originalSummary.gpa10}
-                oldValue={originalSummary.gpa10.toFixed(fixedPoint)}
+                oldValue={formatFixed(originalSummary.gpa10, fixedPoint)}
               />
             ) : (
-              <b>{summary.gpa10.toFixed(fixedPoint)}</b>
+              <b>{formatFixed(summary.gpa10, fixedPoint)}</b>
             )}
           </p>
         </CardContent>
@@ -106,9 +114,9 @@ export function ScoreOverviewCards({
           <ChangeIndicator
             className='font-bold text-3xl'
             newNum={showComparison ? (summary.avgTrainingPoint ?? undefined) : undefined}
-            newValue={summary.avgTrainingPoint?.toFixed(fixedPoint) ?? "N/A"}
+            newValue={summary.avgTrainingPoint != null ? formatFixed(summary.avgTrainingPoint, fixedPoint) : "N/A"}
             oldNum={showComparison ? (originalSummary.avgTrainingPoint ?? undefined) : undefined}
-            oldValue={showComparison ? (originalSummary.avgTrainingPoint?.toFixed(fixedPoint) ?? "N/A") : ""}
+            oldValue={oldTrainingValue}
           />
           <p className='mt-1 text-muted-foreground text-xs'>
             {trainingSemesters > 0 ? `Tính trong ${trainingSemesters} kì đầu` : "Tính trong tất cả kì"}

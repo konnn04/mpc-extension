@@ -107,6 +107,9 @@ export const _DEFAULT_GRADE_COLORS: Record<string, string> = {
 /** Course codes classified as dịch vụ (BHYT, etc.) rather than học phí học tập. */
 export const _TUITION_SERVICE_CODES = ["_BHYTTN1", "_BHYT12T", "_BHYT6T", "_BHYT12"];
 
+/** Mã môn bị loại khỏi tính đơn giá trung bình chuyên ngành (GENG, DEDU, PEDU). */
+export const _TUITION_MAJOR_EXCLUDE_PREFIXES = ["GENG", "DEDU", "PEDU"] as const;
+
 export const _TUITION_CATEGORIES = ["tất cả", "học phí", "dịch vụ"] as const;
 export type TuitionCategory = (typeof _TUITION_CATEGORIES)[number];
 

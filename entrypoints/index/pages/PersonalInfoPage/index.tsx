@@ -52,19 +52,21 @@ export function PersonalInfoPage() {
       </div>
       <div className='flex flex-col gap-6 md:flex-row'>
         <Card className='w-full md:w-1/3'>
-          <CardHeader className='flex flex-col items-center pb-2 text-center'>
-            <div className='mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-primary/20 bg-muted'>
+          <CardHeader className='flex flex-col items-center pb-2 text-center sm:flex-row sm:gap-4 sm:text-left'>
+            <div className='mb-3 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-primary/20 bg-muted sm:mb-0 sm:h-24 sm:w-24'>
               {userData.avatar ? (
                 <img alt='Avatar' className='h-full w-full object-cover' height={96} src={userData.avatar} width={96} />
               ) : (
                 <User className='h-12 w-12 text-muted-foreground' />
               )}
             </div>
-            <CardTitle className='text-xl'>{userData.fullName}</CardTitle>
-            <p className='text-muted-foreground text-sm'>{userData.userId}</p>
-            <Badge className='mt-2' variant='secondary'>
-              {userData.presenceStatus || "Đang học"}
-            </Badge>
+            <div className='sm:min-w-0'>
+              <CardTitle className='text-xl'>{userData.fullName}</CardTitle>
+              <p className='text-muted-foreground text-sm'>{userData.userId}</p>
+              <Badge className='mt-2' variant='secondary'>
+                {userData.presenceStatus || "Đang học"}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent className='space-y-4 pt-4'>
             <div className='flex items-center gap-3 text-sm'>
@@ -159,7 +161,7 @@ export function PersonalInfoPage() {
         </CardHeader>
         <CardContent>
           {userData.awards && userData.awards.length > 0 ? (
-            <div className='overflow-hidden rounded-md border'>
+            <div className='overflow-x-auto rounded-md border'>
               <Table>
                 <TableHeader>
                   <TableRow>

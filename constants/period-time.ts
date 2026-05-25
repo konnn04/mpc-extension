@@ -15,16 +15,17 @@ export const PERIOD_TIME_MAP_GROUP_1: Record<number, { start: string; end: strin
   3: { start: "08:40", end: "09:45" },
   4: { start: "09:45", end: "10:35" },
   5: { start: "10:35", end: "11:25" },
-  6: { start: "12:45", end: "13:35" },
-  7: { start: "13:35", end: "14:25" },
-  8: { start: "14:25", end: "15:30" },
-  9: { start: "15:30", end: "16:20" },
-  10: { start: "16:20", end: "17:10" },
-  11: { start: "17:30", end: "18:20" },
-  12: { start: "18:20", end: "19:10" },
-  13: { start: "19:10", end: "20:00" },
-  14: { start: "20:00", end: "20:50" },
-  15: { start: "20:50", end: "21:40" }
+  6: { start: "11:30", end: "12:40" },
+  7: { start: "12:45", end: "13:35" },
+  8: { start: "13:35", end: "14:25" },
+  9: { start: "14:25", end: "15:30" },
+  10: { start: "15:30", end: "16:20" },
+  11: { start: "16:20", end: "17:10" },
+  12: { start: "17:30", end: "18:20" },
+  13: { start: "18:20", end: "19:10" },
+  14: { start: "19:10", end: "20:00" },
+  15: { start: "20:00", end: "20:50" },
+  16: { start: "20:50", end: "21:40" }
 };
 
 export const PERIOD_TIME_MAP_GROUP_2: Record<number, { start: string; end: string }> = {
@@ -33,16 +34,17 @@ export const PERIOD_TIME_MAP_GROUP_2: Record<number, { start: string; end: strin
   3: { start: "09:10", end: "10:15" },
   4: { start: "10:15", end: "11:05" },
   5: { start: "11:05", end: "11:55" },
-  6: { start: "13:00", end: "13:50" },
-  7: { start: "13:50", end: "14:40" },
-  8: { start: "14:40", end: "15:45" },
-  9: { start: "15:45", end: "16:35" },
-  10: { start: "16:35", end: "17:25" },
-  11: { start: "17:30", end: "18:20" },
-  12: { start: "18:20", end: "19:10" },
-  13: { start: "19:10", end: "20:00" },
-  14: { start: "20:00", end: "20:50" },
-  15: { start: "20:50", end: "21:40" }
+  6: { start: "12:00", end: "12:55" },
+  7: { start: "13:00", end: "13:50" },
+  8: { start: "13:50", end: "14:40" },
+  9: { start: "14:40", end: "15:45" },
+  10: { start: "15:45", end: "16:35" },
+  11: { start: "16:35", end: "17:25" },
+  12: { start: "17:30", end: "18:20" },
+  13: { start: "18:20", end: "19:10" },
+  14: { start: "19:10", end: "20:00" },
+  15: { start: "20:00", end: "20:50" },
+  16: { start: "20:50", end: "21:40" }
 };
 
 // ── Detailed time slots with breaks (for display) ──

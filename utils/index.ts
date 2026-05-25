@@ -40,6 +40,9 @@ export const navigateToURL = async (url: string): Promise<void> => {
   await browser.runtime.sendMessage({ type: _NAVIGATE_TO_URL, url });
 };
 
+export const formatFixed = (value: number, decimals: number): string =>
+  Number.parseFloat(value.toFixed(decimals)).toString();
+
 export const isMatchURL = (regexStr: string, plainUrl: string, currUrl: string): boolean => {
   try {
     return new RegExp(regexStr).test(currUrl);

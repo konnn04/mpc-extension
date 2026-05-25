@@ -1,16 +1,4 @@
-import {
-  Area,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ComposedChart,
-  LabelList,
-  Line,
-  Pie,
-  PieChart,
-  XAxis,
-  YAxis
-} from "recharts";
+import { Area, Bar, CartesianGrid, ComposedChart, LabelList, Line, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartConfig,
@@ -20,6 +8,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
+import { formatVNDCompact } from "@/utils/tuition-compute";
 
 type ChartTermData = {
   term: string;
@@ -143,13 +132,20 @@ export function CreditProgress({
   data,
   totalCredit,
   targetCredit,
-  totalProgramCredits
+  totalProgramCredits,
+  tuitionData
 }: {
   data: ChartTermData[];
   totalCredit: number;
   targetCredit: number;
   totalProgramCredits: number;
+  tuitionData?: { term: string; tuition: number }[];
 }) {
+  const hasTuition = tuitionData && tuitionData.length > 0;
+  const chartConfig = {
+    credit: { label: "TC từng kỳ", color: "oklch(0.6 0.2 200)" },
+    ...(hasTuition ? ({ tuition: { label: "Đã nộp", color: "oklch(0.65 0.18 30)" } } as ChartConfig) : {})
+  } as ChartConfig;
   return (
     <Card>
       <CardHeader>
@@ -182,17 +178,42 @@ export function CreditProgress({
             <span>135 TC</span>
           </div>
           <div className='mt-8'>
-            <ChartContainer
-              className='aspect-auto h-62.5 w-full'
-              config={{ credit: { label: "TC từng kỳ", color: "oklch(0.6 0.2 200)" } }}
-            >
-              <BarChart data={data} margin={{ left: -20, right: 10, top: 10 }}>
+            <ChartContainer className='aspect-auto h-62.5 w-full' config={chartConfig}>
+              <ComposedChart data={data} margin={{ left: -20, right: 10, top: 10 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis axisLine={false} dataKey='term' tickLine={false} tickMargin={10} />
-                <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+                <YAxis axisLine={false} tickLine={false} tickMargin={10} yAxisId='left' />
+                {hasTuition && (
+                  <YAxis
+                    axisLine={false}
+                    orientation='right'
+                    tickFormatter={(v) => formatVNDCompact(Number(v))}
+                    tickLine={false}
+                    tickMargin={10}
+                    yAxisId='right'
+                  />
+                )}
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey='credit' fill='var(--color-credit)' maxBarSize={40} radius={[4, 4, 0, 0]} />
-              </BarChart>
+                <Bar
+                  dataKey='credit'
+                  fill='var(--color-credit)'
+                  maxBarSize={40}
+                  name='TC từng kỳ'
+                  radius={[4, 4, 0, 0]}
+                  yAxisId='left'
+                />
+                {hasTuition && (
+                  <Line
+                    dataKey='tuition'
+                    dot={{ fill: "var(--color-tuition)", r: 4 }}
+                    name='Đã nộp'
+                    stroke='var(--color-tuition)'
+                    strokeWidth={2}
+                    type='monotone'
+                    yAxisId='right'
+                  />
+                )}
+              </ComposedChart>
             </ChartContainer>
           </div>
         </div>

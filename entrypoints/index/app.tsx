@@ -37,7 +37,7 @@ function App() {
   const [route, setRoute] = useState<DashboardRoute>(getInitialRoute);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const isMobile = window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const { theme, changeTheme } = useTheme();
 
@@ -49,6 +49,12 @@ function App() {
       setSidebarCollapsed(collapsed === "1");
       setShowOnboarding(onboarding !== "1");
     });
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const getData = useGlobalStore((s) => s.getData);
@@ -117,7 +123,6 @@ function App() {
   }, [sidebarCollapsed]);
 
   const handleSidebarToggle = () => {
-    const isMobile = window.innerWidth < 768;
     if (isMobile) {
       setMobileOpen(!mobileOpen);
     } else {

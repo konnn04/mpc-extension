@@ -2,20 +2,21 @@ import { useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const SCALE4_STOPS = [
-  { value: 0, label: "F" },
-  { value: 1, label: "D" },
-  { value: 1.5, label: "D+" },
-  { value: 2, label: "C" },
-  { value: 2.5, label: "C+" },
-  { value: 3, label: "B" },
-  { value: 3.5, label: "B+" },
-  { value: 4, label: "A+" }
+const GRADE_STOPS = [
+  { value: 0, label: "F", range: "Dưới 4.0" },
+  { value: 1, label: "D", range: "4.0–4.9" },
+  { value: 2, label: "D+", range: "5.0–5.4" },
+  { value: 3, label: "C", range: "5.5–6.4" },
+  { value: 4, label: "C+", range: "6.5–6.9" },
+  { value: 5, label: "B", range: "7.0–7.9" },
+  { value: 6, label: "B+", range: "8.0–8.4" },
+  { value: 7, label: "A", range: "8.5–8.9" },
+  { value: 8, label: "A+", range: "9.0–10.0" }
 ] as const;
 
-const STEP = 0.5;
+const STEP = 1;
 const MIN = 0;
-const MAX = 4;
+const MAX = GRADE_STOPS.length - 1;
 
 type FilterModalProps = {
   open: boolean;
@@ -57,25 +58,33 @@ export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }:
   const rangePercent = ((filterRange[1] - filterRange[0]) / (MAX - MIN)) * 100;
   const minPercent = ((filterRange[0] - MIN) / (MAX - MIN)) * 100;
 
-  const currentMinLabel = SCALE4_STOPS.find((s) => s.value === filterRange[0])?.label ?? "";
-  const currentMaxLabel = SCALE4_STOPS.find((s) => s.value === filterRange[1])?.label ?? "";
+  const currentMinLabel = GRADE_STOPS[filterRange[0]]?.label ?? "";
+  const currentMaxLabel = GRADE_STOPS[filterRange[1]]?.label ?? "";
+  const currentMinRange = GRADE_STOPS[filterRange[0]]?.range ?? "";
+  const currentMaxRange = GRADE_STOPS[filterRange[1]]?.range ?? "";
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader>
-          <DialogTitle>Lọc theo thang điểm 4</DialogTitle>
+          <DialogTitle>Lọc theo xếp loại</DialogTitle>
         </DialogHeader>
 
         <div className='space-y-6 py-4'>
           <div className='flex items-center justify-center gap-3'>
-            <span className='rounded-full bg-primary/10 px-3 py-1 font-medium text-primary text-sm'>
-              {currentMinLabel} ({filterRange[0].toFixed(1)})
-            </span>
+            <div className='text-center'>
+              <span className='rounded-full bg-primary/10 px-3 py-1 font-medium text-primary text-sm'>
+                {currentMinLabel}
+              </span>
+              <p className='mt-1 text-[10px] text-muted-foreground'>{currentMinRange}</p>
+            </div>
             <span className='text-muted-foreground'>→</span>
-            <span className='rounded-full bg-primary/10 px-3 py-1 font-medium text-primary text-sm'>
-              {currentMaxLabel} ({filterRange[1].toFixed(1)})
-            </span>
+            <div className='text-center'>
+              <span className='rounded-full bg-primary/10 px-3 py-1 font-medium text-primary text-sm'>
+                {currentMaxLabel}
+              </span>
+              <p className='mt-1 text-[10px] text-muted-foreground'>{currentMaxRange}</p>
+            </div>
           </div>
 
           <div className='relative mx-auto w-full max-w-md'>
@@ -115,11 +124,11 @@ export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }:
             </div>
 
             <div className='relative mt-3 flex justify-between'>
-              {SCALE4_STOPS.map((stop) => (
+              {GRADE_STOPS.map((stop) => (
                 <span
-                  className='text-center font-medium text-muted-foreground text-xs leading-tight'
+                  className='text-center font-medium text-[10px] text-muted-foreground leading-tight'
                   key={stop.value}
-                  style={{ width: `${100 / SCALE4_STOPS.length}%`, marginLeft: stop.value === 0 ? 0 : undefined }}
+                  style={{ width: `${100 / GRADE_STOPS.length}%`, marginLeft: stop.value === 0 ? 0 : undefined }}
                 >
                   {stop.label}
                 </span>

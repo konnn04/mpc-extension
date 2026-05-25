@@ -2,6 +2,7 @@ import { FilterIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { GRADE_ORDER } from "@/constants";
 
 export type GroupMode = "semester" | "all";
 
@@ -26,7 +27,7 @@ export function ScoreFiltersBar({
   onToggleHideNonGPA: (v: boolean) => void;
   searchText: string;
 }) {
-  const isFilterActive = filterRange[0] !== 0 || filterRange[1] !== 4;
+  const isFilterActive = filterRange[0] !== 0 || filterRange[1] !== GRADE_ORDER.length - 1;
 
   return (
     <div className='flex flex-wrap items-center gap-2'>
@@ -52,7 +53,7 @@ export function ScoreFiltersBar({
         Lọc
         {isFilterActive && (
           <span className='ml-1 rounded-full bg-primary px-1.5 text-primary-foreground text-xs'>
-            {filterRange[0].toFixed(1)}–{filterRange[1].toFixed(1)}
+            {GRADE_ORDER[filterRange[0]]}–{GRADE_ORDER[filterRange[1]]}
           </span>
         )}
       </Button>

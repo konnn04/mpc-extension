@@ -16,7 +16,11 @@ const chartConfig = {
   max: { label: "Cao nhất", color: "oklch(0.72 0.188 151)" }
 } satisfies ChartConfig;
 
-export function CreditCostChart({ data }: { data: { name: string; avg: number; min: number; max: number }[] }) {
+export function CreditCostChart({
+  data
+}: {
+  data: { name: string; avg: number; avgMajor: number; min: number; max: number }[];
+}) {
   if (data.length === 0) {
     return (
       <Card>
@@ -39,7 +43,7 @@ export function CreditCostChart({ data }: { data: { name: string; avg: number; m
       </CardHeader>
       <CardContent>
         <ChartContainer className='aspect-auto h-75 w-full' config={chartConfig}>
-          <ComposedChart data={data} margin={{ left: -20, right: 10, top: 10 }}>
+          <ComposedChart data={data} margin={{ left: 0, right: 10, top: 10 }}>
             <CartesianGrid vertical={false} />
             <XAxis axisLine={false} dataKey='name' tickLine={false} tickMargin={10} />
             <YAxis
@@ -47,11 +51,12 @@ export function CreditCostChart({ data }: { data: { name: string; avg: number; m
               tickFormatter={(v) => formatVNDCompact(Number(v))}
               tickLine={false}
               tickMargin={10}
+              width={60}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey='min' fill='var(--color-min)' name='Thấp nhất' radius={[4, 4, 0, 0]} stackId='range' />
-            <Bar dataKey='max' fill='var(--color-max)' name='Cao nhất' radius={[4, 4, 0, 0]} stackId='range' />
+            <Bar dataKey='min' fill='var(--color-min)' name='Thấp nhất' radius={[4, 4, 0, 0]} />
+            <Bar dataKey='max' fill='var(--color-max)' name='Cao nhất' radius={[4, 4, 0, 0]} />
             <Line
               dataKey='avg'
               dot={{ fill: "var(--color-avg)", r: 4 }}

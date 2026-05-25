@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import cachTinhToanMd from "@/assets/docs/cach_tinh_toan.md?raw";
 import { FormSemesterDialog } from "@/components/custom/form-semester-dialog";
 import { MarkdownModal } from "@/components/custom/markdown-modal";
+import { GRADE_ORDER } from "@/constants";
 import { _DEFAULT_SCORE_SUMMARY } from "@/constants/default";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useCurrentUserStore } from "@/store/use-current-user-store";
@@ -71,7 +72,7 @@ function ScorePlanPage() {
   const [summary, setSummary] = useState<ScoreSummaryType>(_DEFAULT_SCORE_SUMMARY);
   const [searchText, setSearchText] = useState("");
   const [groupMode, setGroupMode] = useState<GroupMode>("semester");
-  const [filterRange, setFilterRange] = useState<[number, number]>([0, 4]);
+  const [filterRange, setFilterRange] = useState<[number, number]>([0, GRADE_ORDER.length - 1]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [semesterDialog, setSemesterDialog] = useState<SemesterDialogState>({ open: false, mode: "add" });
   const [guideOpen, setGuideOpen] = useState(false);

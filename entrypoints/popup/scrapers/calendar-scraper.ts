@@ -1,79 +1,112 @@
-import type { CalendarEntry, ProgressCallback, SemesterData, WeekData } from "@/types";
+import type {
+  CalendarEntry,
+  ProgressCallback,
+  SemesterData,
+  WeekData,
+} from "@/types";
 
-const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData[]> => {
+const getCalendars = async (
+  onProgress?: ProgressCallback,
+): Promise<SemesterData[]> => {
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
   const SUBJECT_CODE_REGEX = /\((.*?)\)/;
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
-  const WEEK_MATCH_REGEX = /Tuần \(\d{2}\/\d{2}\/(\d{4}) - \d{2}\/\d{2}\/(\d{4})\)/;
+  const WEEK_MATCH_REGEX =
+    /Tuần \(\d{2}\/\d{2}\/(\d{4}) - \d{2}\/\d{2}\/(\d{4})\)/;
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
   const WEEK_SORT_REGEX = /Tuần \((\d{2})\/(\d{2})\/(\d{4})/;
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
-  const DATE_RANGE_REGEX = /(\d{2}\/\d{2}\/\d{2})\s*đến\s*(\d{2}\/\d{2}\/\d{2})/;
+  const DATE_RANGE_REGEX =
+    /(\d{2}\/\d{2}\/\d{2})\s*đến\s*(\d{2}\/\d{2}\/\d{2})/;
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
   const SINGLE_DATE_REGEX = /(\d{2}\/\d{2}\/\d{2})/;
-  const PERIOD_TIME_MAP_GROUP_1: Record<number, { start: string; end: string }> = {
+  const PERIOD_TIME_MAP_GROUP_1: Record<
+    number,
+    { start: string; end: string }
+  > = {
     1: { start: "07:00", end: "07:50" },
     2: { start: "07:50", end: "08:40" },
     3: { start: "08:40", end: "09:45" },
     4: { start: "09:45", end: "10:35" },
     5: { start: "10:35", end: "11:25" },
-    6: { start: "12:45", end: "13:35" },
-    7: { start: "13:35", end: "14:25" },
-    8: { start: "14:25", end: "15:30" },
-    9: { start: "15:30", end: "16:20" },
-    10: { start: "16:20", end: "17:10" },
-    11: { start: "17:30", end: "18:20" },
-    12: { start: "18:20", end: "19:10" },
-    13: { start: "19:10", end: "20:00" },
-    14: { start: "20:00", end: "20:50" },
-    15: { start: "20:50", end: "21:40" }
+    6: { start: "11:30", end: "12:40" },
+    7: { start: "12:45", end: "13:35" },
+    8: { start: "13:35", end: "14:25" },
+    9: { start: "14:25", end: "15:30" },
+    10: { start: "15:30", end: "16:20" },
+    11: { start: "16:20", end: "17:10" },
+    12: { start: "17:30", end: "18:20" },
+    13: { start: "18:20", end: "19:10" },
+    14: { start: "19:10", end: "20:00" },
+    15: { start: "20:00", end: "20:50" },
+    16: { start: "20:50", end: "21:40" },
   };
 
-  const PERIOD_TIME_MAP_GROUP_2: Record<number, { start: string; end: string }> = {
+  const PERIOD_TIME_MAP_GROUP_2: Record<
+    number,
+    { start: string; end: string }
+  > = {
     1: { start: "07:30", end: "08:20" },
     2: { start: "08:20", end: "09:10" },
     3: { start: "09:10", end: "10:15" },
     4: { start: "10:15", end: "11:05" },
     5: { start: "11:05", end: "11:55" },
-    6: { start: "13:00", end: "13:50" },
-    7: { start: "13:50", end: "14:40" },
-    8: { start: "14:40", end: "15:45" },
-    9: { start: "15:45", end: "16:35" },
-    10: { start: "16:35", end: "17:25" },
-    11: { start: "17:30", end: "18:20" },
-    12: { start: "18:20", end: "19:10" },
-    13: { start: "19:10", end: "20:00" },
-    14: { start: "20:00", end: "20:50" },
-    15: { start: "20:50", end: "21:40" }
+    6: { start: "12:00", end: "12:55" },
+    7: { start: "13:00", end: "13:50" },
+    8: { start: "13:50", end: "14:40" },
+    9: { start: "14:40", end: "15:45" },
+    10: { start: "15:45", end: "16:35" },
+    11: { start: "16:35", end: "17:25" },
+    12: { start: "17:30", end: "18:20" },
+    13: { start: "18:20", end: "19:10" },
+    14: { start: "19:10", end: "20:00" },
+    15: { start: "20:00", end: "20:50" },
+    16: { start: "20:50", end: "21:40" },
   };
 
   // ==================== CONFIGURATION ====================
   const CONFIG = {
-    POLL_INTERVAL: 50,        // ms between condition checks
-    DROPDOWN_TIMEOUT: 3000,   // max ms to wait for dropdown open/close
-    TABLE_TIMEOUT: 10_000,    // max ms to wait for table data after semester switch
-    TABLE_EMPTY_TIMEOUT: 4000,// max ms to wait if table remains empty (no-data scenario)
+    POLL_INTERVAL: 50, // ms between condition checks
+    DROPDOWN_TIMEOUT: 3000, // max ms to wait for dropdown open/close
+    TABLE_TIMEOUT: 10_000, // max ms to wait for table data after semester switch
+    TABLE_EMPTY_TIMEOUT: 4000, // max ms to wait if table remains empty (no-data scenario)
     SCROLL_RETRIES: 15,
     ERROR_DISPLAY: 2000,
     COMPLETION_DELAY: 500,
     selectors: {
       semesterSelect: "div.col-lg-4 div.ng-input",
-      semesterDropdown: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
-      semesterItems: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content > div",
+      semesterDropdown:
+        "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
+      semesterItems:
+        "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content > div",
       table: "#printArea > div.table-responsive-lg table.table",
-      tableRows: "tbody tr"
+      tableRows: "tbody tr",
     },
     // ── Legacy nested aliases for backward compat with getExamCalendars ──
-    get limits() { return { maxScrollRetries: this.SCROLL_RETRIES }; },
+    get limits() {
+      return { maxScrollRetries: this.SCROLL_RETRIES };
+    },
     get timeouts() {
       return {
-        get dropdownOpen() { return CONFIG.DROPDOWN_TIMEOUT; },
-        get dropdownClose() { return CONFIG.DROPDOWN_TIMEOUT; },
-        get scrollWait() { return CONFIG.POLL_INTERVAL; },
-        get tableUpdateLong() { return CONFIG.TABLE_TIMEOUT; },
+        get dropdownOpen() {
+          return CONFIG.DROPDOWN_TIMEOUT;
+        },
+        get dropdownClose() {
+          return CONFIG.DROPDOWN_TIMEOUT;
+        },
+        get scrollWait() {
+          return CONFIG.POLL_INTERVAL;
+        },
+        get tableUpdateLong() {
+          return CONFIG.TABLE_TIMEOUT;
+        },
         tableUpdateShort: 500,
-        get errorDisplay() { return CONFIG.ERROR_DISPLAY; },
-        get completionDelay() { return CONFIG.COMPLETION_DELAY; }
+        get errorDisplay() {
+          return CONFIG.ERROR_DISPLAY;
+        },
+        get completionDelay() {
+          return CONFIG.COMPLETION_DELAY;
+        },
       };
     },
     overlayIds: {
@@ -81,15 +114,15 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
       progressBar: "mpc-crawl-progress-bar",
       progressText: "mpc-crawl-progress-text",
       message: "mpc-crawl-message",
-      semesterInfo: "mpc-crawl-semester-info"
-    }
+      semesterInfo: "mpc-crawl-semester-info",
+    },
   };
 
   // ── Smart polling: check condition every POLL_INTERVAL ms, resolve early, reject on timeout ──
   const pollUntil = (
     condition: () => boolean,
     timeoutMs: number,
-    label?: string
+    label?: string,
   ): Promise<void> =>
     new Promise((resolve, reject) => {
       if (condition()) {
@@ -109,15 +142,26 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     });
 
   /** Poll until a selector matches an element in the DOM. */
-  const waitForSelector = (selector: string, timeoutMs: number): Promise<void> =>
+  const waitForSelector = (
+    selector: string,
+    timeoutMs: number,
+  ): Promise<void> =>
     pollUntil(() => !!document.querySelector(selector), timeoutMs, selector);
 
   /** Poll until a selector NO LONGER matches (element removed). */
-  const waitForSelectorRemoved = (selector: string, timeoutMs: number): Promise<void> =>
-    pollUntil(() => !document.querySelector(selector), timeoutMs, `removed:${selector}`);
+  const waitForSelectorRemoved = (
+    selector: string,
+    timeoutMs: number,
+  ): Promise<void> =>
+    pollUntil(
+      () => !document.querySelector(selector),
+      timeoutMs,
+      `removed:${selector}`,
+    );
 
   // ── Legacy wait kept only for non-DOM delays (overlay animations, completion) ──
-  const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+  const wait = (ms: number): Promise<void> =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   const createOverlay = (): HTMLDivElement => {
     const overlay = document.createElement("div");
@@ -131,7 +175,8 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
 
     const title = document.createElement("h3");
     title.textContent = "Đang đọc lịch học";
-    title.style.cssText = "margin:0 0 4px 0;font-size:16px;font-weight:600;color:#0f172a";
+    title.style.cssText =
+      "margin:0 0 4px 0;font-size:16px;font-weight:600;color:#0f172a";
 
     const message = document.createElement("p");
     message.id = CONFIG.overlayIds.message;
@@ -139,15 +184,18 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     message.style.cssText = "margin:0 0 16px 0;font-size:14px;color:#64748b";
 
     const progressBg = document.createElement("div");
-    progressBg.style.cssText = "background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;margin-bottom:8px";
+    progressBg.style.cssText =
+      "background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;margin-bottom:8px";
 
     const progressBar = document.createElement("div");
     progressBar.id = CONFIG.overlayIds.progressBar;
-    progressBar.style.cssText = "height:100%;background:#0f172a;width:0%;transition:width 0.3s ease";
+    progressBar.style.cssText =
+      "height:100%;background:#0f172a;width:0%;transition:width 0.3s ease";
     progressBg.appendChild(progressBar);
 
     const info = document.createElement("div");
-    info.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:16px";
+    info.style.cssText =
+      "display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:16px";
 
     const progressText = document.createElement("span");
     progressText.id = CONFIG.overlayIds.progressText;
@@ -181,7 +229,9 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
 
   const updateOverlay = (progress: number, message: string): void => {
     const progressBar = document.getElementById(CONFIG.overlayIds.progressBar);
-    const progressText = document.getElementById(CONFIG.overlayIds.progressText);
+    const progressText = document.getElementById(
+      CONFIG.overlayIds.progressText,
+    );
     const messageEl = document.getElementById(CONFIG.overlayIds.message);
 
     if (progressBar) {
@@ -214,7 +264,9 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     }
   };
 
-  const scrollDropdownToLoadAll = async (scrollableContent: Element): Promise<void> => {
+  const scrollDropdownToLoadAll = async (
+    scrollableContent: Element,
+  ): Promise<void> => {
     const el = scrollableContent as HTMLElement;
     el.scrollTop = el.scrollHeight;
     await wait(250);
@@ -224,8 +276,12 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     // Capture the currently selected semester BEFORE any DOM interaction
     const getCurrentSelected = (): string | null => {
       const labelEl =
-        document.querySelector("ng-select[bindvalue='hoc_ky'] .ng-value-label") ||
-        document.querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label") ||
+        document.querySelector(
+          "ng-select[bindvalue='hoc_ky'] .ng-value-label",
+        ) ||
+        document.querySelector(
+          "ng-select[bindlabel='ten_hoc_ky'] .ng-value-label",
+        ) ||
         document.querySelector(".ng-value-label");
       return labelEl?.textContent?.trim() || null;
     };
@@ -233,20 +289,31 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     const savedCurrent = getCurrentSelected();
     console.log("📌 Học kỳ hiện tại:", savedCurrent);
 
-    const semesterSelect = document.querySelector(CONFIG.selectors.semesterSelect);
+    const semesterSelect = document.querySelector(
+      CONFIG.selectors.semesterSelect,
+    );
     if (!semesterSelect) {
       if (savedCurrent) {
         return [savedCurrent];
       }
-      throw new Error("Không tìm thấy selector học kỳ. Hãy đảm bảo bạn đang ở trang TKB Học kỳ.");
+      throw new Error(
+        "Không tìm thấy selector học kỳ. Hãy đảm bảo bạn đang ở trang TKB Học kỳ.",
+      );
     }
 
-    semesterSelect.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    await waitForSelector(CONFIG.selectors.semesterDropdown, CONFIG.DROPDOWN_TIMEOUT);
+    semesterSelect.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true }),
+    );
+    await waitForSelector(
+      CONFIG.selectors.semesterDropdown,
+      CONFIG.DROPDOWN_TIMEOUT,
+    );
 
     // Collect items while scrolling — virtual scroll only keeps viewport items in DOM
     const seen = new Set<string>();
-    const scrollEl = document.querySelector(CONFIG.selectors.semesterDropdown) as HTMLElement | null;
+    const scrollEl = document.querySelector(
+      CONFIG.selectors.semesterDropdown,
+    ) as HTMLElement | null;
     if (scrollEl) {
       const step = scrollEl.clientHeight || 100;
       let pos = 0;
@@ -272,13 +339,23 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
 
     const semesters = Array.from(seen);
 
-    semesterSelect.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    await waitForSelectorRemoved(CONFIG.selectors.semesterDropdown, CONFIG.DROPDOWN_TIMEOUT);
-    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    semesterSelect.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true }),
+    );
+    await waitForSelectorRemoved(
+      CONFIG.selectors.semesterDropdown,
+      CONFIG.DROPDOWN_TIMEOUT,
+    );
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
     await wait(50);
 
     if (semesters.length === 0 && savedCurrent) {
-      console.warn("Dropdown không có items, fallback về học kỳ hiện tại:", savedCurrent);
+      console.warn(
+        "Dropdown không có items, fallback về học kỳ hiện tại:",
+        savedCurrent,
+      );
       return [savedCurrent];
     }
 
@@ -315,7 +392,11 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
       const verifyStart = Date.now();
       while (Date.now() - verifyStart < verifyMax) {
         const rows = table.querySelectorAll("tbody tr");
-        if (rows.length > 0 && !rows[0]?.textContent?.includes("Không tìm thấy")) break;
+        if (
+          rows.length > 0 &&
+          !rows[0]?.textContent?.includes("Không tìm thấy")
+        )
+          break;
         await wait(200);
       }
     }
@@ -323,36 +404,58 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
 
   const selectSemester = async (semesterText: string): Promise<void> => {
     const currentLabel =
-      document.querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label")?.textContent?.trim() ||
+      document
+        .querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label")
+        ?.textContent?.trim() ||
       document.querySelector("ng-select .ng-value-label")?.textContent?.trim();
 
     // Already showing the requested semester — still wait for any pending render
     if (currentLabel === semesterText) {
-      console.log(`Đang ở học kỳ "${semesterText}", đợi render nếu đang load dở.`);
+      console.log(
+        `Đang ở học kỳ "${semesterText}", đợi render nếu đang load dở.`,
+      );
       await waitForSpinnerThenSettle();
       return;
     }
 
-    const semesterSelect = document.querySelector(CONFIG.selectors.semesterSelect);
+    const semesterSelect = document.querySelector(
+      CONFIG.selectors.semesterSelect,
+    );
     if (!semesterSelect) {
       throw new Error("Không tìm thấy selector học kỳ");
     }
 
-    semesterSelect.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    await waitForSelector(CONFIG.selectors.semesterDropdown, CONFIG.DROPDOWN_TIMEOUT);
+    semesterSelect.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true }),
+    );
+    await waitForSelector(
+      CONFIG.selectors.semesterDropdown,
+      CONFIG.DROPDOWN_TIMEOUT,
+    );
 
-    const scrollableContent = document.querySelector(CONFIG.selectors.semesterDropdown);
+    const scrollableContent = document.querySelector(
+      CONFIG.selectors.semesterDropdown,
+    );
     if (scrollableContent) {
       await scrollDropdownToLoadAll(scrollableContent);
     }
 
     const items = document.querySelectorAll(CONFIG.selectors.semesterItems);
-    const targetItem = Array.from(items).find((node) => node.textContent?.trim() === semesterText) as HTMLElement;
+    const targetItem = Array.from(items).find(
+      (node) => node.textContent?.trim() === semesterText,
+    ) as HTMLElement;
 
     if (!targetItem) {
-      semesterSelect.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      await waitForSelectorRemoved(CONFIG.selectors.semesterDropdown, CONFIG.DROPDOWN_TIMEOUT);
-      console.warn(`Không tìm thấy học kỳ "${semesterText}" trong dropdown, dùng dữ liệu hiện tại.`);
+      semesterSelect.dispatchEvent(
+        new MouseEvent("mousedown", { bubbles: true }),
+      );
+      await waitForSelectorRemoved(
+        CONFIG.selectors.semesterDropdown,
+        CONFIG.DROPDOWN_TIMEOUT,
+      );
+      console.warn(
+        `Không tìm thấy học kỳ "${semesterText}" trong dropdown, dùng dữ liệu hiện tại.`,
+      );
       return;
     }
 
@@ -369,7 +472,11 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
   const parseDateString = (dateStr: string): Date => {
     const [d, m, y] = dateStr.split("/");
     const fullYear = Number.parseInt(y, 10) + 2000;
-    return new Date(fullYear, Number.parseInt(m, 10) - 1, Number.parseInt(d, 10));
+    return new Date(
+      fullYear,
+      Number.parseInt(m, 10) - 1,
+      Number.parseInt(d, 10),
+    );
   };
 
   const getDayOffset = (dayStr: string): number => {
@@ -388,7 +495,7 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
 
   const parseRoomInfo = (
     roomStr: string,
-    hasLink: boolean
+    hasLink: boolean,
   ): {
     category: "COURSE" | "LAB" | "OTHER";
     locationType: "NB" | "MLA" | "VVT" | "GP" | "LB" | "OTHER";
@@ -400,16 +507,61 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     const lowerRoom = roomStr.trim();
 
     const rules = [
-      { prefix: "NB.PM", cat: "LAB", locText: "Cơ sở Nhơn Đức (Nhà Bè)", locType: "NB" },
-      { prefix: "NB.PDN", cat: "OTHER", locText: "Cơ sở Nhơn Đức (Nhà Bè)", locType: "NB" },
-      { prefix: "NB", cat: "COURSE", locText: "Cơ sở Nhơn Đức (Nhà Bè)", locType: "NB" },
-      { prefix: "LB.GDQP", cat: "OTHER", locText: "Cơ sở Long Hưng (Long Bình Tân)", locType: "LB" },
-      { prefix: "LB", cat: "OTHER", locText: "Cơ sở Long Hưng (Long Bình Tân)", locType: "LB" },
-      { prefix: "MLA", cat: "COURSE", locText: "Cơ sở Mai Thị Lựu", locType: "MLA" },
-      { prefix: "MLD", cat: "COURSE", locText: "Cơ sở Mai Thị Lựu", locType: "MLA" },
-      { prefix: "A.PM", cat: "LAB", locText: "Cơ sở Võ Văn Tần", locType: "VVT" },
-      { prefix: "A", cat: "COURSE", locText: "Cơ sở Võ Văn Tần", locType: "VVT" },
-      { prefix: "GP", cat: "COURSE", locText: "Cơ sở Gia Phú", locType: "GP" }
+      {
+        prefix: "NB.PM",
+        cat: "LAB",
+        locText: "Cơ sở Nhơn Đức (Nhà Bè)",
+        locType: "NB",
+      },
+      {
+        prefix: "NB.PDN",
+        cat: "OTHER",
+        locText: "Cơ sở Nhơn Đức (Nhà Bè)",
+        locType: "NB",
+      },
+      {
+        prefix: "NB",
+        cat: "COURSE",
+        locText: "Cơ sở Nhơn Đức (Nhà Bè)",
+        locType: "NB",
+      },
+      {
+        prefix: "LB.GDQP",
+        cat: "OTHER",
+        locText: "Cơ sở Long Hưng (Long Bình Tân)",
+        locType: "LB",
+      },
+      {
+        prefix: "LB",
+        cat: "OTHER",
+        locText: "Cơ sở Long Hưng (Long Bình Tân)",
+        locType: "LB",
+      },
+      {
+        prefix: "MLA",
+        cat: "COURSE",
+        locText: "Cơ sở Mai Thị Lựu",
+        locType: "MLA",
+      },
+      {
+        prefix: "MLD",
+        cat: "COURSE",
+        locText: "Cơ sở Mai Thị Lựu",
+        locType: "MLA",
+      },
+      {
+        prefix: "A.PM",
+        cat: "LAB",
+        locText: "Cơ sở Võ Văn Tần",
+        locType: "VVT",
+      },
+      {
+        prefix: "A",
+        cat: "COURSE",
+        locText: "Cơ sở Võ Văn Tần",
+        locType: "VVT",
+      },
+      { prefix: "GP", cat: "COURSE", locText: "Cơ sở Gia Phú", locType: "GP" },
     ] as const;
 
     const matchedRule = rules.find((rule) => lowerRoom.startsWith(rule.prefix));
@@ -423,7 +575,9 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
       locationText = locationText ? `${locationText} (Online)` : "Online";
     }
 
-    const formattedRoom = lowerRoom ? `${lowerRoom}${locationText ? `, ${locationText}` : ""}` : locationText;
+    const formattedRoom = lowerRoom
+      ? `${lowerRoom}${locationText ? `, ${locationText}` : ""}`
+      : locationText;
     return { category, locationType, formattedRoom };
   };
 
@@ -435,19 +589,24 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     roomText: string,
     link: string,
     teacher: string,
-    dateRangeStr: string
+    dateRangeStr: string,
   ): { date: Date; entry: CalendarEntry }[] => {
     const startPeriod = Number.parseInt(startPeriodStr, 10);
     const numPeriods = Number.parseInt(numPeriodsStr, 10);
     const endPeriod = startPeriod + numPeriods - 1;
 
-    const { category, locationType, formattedRoom } = parseRoomInfo(roomText, !!link);
+    const { category, locationType, formattedRoom } = parseRoomInfo(
+      roomText,
+      !!link,
+    );
 
-    const timeMap = ["NB", "LB"].includes(locationType) ? PERIOD_TIME_MAP_GROUP_2 : PERIOD_TIME_MAP_GROUP_1;
+    const timeMap = ["NB", "LB"].includes(locationType)
+      ? PERIOD_TIME_MAP_GROUP_2
+      : PERIOD_TIME_MAP_GROUP_1;
 
     const { start: startTime, end: endTime } = {
       start: timeMap[startPeriod]?.start || "",
-      end: timeMap[endPeriod]?.end || ""
+      end: timeMap[endPeriod]?.end || "",
     };
 
     const description = link ? `Link học: ${link}` : "";
@@ -497,8 +656,8 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
             room: formattedRoom,
             teacher,
             description,
-            link
-          }
+            link,
+          },
         });
       }
       currDate.setDate(currDate.getDate() + 1);
@@ -554,7 +713,8 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
 
       if (cells.length >= 15) {
         // First row of a subject (usually 21 columns)
-        const getText = (index: number) => cells[index]?.textContent?.trim() || "";
+        const getText = (index: number) =>
+          cells[index]?.textContent?.trim() || "";
         const codeText = getText(0);
         const titleLine = getText(1);
         const title = titleLine.split("(")[0].trim();
@@ -597,7 +757,7 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
           code,
           title,
           group,
-          teacherFallback: teacher
+          teacherFallback: teacher,
         };
 
         if (numPeriodsStr === "0") {
@@ -612,7 +772,7 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
           roomText,
           link,
           teacher,
-          dateRangeStr
+          dateRangeStr,
         );
         allEntries.push(...entries);
       } else {
@@ -620,7 +780,8 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
           continue;
         }
 
-        const getText = (index: number) => cells[index]?.textContent?.trim() || "";
+        const getText = (index: number) =>
+          cells[index]?.textContent?.trim() || "";
         const dayStr = getText(0); // 1st col
         const startPeriodStr = getText(1);
         const numPeriodsStr = getText(2);
@@ -666,7 +827,7 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
           roomText,
           link,
           teacher,
-          dateRangeStr
+          dateRangeStr,
         );
         allEntries.push(...entries);
       }
@@ -698,12 +859,12 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
           const dateA = new Date(
             Number.parseInt(aMatch[3], 10),
             Number.parseInt(aMatch[2], 10) - 1,
-            Number.parseInt(aMatch[1], 10)
+            Number.parseInt(aMatch[1], 10),
           ).getTime();
           const dateB = new Date(
             Number.parseInt(bMatch[3], 10),
             Number.parseInt(bMatch[2], 10) - 1,
-            Number.parseInt(bMatch[1], 10)
+            Number.parseInt(bMatch[1], 10),
           ).getTime();
           return dateA - dateB;
         }
@@ -718,7 +879,9 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     console.log("🚀 Bắt đầu lấy dữ liệu lịch học (TKB Học Kỳ)...");
 
     if (!window.location.hash.includes("/tkb-hocky")) {
-      throw new Error("Vui lòng chuyển đến trang 'Thời khóa biểu dạng học kỳ' để thực hiện thao tác này.");
+      throw new Error(
+        "Vui lòng chuyển đến trang 'Thời khóa biểu dạng học kỳ' để thực hiện thao tác này.",
+      );
     }
 
     showOverlay();
@@ -733,7 +896,11 @@ const getCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData
     const allData: SemesterData[] = [];
     const totalSemesters = semesters.length;
 
-    for (let semesterIndex = 0; semesterIndex < semesters.length; semesterIndex++) {
+    for (
+      let semesterIndex = 0;
+      semesterIndex < semesters.length;
+      semesterIndex++
+    ) {
       const semester = semesters[semesterIndex];
       const semesterProgress = (semesterIndex / totalSemesters) * 100;
 
@@ -773,12 +940,15 @@ export type {
   CalendarEntry,
   ProgressCallback,
   SemesterData,
-  WeekData
+  WeekData,
 } from "@/types";
 export { getCalendars };
-export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<SemesterData[]> => {
+export const getExamCalendars = async (
+  onProgress?: ProgressCallback,
+): Promise<SemesterData[]> => {
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
-  const WEEK_MATCH_REGEX = /Tuần \(\d{2}\/\d{2}\/(\d{4}) - \d{2}\/\d{2}\/(\d{4})\)/;
+  const WEEK_MATCH_REGEX =
+    /Tuần \(\d{2}\/\d{2}\/(\d{4}) - \d{2}\/\d{2}\/(\d{4})\)/;
   // biome-ignore lint/performance/useTopLevelRegex: Must be scoped within function for injection via executeScript
   const WEEK_SORT_REGEX = /Tuần \((\d{2})\/(\d{2})\/(\d{4})/;
 
@@ -786,10 +956,12 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
   const CONFIG = {
     selectors: {
       semesterSelect: "ng-select[bindlabel='ten_hoc_ky'] div.ng-input",
-      semesterDropdown: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
-      semesterItems: "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content > div",
+      semesterDropdown:
+        "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
+      semesterItems:
+        "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel div.scrollable-content > div",
       table: "#printArea div.table-responsive-lg table.table",
-      tableRows: "tbody tr"
+      tableRows: "tbody tr",
     },
     timeouts: {
       dropdownOpen: 300,
@@ -798,22 +970,23 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
       tableUpdateLong: 15_000,
       tableUpdateShort: 1000,
       errorDisplay: 2000,
-      completionDelay: 500
+      completionDelay: 500,
     },
     limits: {
-      maxScrollRetries: 15
+      maxScrollRetries: 15,
     },
     overlayIds: {
       overlay: "mpc-crawl-overlay",
       progressBar: "mpc-crawl-progress-bar",
       progressText: "mpc-crawl-progress-text",
       message: "mpc-crawl-message",
-      semesterInfo: "mpc-crawl-semester-info"
-    }
+      semesterInfo: "mpc-crawl-semester-info",
+    },
   };
 
   // ==================== HELPER FUNCTIONS ====================
-  const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+  const wait = (ms: number): Promise<void> =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   const createOverlay = (): HTMLDivElement => {
     const overlay = document.createElement("div");
@@ -827,7 +1000,8 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
 
     const title = document.createElement("h3");
     title.textContent = "Đang đọc lịch thi";
-    title.style.cssText = "margin:0 0 4px 0;font-size:16px;font-weight:600;color:#0f172a";
+    title.style.cssText =
+      "margin:0 0 4px 0;font-size:16px;font-weight:600;color:#0f172a";
 
     const message = document.createElement("p");
     message.id = CONFIG.overlayIds.message;
@@ -835,15 +1009,18 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     message.style.cssText = "margin:0 0 16px 0;font-size:14px;color:#64748b";
 
     const progressBg = document.createElement("div");
-    progressBg.style.cssText = "background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;margin-bottom:8px";
+    progressBg.style.cssText =
+      "background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;margin-bottom:8px";
 
     const progressBar = document.createElement("div");
     progressBar.id = CONFIG.overlayIds.progressBar;
-    progressBar.style.cssText = "height:100%;background:#0f172a;width:0%;transition:width 0.3s ease";
+    progressBar.style.cssText =
+      "height:100%;background:#0f172a;width:0%;transition:width 0.3s ease";
     progressBg.appendChild(progressBar);
 
     const info = document.createElement("div");
-    info.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:16px";
+    info.style.cssText =
+      "display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:16px";
 
     const progressText = document.createElement("span");
     progressText.id = CONFIG.overlayIds.progressText;
@@ -877,7 +1054,9 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
 
   const updateOverlay = (progress: number, message: string): void => {
     const progressBar = document.getElementById(CONFIG.overlayIds.progressBar);
-    const progressText = document.getElementById(CONFIG.overlayIds.progressText);
+    const progressText = document.getElementById(
+      CONFIG.overlayIds.progressText,
+    );
     const messageEl = document.getElementById(CONFIG.overlayIds.message);
 
     if (progressBar) {
@@ -910,7 +1089,9 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     }
   };
 
-  const scrollDropdownToLoadAll = async (scrollableContent: Element): Promise<void> => {
+  const scrollDropdownToLoadAll = async (
+    scrollableContent: Element,
+  ): Promise<void> => {
     const el = scrollableContent as HTMLElement;
     el.scrollTop = el.scrollHeight;
     await wait(250);
@@ -920,8 +1101,12 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     // Capture the currently selected semester BEFORE any DOM interaction
     const getCurrentSelected = (): string | null => {
       const labelEl =
-        document.querySelector("ng-select[bindvalue='hoc_ky'] .ng-value-label") ||
-        document.querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label") ||
+        document.querySelector(
+          "ng-select[bindvalue='hoc_ky'] .ng-value-label",
+        ) ||
+        document.querySelector(
+          "ng-select[bindlabel='ten_hoc_ky'] .ng-value-label",
+        ) ||
         document.querySelector(".ng-value-label");
       return labelEl?.textContent?.trim() || null;
     };
@@ -930,8 +1115,9 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     console.log("📌 Học kỳ hiện tại:", savedCurrent);
 
     const inputDiv =
-      document.querySelector("ng-select[bindlabel='ten_hoc_ky'] div.ng-input") ||
-      document.querySelector("ng-select div.ng-input");
+      document.querySelector(
+        "ng-select[bindlabel='ten_hoc_ky'] div.ng-input",
+      ) || document.querySelector("ng-select div.ng-input");
 
     if (!inputDiv) {
       if (savedCurrent) {
@@ -947,7 +1133,7 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     const dropdownSelectors = [
       "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
       "ng-select ng-dropdown-panel .ng-dropdown-panel-items",
-      "ng-dropdown-panel .ng-dropdown-panel-items"
+      "ng-dropdown-panel .ng-dropdown-panel-items",
     ];
     let scrollEl: HTMLElement | null = null;
     for (const sel of dropdownSelectors) {
@@ -973,7 +1159,9 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
         pos += step;
       }
     } else {
-      const staticItems = document.querySelectorAll("ng-dropdown-panel .ng-option");
+      const staticItems = document.querySelectorAll(
+        "ng-dropdown-panel .ng-option",
+      );
       for (const item of staticItems) {
         const t = item.textContent?.trim();
         if (t) seen.add(t);
@@ -984,23 +1172,35 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
 
     inputDiv.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     await wait(CONFIG.timeouts.dropdownClose);
-    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
     await wait(100);
 
     if (semesters.length === 0 && savedCurrent) {
-      console.warn("Dropdown không có items, fallback về học kỳ hiện tại:", savedCurrent);
+      console.warn(
+        "Dropdown không có items, fallback về học kỳ hiện tại:",
+        savedCurrent,
+      );
       return [savedCurrent];
     }
 
     return semesters;
   };
 
-  const selectSemester = async (semesterName: string, _index: number): Promise<void> => {
+  const selectSemester = async (
+    semesterName: string,
+    _index: number,
+  ): Promise<void> => {
     const currentLabel =
-      document.querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label")?.textContent?.trim() ||
+      document
+        .querySelector("ng-select[bindlabel='ten_hoc_ky'] .ng-value-label")
+        ?.textContent?.trim() ||
       document.querySelector("ng-select .ng-value-label")?.textContent?.trim();
     if (currentLabel === semesterName) {
-      console.log(`Đang ở học kỳ "${semesterName}", đợi render nếu đang load dở.`);
+      console.log(
+        `Đang ở học kỳ "${semesterName}", đợi render nếu đang load dở.`,
+      );
       const spinnerSelector = "ngx-spinner .ngx-spinner-overlay";
       const maxWait = CONFIG.timeouts.tableUpdateLong;
       const p1Start = Date.now();
@@ -1018,9 +1218,14 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     }
 
     const inputDiv =
-      document.querySelector("ng-select[bindlabel='ten_hoc_ky'] div.ng-input") ||
-      document.querySelector("ng-select div.ng-input");
-    const clickTarget = inputDiv || (document.querySelector("ng-select[bindlabel='ten_hoc_ky']") as HTMLElement);
+      document.querySelector(
+        "ng-select[bindlabel='ten_hoc_ky'] div.ng-input",
+      ) || document.querySelector("ng-select div.ng-input");
+    const clickTarget =
+      inputDiv ||
+      (document.querySelector(
+        "ng-select[bindlabel='ten_hoc_ky']",
+      ) as HTMLElement);
 
     if (!clickTarget) {
       throw new Error("Không tìm thấy bộ chọn học kỳ để tải dữ liệu");
@@ -1034,7 +1239,7 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     const scrollHostSelectors = [
       "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-dropdown-panel-items",
       "ng-select ng-dropdown-panel .ng-dropdown-panel-items",
-      "ng-dropdown-panel .ng-dropdown-panel-items"
+      "ng-dropdown-panel .ng-dropdown-panel-items",
     ];
     let scrollHost: HTMLElement | null = null;
     for (const sel of scrollHostSelectors) {
@@ -1051,8 +1256,12 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
         scrollHost.scrollTop = pos;
         await wait(150);
 
-        const options = document.querySelectorAll("ng-dropdown-panel .ng-option");
-        targetItem = Array.from(options).find((item) => item.textContent?.trim() === semesterName);
+        const options = document.querySelectorAll(
+          "ng-dropdown-panel .ng-option",
+        );
+        targetItem = Array.from(options).find(
+          (item) => item.textContent?.trim() === semesterName,
+        );
         if (targetItem) break;
 
         pos += step;
@@ -1064,11 +1273,13 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
       const itemSelectors = [
         "ng-select[bindlabel='ten_hoc_ky'] ng-dropdown-panel .ng-option",
         "ng-select ng-dropdown-panel .ng-option",
-        "ng-dropdown-panel .ng-option"
+        "ng-dropdown-panel .ng-option",
       ];
       for (const sel of itemSelectors) {
         const found = document.querySelectorAll(sel);
-        targetItem = Array.from(found).find((item) => item.textContent?.trim() === semesterName);
+        targetItem = Array.from(found).find(
+          (item) => item.textContent?.trim() === semesterName,
+        );
         if (targetItem) break;
       }
     }
@@ -1076,14 +1287,18 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     if (!targetItem) {
       clickTarget.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
       await wait(CONFIG.timeouts.dropdownClose);
-      console.warn(`Không tìm thấy học kỳ "${semesterName}" trong dropdown, dùng dữ liệu hiện tại.`);
+      console.warn(
+        `Không tìm thấy học kỳ "${semesterName}" trong dropdown, dùng dữ liệu hiện tại.`,
+      );
       return;
     }
 
     console.log(`🔍 Tìm thấy "${semesterName}", đang click...`);
     (targetItem as HTMLElement).scrollIntoView({ block: "nearest" });
     await wait(CONFIG.timeouts.scrollWait);
-    (targetItem as HTMLElement).dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    (targetItem as HTMLElement).dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true }),
+    );
     (targetItem as HTMLElement).click();
 
     // Two-phase spinner poll: wait for overlay to APPEAR, then DISAPPEAR
@@ -1112,7 +1327,11 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
       const verifyStart = Date.now();
       while (Date.now() - verifyStart < verifyMax) {
         const rows = table.querySelectorAll("tbody tr");
-        if (rows.length > 0 && !rows[0]?.textContent?.includes("Không tìm thấy")) break;
+        if (
+          rows.length > 0 &&
+          !rows[0]?.textContent?.includes("Không tìm thấy")
+        )
+          break;
         await wait(200);
       }
     }
@@ -1143,7 +1362,9 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
 
     // Filter to data rows: bg-white with enough tds, skip search row & no-data row
     const dataRows = Array.from(rows).filter(
-      (row) => row.classList.contains("bg-white") && row.querySelectorAll("td").length >= 10
+      (row) =>
+        row.classList.contains("bg-white") &&
+        row.querySelectorAll("td").length >= 10,
     );
 
     for (let i = 0; i < dataRows.length; i++) {
@@ -1203,14 +1424,20 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
       const lastCellText = cells[cells.length - 1]?.textContent?.trim() || "";
       startPeriod = Number.parseInt(lastCellText, 10) || 1;
 
-      const room = roomStr ? `${roomStr}${locationText ? ` - ${locationText}` : ""}` : locationText;
+      const room = roomStr
+        ? `${roomStr}${locationText ? ` - ${locationText}` : ""}`
+        : locationText;
 
       if (!(date && startTime)) {
         continue;
       }
 
       const [dayPart, monthPart, yearPart] = date.split("/");
-      const dDate = new Date(Number(yearPart), Number(monthPart) - 1, Number(dayPart));
+      const dDate = new Date(
+        Number(yearPart),
+        Number(monthPart) - 1,
+        Number(dayPart),
+      );
       const dayOfWeek = dDate.getDay();
       const dayNames = ["CN", "2", "3", "4", "5", "6", "7"];
       const formattedDay = `Thứ ${dayNames[dayOfWeek]} (${dayPart.padStart(2, "0")}/${monthPart.padStart(2, "0")})`;
@@ -1222,12 +1449,12 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
         day: formattedDay,
         startPeriod,
         startTime,
-        endTime: "",   // Cannot compute without period map; left for UI to display startTime
+        endTime: "", // Cannot compute without period map; left for UI to display startTime
         room,
         teacher: "",
         link: "",
         category: "EXAM" as const,
-        eventType: "EXAM" as const
+        eventType: "EXAM" as const,
       };
 
       allEntries.push({ date, entry });
@@ -1258,12 +1485,12 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
           const dateA = new Date(
             Number.parseInt(aMatch[3], 10),
             Number.parseInt(aMatch[2], 10) - 1,
-            Number.parseInt(aMatch[1], 10)
+            Number.parseInt(aMatch[1], 10),
           ).getTime();
           const dateB = new Date(
             Number.parseInt(bMatch[3], 10),
             Number.parseInt(bMatch[2], 10) - 1,
-            Number.parseInt(bMatch[1], 10)
+            Number.parseInt(bMatch[1], 10),
           ).getTime();
           return dateA - dateB;
         }
@@ -1278,7 +1505,9 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     console.log("🚀 Bắt đầu lấy dữ liệu lịch thi (TKB Cá Nhân)...");
 
     if (!window.location.hash.includes("/lichthi")) {
-      throw new Error("Vui lòng chuyển đến trang 'Xem lịch thi' để thực hiện thao tác này.");
+      throw new Error(
+        "Vui lòng chuyển đến trang 'Xem lịch thi' để thực hiện thao tác này.",
+      );
     }
 
     showOverlay();
@@ -1293,7 +1522,11 @@ export const getExamCalendars = async (onProgress?: ProgressCallback): Promise<S
     const allData: SemesterData[] = [];
     const totalSemesters = semesters.length;
 
-    for (let semesterIndex = 0; semesterIndex < semesters.length; semesterIndex++) {
+    for (
+      let semesterIndex = 0;
+      semesterIndex < semesters.length;
+      semesterIndex++
+    ) {
       const semester = semesters[semesterIndex];
       const semesterProgress = (semesterIndex / totalSemesters) * 100;
 

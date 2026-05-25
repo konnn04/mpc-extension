@@ -166,8 +166,7 @@ export function CalendarPage() {
               <LayoutList className='h-3.5 w-3.5' />
               <span>
                 {eventCounts.total} sự kiện
-                {eventCounts.study > 0 && ` (${eventCounts.study} học, `}
-                {eventCounts.exam > 0 && `${eventCounts.exam} thi)`}
+                {` (${eventCounts.study} buổi học${eventCounts.exam > 0 ? `, ${eventCounts.exam} buổi thi` : ""})`}
               </span>
             </p>
           )}
@@ -220,7 +219,7 @@ export function CalendarPage() {
       </div>
 
       <div className='flex flex-1 flex-col gap-6 overflow-y-auto lg:flex-row lg:overflow-hidden'>
-        <div className='flex w-full flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-card shadow-sm lg:w-[40%]'>
+        <div className='flex w-full shrink-0 flex-col overflow-hidden rounded-lg border bg-card shadow-sm lg:w-[40%]'>
           <div className='border-b p-4'>
             <h2 className='font-semibold'>Lịch học sắp tới</h2>
           </div>

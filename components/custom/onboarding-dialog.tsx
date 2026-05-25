@@ -49,12 +49,12 @@ export function OnboardingDialog({ open, onComplete, onSkip }: OnboardingDialogP
     <Dialog
       modal
       onOpenChange={() => {
-        /* controlled via open prop */
+        /* modal — no close via overlay */
       }}
       open={open}
     >
       <DialogContent
-        className='max-w-lg'
+        className='sm:max-w-2xl'
         onEscapeKeyDown={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
         showCloseButton={false}
@@ -186,10 +186,10 @@ export function OnboardingDialog({ open, onComplete, onSkip }: OnboardingDialogP
                 </p>
                 <p className='mt-1 text-muted-foreground text-xs'>Ghim extension để dễ dùng nè 👆</p>
 
-                <div className='mt-3 flex items-center justify-center rounded-md border border-dashed bg-muted/50 py-6 text-muted-foreground text-xs'>
+                <div className='mt-3 flex items-center justify-center rounded-md text-muted-foreground text-xs'>
                   <img
                     alt='MPC'
-                    className='h-full w-full object-cover'
+                    className='h-full w-full max-w-[40vh] object-cover'
                     height={200}
                     src='imgs/onboarding-1.jpg'
                     width={400}

@@ -1,5 +1,7 @@
 export const _REPORT_BUG_URL: string = "https://youtu.be/dQw4w9WgXcQ" as const;
 
+export const GRADE_ORDER = ["F", "D", "D+", "C", "C+", "B", "B+", "A", "A+"] as const;
+
 export const _FACEBOOK_URL: string = "https://www.facebook.com/CLBLapTrinhTrenThietBiDiDong" as const;
 export const _MESSENGER_URL: string = "https://m.me/168697773726618" as const;
 export const _GITHUB_URL: string = "https://github.com/mpc-ou/mpc-extension" as const;

@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import { _TUITION_SERVICE_CODES } from "@/constants/default";
+import { _TUITION_MAJOR_EXCLUDE_PREFIXES, _TUITION_SERVICE_CODES } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import type { PairedReceiptGroup, SemesterTuitionDetail } from "@/types";
 import { formatVND } from "@/utils/tuition-compute";
@@ -127,15 +127,22 @@ export function SemesterCard({
   const totalAmount = filteredGroups.reduce((s, g) => s + g.subtotal, 0);
   let totalCredits = 0;
   let creditAmount = 0;
+  let majorCredits = 0;
+  let majorAmount = 0;
   for (const g of filteredGroups) {
     for (const item of g.items) {
       if (!isNonCreditItem(item.courseCode) && item.credits > 0) {
         totalCredits += item.credits;
         creditAmount += item.amount;
+        if (!_TUITION_MAJOR_EXCLUDE_PREFIXES.some((p) => item.courseCode.startsWith(p))) {
+          majorCredits += item.credits;
+          majorAmount += item.amount;
+        }
       }
     }
   }
   const avgPerCredit = totalCredits > 0 ? Math.round(creditAmount / totalCredits) : 0;
+  const avgMajorPerCredit = majorCredits > 0 ? Math.round(majorAmount / majorCredits) : 0;
   const receiptCount = filteredGroups.length;
 
   return (
@@ -156,7 +163,7 @@ export function SemesterCard({
         </div>
         <div className='shrink-0 text-right'>
           <p className='font-semibold text-sm'>{formatVND(totalAmount)}</p>
-          {avgPerCredit > 0 && <p className='text-muted-foreground text-xs'>{formatVND(avgPerCredit)}/tín</p>}
+          {avgMajorPerCredit > 0 && <p className='text-muted-foreground text-xs'>{formatVND(avgMajorPerCredit)}/tín</p>}
         </div>
         {expanded ? (
           <ChevronDown className='h-4 w-4 shrink-0 text-muted-foreground' />
@@ -184,6 +191,11 @@ export function SemesterCard({
             <span>
               <strong>{avgPerCredit > 0 ? formatVND(avgPerCredit) : "—"}</strong> /tín chỉ
             </span>
+            {avgMajorPerCredit > 0 && avgMajorPerCredit !== avgPerCredit && (
+              <span className='text-muted-foreground'>
+                <strong className='text-foreground'>{formatVND(avgMajorPerCredit)}</strong> /tín (CN)
+              </span>
+            )}
           </div>
         </div>
       )}

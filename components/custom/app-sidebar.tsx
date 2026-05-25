@@ -45,7 +45,7 @@ export function AppSidebar({
       {isMobile && !collapsed && (
         <button
           aria-label='Đóng thanh bên'
-          className='fixed inset-0 z-30 cursor-default border-none bg-black/50 md:hidden'
+          className='fixed inset-0 z-30 cursor-default border-none bg-black/50 lg:hidden'
           onClick={onClose}
           onKeyDown={(e) => e.key === "Escape" && onClose?.()}
           type='button'
@@ -56,8 +56,8 @@ export function AppSidebar({
         className={cn(
           "flex h-screen flex-col border-r bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
           collapsed ? "w-16" : "w-87.5",
-          isMobile && !collapsed ? "fixed top-0 left-0 z-40 shadow-2xl md:relative md:shadow-none" : "",
-          isMobile && collapsed ? "hidden md:flex" : "flex"
+          isMobile && !collapsed ? "fixed top-0 left-0 z-40 shadow-2xl lg:relative lg:shadow-none" : "",
+          isMobile && collapsed ? "hidden lg:flex" : "flex"
         )}
       >
         <div className={cn("flex h-14 shrink-0 items-center border-b px-3", collapsed ? "justify-center" : "px-4")}>

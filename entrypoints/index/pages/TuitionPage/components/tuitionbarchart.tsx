@@ -29,7 +29,7 @@ export function TuitionBarChart({
       </CardHeader>
       <CardContent>
         <ChartContainer className='aspect-auto h-75 w-full' config={chartConfig}>
-          <BarChart data={barData} margin={{ left: -20, right: 10, top: 10 }}>
+          <BarChart data={barData} margin={{ left: 0, right: 10, top: 10 }}>
             <CartesianGrid vertical={false} />
             <XAxis axisLine={false} dataKey='name' tickLine={false} tickMargin={10} />
             <YAxis
@@ -37,6 +37,7 @@ export function TuitionBarChart({
               tickFormatter={(v) => formatVNDCompact(Number(v))}
               tickLine={false}
               tickMargin={10}
+              width={60}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />

@@ -58,7 +58,7 @@ export function AboutUsPage() {
       <div className='mb-8 flex flex-col items-start gap-2'>
         <h1 className='font-bold text-3xl tracking-tight'>Về chúng tôi</h1>
         <p className='text-lg text-muted-foreground'>
-          Thông tin về dự án MPC Extension và CLB Lập trình thiết bị di động (MPC).
+          Thông tin về dự án MPC Extension và CLB Lập trình trên thiết bị di động (MPC).
         </p>
       </div>
 

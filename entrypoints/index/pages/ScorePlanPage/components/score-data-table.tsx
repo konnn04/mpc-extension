@@ -34,10 +34,11 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { GRADE_ORDER } from "@/constants";
 import { _DEFAULT_FORM_DATA } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import type { ScoreGroupType, ScoreRecordType } from "@/types";
-import { parseScale10ToCharacterAndScale4, removeVietnameseTones } from "@/utils";
+import { formatFixed, parseScale10ToCharacterAndScale4, removeVietnameseTones } from "@/utils";
 import { computeSummary, getAcademicRank, getTrainingRank } from "@/utils/academic-compute";
 
 type SortKey = "code" | "name" | "credit" | "scale10" | "scale4" | "character";
@@ -137,8 +138,8 @@ export function ScoreDataTable({
     const q = removeVietnameseTones(searchText.toLowerCase());
     const nameMatch =
       q === "" || removeVietnameseTones(sub.name.toLowerCase()).includes(q) || sub.code.toLowerCase().includes(q);
-    const gradeMatch =
-      sub.point.scale4 != null && sub.point.scale4 >= filterRange[0] && sub.point.scale4 <= filterRange[1];
+    const gradeIdx = sub.point.character ? (GRADE_ORDER as readonly string[]).indexOf(sub.point.character) : -1;
+    const gradeMatch = gradeIdx !== -1 && gradeIdx >= filterRange[0] && gradeIdx <= filterRange[1];
     return nameMatch && gradeMatch;
   };
 
@@ -256,22 +257,9 @@ export function ScoreDataTable({
               {sub.isIgnore && (
                 <Tooltip>
                   <TooltipTrigger>
-                    <span
-                      className={cn(
-                        "rounded px-1.5 py-0.5 text-[10px]",
-                        sub.isImproved
-                          ? "bg-orange-500/15 text-orange-600 dark:text-orange-400"
-                          : "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {sub.isImproved ? "Cải thiện" : "Không tính"}
-                    </span>
+                    <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>Không tính</span>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {sub.isImproved
-                      ? "Môn đã học cải thiện, chỉ tính điểm cao nhất"
-                      : "Môn không tính vào GPA (GDTC, GDQP, BHYT...)"}
-                  </TooltipContent>
+                  <TooltipContent>Môn không tính vào GPA (GDTC, GDQP, BHYT...)</TooltipContent>
                 </Tooltip>
               )}
               {isNew && (
@@ -492,16 +480,25 @@ export function ScoreDataTable({
           <div className='overflow-hidden rounded-lg border' key={semester.id}>
             <div className='flex items-center justify-between bg-muted/50 px-4 py-2'>
               <div>
-                <p className='font-semibold'>{semester.title}</p>
-                <p className='text-muted-foreground text-xs'>
-                  Hệ 10: {semester.avgPoint.scale10?.toFixed(fixedPoint) || "---"} · Hệ 4:{" "}
-                  {semester.avgPoint.scale4?.toFixed(fixedPoint) || "---"}
+                <p className='pb-1 font-semibold text-sm'>{semester.title}</p>
+                <p className='text-muted-foreground text-sm'>
+                  Hệ 10:{" "}
+                  <span className='font-semibold text-foreground'>
+                    {semester.avgPoint.scale10 != null ? formatFixed(semester.avgPoint.scale10, fixedPoint) : "---"}
+                  </span>{" "}
+                  · Hệ 4:{" "}
+                  <span className='font-semibold text-foreground'>
+                    {semester.avgPoint.scale4 != null ? formatFixed(semester.avgPoint.scale4, fixedPoint) : "---"}
+                  </span>
                   {semester.avgPoint.scale4 !== null ? ` (${getAcademicRank(semester.avgPoint.scale4).label})` : ""} ·
-                  ĐRL: {semester.trainingPoint ?? "---"}
+                  ĐRL: <span className='font-semibold text-foreground'>{semester.trainingPoint ?? "---"}</span>
                   {semester.trainingPoint !== null && semester.trainingPoint !== undefined
                     ? ` (${getTrainingRank(semester.trainingPoint).label})`
                     : ""}{" "}
-                  · Tích lũy: {getSemesterHeaderSummary(semesterIdx).gpa4.toFixed(fixedPoint)}
+                  · Tích lũy:{" "}
+                  <span className='font-semibold text-foreground'>
+                    {formatFixed(getSemesterHeaderSummary(semesterIdx).gpa4, fixedPoint)}
+                  </span>
                   {` (${getAcademicRank(getSemesterHeaderSummary(semesterIdx).gpa4).label})`}
                 </p>
               </div>

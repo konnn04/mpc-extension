@@ -2,7 +2,7 @@ import { Download, InfoIcon, Landmark } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { _DEFAULT_IGNORE_SUBJECT_DATA } from "@/constants/default";
+import { _DEFAULT_IGNORE_SUBJECT_DATA, _TUITION_MAJOR_EXCLUDE_PREFIXES } from "@/constants/default";
 import { useTuitionStore } from "@/store/use-tuition-store";
 import type { SemesterTuitionDetail } from "@/types";
 import { computeTuitionStats } from "@/utils/tuition-compute";
@@ -19,36 +19,49 @@ const isIgnoredForCredit = (code: string) =>
 type SortKey = "courseCode" | "courseName" | "credits" | "amount" | "semesterName";
 type SortDir = "asc" | "desc";
 
+function collectRates(detail: SemesterTuitionDetail) {
+  const rates: number[] = [];
+  const ratesMajor: number[] = [];
+  for (const group of detail.receiptGroups) {
+    if (group.receiptType === "B") {
+      continue;
+    }
+    for (const item of group.items) {
+      if (isIgnoredForCredit(item.courseCode) || !(item.credits > 0 && item.amount > 0)) {
+        continue;
+      }
+      const rate = item.amount / item.credits;
+      rates.push(rate);
+      if (!_TUITION_MAJOR_EXCLUDE_PREFIXES.some((p) => item.courseCode.startsWith(p))) {
+        ratesMajor.push(rate);
+      }
+    }
+  }
+  return { rates, ratesMajor };
+}
+
 function buildCreditCostData(
   summary: { semesterName: string }[],
   details: Record<string, SemesterTuitionDetail>
-): { name: string; avg: number; min: number; max: number }[] {
-  const result: { name: string; avg: number; min: number; max: number }[] = [];
+): { name: string; avg: number; avgMajor: number; min: number; max: number }[] {
+  const result: { name: string; avg: number; avgMajor: number; min: number; max: number }[] = [];
   for (const entry of summary) {
     const detail = details[entry.semesterName];
     if (!detail) {
       continue;
     }
-    const rates: number[] = [];
-    for (const group of detail.receiptGroups) {
-      if (group.receiptType === "B") {
-        continue;
-      }
-      for (const item of group.items) {
-        if (isIgnoredForCredit(item.courseCode) || !(item.credits > 0 && item.amount > 0)) {
-          continue;
-        }
-        rates.push(item.amount / item.credits);
-      }
+    const { rates, ratesMajor } = collectRates(detail);
+    if (rates.length === 0) {
+      continue;
     }
-    if (rates.length > 0) {
-      result.push({
-        name: entry.semesterName.replace("Học kỳ ", "HK").replace(" - Năm học ", " "),
-        avg: Math.round(rates.reduce((a, b) => a + b, 0) / rates.length),
-        min: Math.round(Math.min(...rates)),
-        max: Math.round(Math.max(...rates))
-      });
-    }
+    const avgRate = (arr: number[]) => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+    result.push({
+      name: entry.semesterName.replace("Học kỳ ", "HK").replace(" - Năm học ", " "),
+      avg: avgRate(rates),
+      avgMajor: ratesMajor.length > 0 ? avgRate(ratesMajor) : 0,
+      min: Math.round(Math.min(...rates)),
+      max: Math.round(Math.max(...rates))
+    });
   }
   return result;
 }
