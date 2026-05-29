@@ -24,6 +24,7 @@ type GlobalStorageType = {
   maxCreditsWarning: number;
   maxCreditsSummer: number;
   drlWarningThreshold: number;
+  matchSubjectByName: boolean;
 };
 
 function applySavedGlobalData(savedData: Partial<GlobalStorageType>, set: (state: Partial<GlobalState>) => void) {
@@ -54,6 +55,9 @@ function applySavedGlobalData(savedData: Partial<GlobalStorageType>, set: (state
   if (savedData.drlWarningThreshold !== undefined) {
     set({ drlWarningThreshold: savedData.drlWarningThreshold });
   }
+  if (savedData.matchSubjectByName !== undefined) {
+    set({ matchSubjectByName: savedData.matchSubjectByName });
+  }
 }
 
 type GlobalState = {
@@ -69,6 +73,7 @@ type GlobalState = {
   maxCreditsWarning: number;
   maxCreditsSummer: number;
   drlWarningThreshold: number;
+  matchSubjectByName: boolean;
   setFixedPoint: (point: number) => void;
   setIgnoreList: (list: string[]) => void;
   setSiteURLMapping: (mapping: _SITE_MAPPING) => void;
@@ -78,6 +83,7 @@ type GlobalState = {
   setMaxCreditsWarning: (v: number) => void;
   setMaxCreditsSummer: (v: number) => void;
   setDrlWarningThreshold: (v: number) => void;
+  setMatchSubjectByName: (v: boolean) => void;
   setTab: (tab: _TAB_CATE) => void;
   setSiteCurr: (siteCurr: _SITE_CATE) => void;
   setSiteCurrURL: (siteCurrURL: string) => void;
@@ -98,6 +104,7 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   maxCreditsWarning: _DEFAULT_MAX_CREDITS_WARNING,
   maxCreditsSummer: _DEFAULT_MAX_CREDITS_SUMMER,
   drlWarningThreshold: _DEFAULT_DRL_WARNING_THRESHOLD,
+  matchSubjectByName: true,
   setTab: (tab: _TAB_CATE) => {
     set({ tab });
     get().saveData();
@@ -113,6 +120,7 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   setMaxCreditsWarning: (v: number) => set({ maxCreditsWarning: v }),
   setMaxCreditsSummer: (v: number) => set({ maxCreditsSummer: v }),
   setDrlWarningThreshold: (v: number) => set({ drlWarningThreshold: v }),
+  setMatchSubjectByName: (v: boolean) => set({ matchSubjectByName: v }),
   saveData: async () => {
     const data: GlobalStorageType = {
       tab: get().tab,
@@ -124,7 +132,8 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
       minCreditsPerSemester: get().minCreditsPerSemester,
       maxCreditsWarning: get().maxCreditsWarning,
       maxCreditsSummer: get().maxCreditsSummer,
-      drlWarningThreshold: get().drlWarningThreshold
+      drlWarningThreshold: get().drlWarningThreshold,
+      matchSubjectByName: get().matchSubjectByName
     };
     const payload = JSON.stringify(data);
     try {

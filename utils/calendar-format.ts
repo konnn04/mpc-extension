@@ -137,3 +137,32 @@ export function getLocationLabel(location?: string): string {
       return location || "";
   }
 }
+
+/** Semester name parsed fields. */
+export type ParsedSemester = { num: number; startYear: number; endYear: number };
+
+const _SEMESTER_RE = /Học kỳ\s+(\d+)\s+(?:-\s*)?Năm học\s+(\d{4})\s*[-–]\s*(\d{4})/;
+
+/** Normalize semester name for fuzzy comparison — collapses dashes and whitespace. */
+export function normalizeSemesterName(name: string): string {
+  return name.replace(/[-–]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/** Parse "Học kỳ X - Năm học YYYY - ZZZZ" (or variant) → { num, startYear, endYear } or null. */
+export function parseSemesterName(name: string): ParsedSemester | null {
+  const m = name.match(_SEMESTER_RE);
+  if (!m) {
+    return null;
+  }
+  return { num: Number.parseInt(m[1], 10), startYear: Number.parseInt(m[2], 10), endYear: Number.parseInt(m[3], 10) };
+}
+
+/** Short display form: "Học kỳ 1 - Năm học 2022 - 2023" → "HK 1 2022 - 2023". */
+export function shortSemesterName(name: string): string {
+  return name.replace("Học kỳ ", "HK").replace(" - Năm học ", " ");
+}
+
+/** Build canonical label from parsed fields. */
+export function formatSemesterLabel(p: ParsedSemester): string {
+  return `Học kỳ ${p.num} - Năm học ${p.startYear} - ${p.endYear}`;
+}

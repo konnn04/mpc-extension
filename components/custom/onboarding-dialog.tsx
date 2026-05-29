@@ -199,7 +199,7 @@ export function OnboardingDialog({ open, onComplete, onSkip }: OnboardingDialogP
 
               <div className='rounded-lg border p-3'>
                 <p className='text-sm leading-relaxed'>
-                  Nếu bạn muốn tùy biến sau, vui lòng vào <span className='font-semibold text-primary'>Cài đặt</span>{" "}
+                  * Nếu bạn muốn tùy biến sau, vui lòng vào <span className='font-semibold text-primary'>Cài đặt</span>{" "}
                   nhé
                 </p>
                 <p className='mt-1 text-muted-foreground text-xs'>
@@ -237,6 +237,10 @@ export function OnboardingDialog({ open, onComplete, onSkip }: OnboardingDialogP
             </Button>
           </div>
         </div>
+
+        <p className='text-center text-muted-foreground text-xs'>
+          Thiết lập xong hoặc bỏ qua sẽ không hiển thị lại. Có thể chỉnh sửa sau trong Cài đặt.
+        </p>
       </DialogContent>
     </Dialog>
   );

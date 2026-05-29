@@ -27,7 +27,7 @@ export const useTuitionStore = create<TuitionState>((set, get) => ({
   setLastUpdate: (date: Date | null) => set({ lastUpdate: date }),
 
   getData: async () => {
-    const sid = useCurrentUserStore.getState().studentId;
+    const sid = useCurrentUserStore.getState().effectiveStudentId;
     if (!sid) {
       return;
     }
@@ -55,7 +55,7 @@ export const useTuitionStore = create<TuitionState>((set, get) => ({
   },
 
   clearData: async () => {
-    const key = getTuitionKey(useCurrentUserStore.getState().studentId);
+    const key = getTuitionKey(useCurrentUserStore.getState().effectiveStudentId);
     await storage.removeItem(key);
     set({ summary: [], details: {}, lastUpdate: null });
   }

@@ -1,9 +1,10 @@
+import { CircleHelp } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import cachTinhToanMd from "@/assets/docs/cach_tinh_toan.md?raw";
+import HuongDanNhapDiemMd from "@/assets/docs/ke_hoach_diem_so.md?raw";
 import { FormSemesterDialog } from "@/components/custom/form-semester-dialog";
 import { MarkdownModal } from "@/components/custom/markdown-modal";
-import { GRADE_ORDER } from "@/constants";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { _DEFAULT_SCORE_SUMMARY } from "@/constants/default";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useCurrentUserStore } from "@/store/use-current-user-store";
@@ -18,6 +19,8 @@ import {
   getNextSemesterName,
   getScoreSummary,
   handleExportScoreData,
+  isSameSubject,
+  markImprovedSubjects,
   updateIgnoreSubject,
   updateScoreAvg
 } from "@/utils/score";
@@ -61,6 +64,7 @@ function ScorePlanPage() {
   const drlWarningThreshold = useGlobalStore((s) => s.drlWarningThreshold);
   const retakeRatioLimit = useGlobalStore((s) => s.retakeRatioLimit);
   const maxCreditsPerSemester = useGlobalStore((s) => s.maxCreditsPerSemester);
+  const matchSubjectByName = useGlobalStore((s) => s.matchSubjectByName);
   const minCreditsPerSemester = useGlobalStore((s) => s.minCreditsPerSemester);
   const maxCreditsWarning = useGlobalStore((s) => s.maxCreditsWarning);
   const maxCreditsSummer = useGlobalStore((s) => s.maxCreditsSummer);
@@ -69,29 +73,48 @@ function ScorePlanPage() {
   const {
     settings: { trainingSemesters, totalProgramCredits }
   } = useUserSettingsStore();
+  const effectiveStudentId = useCurrentUserStore((s) => s.effectiveStudentId);
   const [summary, setSummary] = useState<ScoreSummaryType>(_DEFAULT_SCORE_SUMMARY);
   const [searchText, setSearchText] = useState("");
   const [groupMode, setGroupMode] = useState<GroupMode>("semester");
-  const [filterRange, setFilterRange] = useState<[number, number]>([0, GRADE_ORDER.length - 1]);
+  const ALL_GRADES = ["F", "D", "D+", "C", "C+", "B", "B+", "A", "A+"] as const;
+  const [selectedGrades, setSelectedGrades] = useState<Set<string>>(new Set(ALL_GRADES));
   const [filterOpen, setFilterOpen] = useState(false);
   const [semesterDialog, setSemesterDialog] = useState<SemesterDialogState>({ open: false, mode: "add" });
   const [guideOpen, setGuideOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [hideNonGPA, setHideNonGPA] = useState(false);
+  const [showNonStandard, setShowNonStandard] = useState(true);
   const [estimatedTuition, setEstimatedTuition] = useState<number | null>(null);
 
-  useEffect(() => {
+  const loadEstimatedTuition = useCallback(async () => {
     const sid = useCurrentUserStore.getState().effectiveStudentId;
     if (!sid) {
       return;
     }
-    (async () => {
-      const raw = await storage.getItem<number>(`local:${sid}:latestAvgCreditCost`);
-      if (typeof raw === "number" && raw > 0) {
-        setEstimatedTuition(raw);
-      }
-    })();
+    const raw = await storage.getItem<number>(`local:${sid}:latestAvgCreditCost`);
+    if (typeof raw === "number" && raw > 0) {
+      setEstimatedTuition(raw);
+    }
   }, []);
+
+  useEffect(() => {
+    loadEstimatedTuition();
+  }, [loadEstimatedTuition]);
+
+  useEffect(() => {
+    loadEstimatedTuition();
+  }, [loadEstimatedTuition]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        loadEstimatedTuition();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [loadEstimatedTuition]);
 
   const displayScores = useMemo(() => {
     if (!hideNonGPA) {
@@ -160,15 +183,19 @@ function ScorePlanPage() {
 
     let invested = 0;
     for (const c of currentSubs) {
-      const existed = initSubs.find(
-        (i) => i.code === c.code && i.name === c.name && i.credit === c.credit && i.point.scale10 === c.point.scale10
-      );
-      if (!existed) {
+      const original = initSubs.find((i) => isSameSubject(i, c, matchSubjectByName));
+      if (!original) {
+        invested += c.credit;
+        continue;
+      }
+      const origScale10 = original.point.scale10 || 0;
+      const currScale10 = c.point.scale10 || 0;
+      if (origScale10 > 0 && currScale10 !== origScale10) {
         invested += c.credit;
       }
     }
     return invested;
-  }, [scores, originalScores]);
+  }, [scores, originalScores, matchSubjectByName]);
 
   const handleAutoAddSemester = () => {
     let nextTitle: string | null = null;
@@ -197,7 +224,7 @@ function ScorePlanPage() {
   const updateIgnoreAndAvg = useCallback(
     (data: ScoreGroupType[]) => {
       const updated = updateIgnoreSubject(data, ignoreList);
-      return updateScoreAvg(updated);
+      return updateScoreAvg(markImprovedSubjects(updated));
     },
     [ignoreList]
   );
@@ -350,8 +377,23 @@ function ScorePlanPage() {
         onImportManual={() => setImportModalOpen(true)}
       />
 
+      {matchSubjectByName && (
+        <div className='flex items-center gap-1.5 text-muted-foreground text-xs'>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className='flex cursor-help items-center gap-1'>
+                <CircleHelp className='h-3 w-3' />
+                So sánh môn cải thiện bằng tên
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className='max-w-56'>
+              Đang so sánh môn cải thiện theo tên + tín chỉ (ngoài mã môn). Tắt trong Cài đặt nếu không cần.
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      )}
+
       <ScoreFiltersBar
-        filterRange={filterRange}
         groupMode={groupMode}
         hideNonGPA={hideNonGPA}
         onAddSemester={handleAutoAddSemester}
@@ -360,11 +402,11 @@ function ScorePlanPage() {
         onSearchTextChange={setSearchText}
         onToggleHideNonGPA={setHideNonGPA}
         searchText={searchText}
+        selectedGrades={selectedGrades}
       />
 
       <ScoreDataTable
         data={displayScores}
-        filterRange={filterRange}
         fixedPoint={fixedPoint}
         groupMode={groupMode}
         handleAddSubject={handleAddSubject}
@@ -374,6 +416,8 @@ function ScorePlanPage() {
         handleEditSubject={handleEditSubject}
         initialData={originalScores}
         searchText={searchText}
+        selectedGrades={selectedGrades}
+        showNonStandard={showNonStandard}
       />
 
       <FormSemesterDialog
@@ -386,10 +430,12 @@ function ScorePlanPage() {
       />
 
       <FilterModal
-        filterRange={filterRange}
-        onFilterChange={setFilterRange}
+        onFilterChange={setSelectedGrades}
         onOpenChange={setFilterOpen}
+        onToggleShowNonStandard={setShowNonStandard}
         open={filterOpen}
+        selectedGrades={selectedGrades}
+        showNonStandard={showNonStandard}
       />
 
       <ScoreStickyBar
@@ -408,7 +454,7 @@ function ScorePlanPage() {
 
       <MarkdownModal
         isOpen={guideOpen}
-        markdownContent={cachTinhToanMd}
+        markdownContent={HuongDanNhapDiemMd}
         onClose={() => setGuideOpen(false)}
         params={calcParams}
         title='Hướng dẫn Kế hoạch điểm số'

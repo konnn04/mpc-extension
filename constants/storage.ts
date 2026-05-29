@@ -10,14 +10,14 @@ export const _SYNC_GLOBAL_KEY = `${_SYNC}:global` as const;
 // ── Legacy local keys (fallback) ──
 export const _CHROME_STORAGE_INFO_KEY = `${_LOCAL}:userData` as const;
 export const _CHROME_STORAGE_POINT_KEY = `${_LOCAL}:pointData` as const;
-export const _CHROME_STORAGE_CALENDAR_KEY = `${_LOCAL}:calendarData` as const;
-export const _CHROME_STORAGE_EXAM_KEY = `${_LOCAL}:examData` as const;
+export const _CHROME_STORAGE_CALENDAR_KEY = `${_LOCAL}:studyCalendarData` as const;
+export const _CHROME_STORAGE_EXAM_KEY = `${_LOCAL}:examCalendarData` as const;
 
 export const _DATA_SUFFIXES = [
   "userData",
   "pointData",
-  "calendarData",
-  "examData",
+  "studyCalendarData",
+  "examCalendarData",
   "tuitionData",
   "userSettings"
 ] as const;
@@ -31,7 +31,7 @@ export const getAvatarKey = (studentId: string) => _key(_LOCAL, studentId, "avat
 
 export const getUserInfoKey = (studentId: string) => getScopedKey(studentId, "userData");
 export const getPointKey = (studentId: string) => getScopedKey(studentId, "pointData");
-export const getCalendarKey = (studentId: string) => getScopedKey(studentId, "calendarData");
-export const getExamKey = (studentId: string) => getScopedKey(studentId, "examData");
+export const getStudyCalendarKey = (studentId: string) => getScopedKey(studentId, "studyCalendarData");
+export const getExamCalendarKey = (studentId: string) => getScopedKey(studentId, "examCalendarData");
 export const getTuitionKey = (studentId: string) => getScopedKey(studentId, "tuitionData");
 export const getUserSettingsKey = (studentId: string) => getScopedKey(studentId, "userSettings");

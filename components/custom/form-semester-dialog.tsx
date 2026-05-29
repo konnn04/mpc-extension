@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +30,8 @@ export const FormSemesterDialog = ({
 }: Props) => {
   const [semesterName, setSemesterName] = useState(initialValue);
   const [trainingPoint, setTrainingPoint] = useState<number | null>(initialTrainingPoint ?? null);
+  const nameId = useId();
+  const pointId = useId();
 
   useEffect(() => {
     if (open) {
@@ -59,18 +61,18 @@ export const FormSemesterDialog = ({
         </DialogHeader>
         <div className='space-y-4 py-4'>
           <div className='space-y-2'>
-            <Label htmlFor='semester-name'>Tiêu đề kỳ học</Label>
+            <Label htmlFor={nameId}>Tiêu đề kỳ học</Label>
             <Input
-              id='semester-name'
+              id={nameId}
               onChange={(e) => setSemesterName(e.target.value)}
               placeholder='Học kỳ mới'
               value={semesterName}
             />
           </div>
           <div className='space-y-2'>
-            <Label htmlFor='training-point'>Điểm rèn luyện</Label>
+            <Label htmlFor={pointId}>Điểm rèn luyện</Label>
             <Input
-              id='training-point'
+              id={pointId}
               max='100'
               min='0'
               onChange={(e) => {

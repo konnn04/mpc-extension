@@ -65,7 +65,9 @@ function App() {
     }
     const scrape = async () => {
       try {
-        const data = await browser.runtime.sendMessage({ type: _GET_BASIC_INFO });
+        const data = await browser.runtime.sendMessage({
+          type: _GET_BASIC_INFO
+        });
         if (data?.studentId) {
           setCurrentUser(data.studentId, data.displayName, data.avatar || "");
           await Promise.all([getInfoData(), getScoreData(), getCalendarData(), getTuitionData()]);
@@ -79,7 +81,10 @@ function App() {
 
   useEffect(() => {
     const checkURL = async (tabId?: number) => {
-      const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
+      const [activeTab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true
+      });
       if (tabId !== undefined && activeTab?.id !== tabId) {
         return;
       }
@@ -111,7 +116,9 @@ function App() {
   }, [siteURLMapping]);
 
   const openDashboard = (tab?: string) => {
-    browser.tabs.create({ url: browser.runtime.getURL(`/index.html${tab ? `#${tab}` : ""}`) });
+    browser.tabs.create({
+      url: browser.runtime.getURL(`/index.html${tab ? `#${tab}` : ""}`)
+    });
   };
 
   const navTo = (url: string) => {
@@ -122,8 +129,8 @@ function App() {
     isLoading,
     hasInfo,
     hasScore,
-    hasCalendar,
-    hasExam,
+    hasStudyCalendar,
+    hasExamCalendar,
     hasTuition,
     handleImportInfo,
     handleImportScore,
@@ -182,10 +189,10 @@ function App() {
           handleImportInfo={handleImportInfo}
           handleImportScore={handleImportScore}
           handleImportTuition={handleImportTuition}
-          hasCalendar={hasCalendar}
-          hasExam={hasExam}
+          hasExamCalendar={hasExamCalendar}
           hasInfo={hasInfo}
           hasScore={hasScore}
+          hasStudyCalendar={hasStudyCalendar}
           hasTuition={hasTuition}
           isLoading={isLoading}
           kcqHomepage={siteURLMapping.kcq.homepage.url}

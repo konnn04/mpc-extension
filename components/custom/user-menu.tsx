@@ -1,5 +1,5 @@
-import { Check, ChevronDown, RefreshCw, Trash2, User as UserIcon } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { Check, ChevronDown, Trash2, User as UserIcon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +18,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { _DATA_SUFFIXES, getAvatarKey, getStudentKeys } from "@/constants/storage";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useCalendarStore } from "@/store/use-calendar-store";
@@ -51,7 +49,7 @@ export function UserMenu() {
   const { studentId, displayName, avatar, viewStudentId, setViewStudentId } = useCurrentUserStore();
   const confirm = useConfirm();
 
-  const [switchOpen, setSwitchOpen] = useState(false);
+  // const [switchOpen, setSwitchOpen] = useState(false);
   const [switchInput, setSwitchInput] = useState("");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -62,30 +60,30 @@ export function UserMenu() {
 
   const isViewingOther = viewStudentId !== "" && viewStudentId !== studentId;
 
-  const handleSwitchSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    const trimmed = switchInput.trim();
-    if (!(trimmed && MSSV_REGEX.test(trimmed))) {
-      toast.error("MSSV không hợp lệ");
-      return;
-    }
-    if (trimmed === studentId) {
-      setViewStudentId("");
-      toast.success("Đã quay về tài khoản hiện tại");
-      setSwitchOpen(false);
-      setSwitchInput("");
-      return;
-    }
-    const existing = await scanStudentIds();
-    if (!existing.includes(trimmed)) {
-      toast.error(`Không tìm thấy dữ liệu của MSSV ${trimmed}`);
-      return;
-    }
-    setViewStudentId(trimmed);
-    toast.success(`Đang xem dữ liệu của MSSV ${trimmed}`);
-    setSwitchOpen(false);
-    setSwitchInput("");
-  };
+  // const handleSwitchSubmit = async (e: FormEvent) => {
+  //   e.preventDefault();
+  //   const trimmed = switchInput.trim();
+  //   if (!(trimmed && MSSV_REGEX.test(trimmed))) {
+  //     toast.error("MSSV không hợp lệ");
+  //     return;
+  //   }
+  //   if (trimmed === studentId) {
+  //     setViewStudentId("");
+  //     toast.success("Đã quay về tài khoản hiện tại");
+  //     setSwitchOpen(false);
+  //     setSwitchInput("");
+  //     return;
+  //   }
+  //   const existing = await scanStudentIds();
+  //   if (!existing.includes(trimmed)) {
+  //     toast.error(`Không tìm thấy dữ liệu của MSSV ${trimmed}`);
+  //     return;
+  //   }
+  //   setViewStudentId(trimmed);
+  //   toast.success(`Đang xem dữ liệu của MSSV ${trimmed}`);
+  //   setSwitchOpen(false);
+  //   setSwitchInput("");
+  // };
 
   const openDelete = async () => {
     setDeleteOpen(true);
@@ -123,8 +121,8 @@ export function UserMenu() {
         useInfoStore.getState().setCourseData(useInfoStore.getState().courseData);
         useScoreStore.getState().setScores([]);
         useScoreStore.getState().setOriginalScores([]);
-        useCalendarStore.getState().setCalendarData([]);
-        useCalendarStore.getState().setExamData([]);
+        useCalendarStore.getState().setStudyCalendarData([]);
+        useCalendarStore.getState().setExamCalendarData([]);
       }
       toast.success(`Đã xóa dữ liệu của ${checked.size} MSSV`);
       const remaining = await scanStudentIds();
@@ -177,10 +175,10 @@ export function UserMenu() {
               <DropdownMenuSeparator />
             </>
           )}
-          <DropdownMenuItem onClick={() => setSwitchOpen(true)}>
+          {/* <DropdownMenuItem onClick={() => setSwitchOpen(true)}>
             <RefreshCw className='mr-2 h-4 w-4' />
             Đổi tài khoản
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem className='text-destructive' onClick={openDelete}>
             <Trash2 className='mr-2 h-4 w-4' />
@@ -189,7 +187,7 @@ export function UserMenu() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog onOpenChange={setSwitchOpen} open={switchOpen}>
+      {/* <Dialog onOpenChange={setSwitchOpen} open={switchOpen}>
         <DialogContent className='sm:max-w-sm'>
           <form onSubmit={handleSwitchSubmit}>
             <DialogHeader>
@@ -215,7 +213,7 @@ export function UserMenu() {
             </DialogFooter>
           </form>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       <Dialog onOpenChange={setDeleteOpen} open={deleteOpen}>
         <DialogContent className='sm:max-w-sm'>

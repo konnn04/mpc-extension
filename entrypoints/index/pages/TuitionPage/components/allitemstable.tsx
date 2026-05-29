@@ -1,9 +1,8 @@
 import { _TUITION_SERVICE_CODES } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import type { SemesterTuitionDetail, TuitionReceiptItem } from "@/types";
-import { formatVND } from "@/utils/tuition-compute";
-
-const isNonCreditItem = (code: string) => code.startsWith("_");
+import { shortSemesterName } from "@/utils/calendar-format";
+import { formatVND, isNonCreditItem } from "@/utils/tuition-compute";
 
 export type FlatItem = TuitionReceiptItem & {
   semesterName: string;
@@ -130,7 +129,7 @@ export function AllItemsTable({
                 <td className='py-1.5 pr-3 font-mono text-sm'>{item.courseCode || "—"}</td>
                 <td className='py-1.5 pr-3 text-sm'>{item.courseName || "—"}</td>
                 <td className='hidden py-1.5 pr-3 text-muted-foreground text-sm md:table-cell'>
-                  {item.semesterName.replace("Học kỳ ", "HK").replace(" - Năm học ", " ")}
+                  {shortSemesterName(item.semesterName)}
                 </td>
                 <td className='py-1.5 pr-3 text-center text-sm'>{dimmed ? "—" : item.credits || "—"}</td>
                 <td className={cn("py-1.5 text-right text-sm", item.amount < 0 && "text-red-500")}>

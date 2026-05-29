@@ -1,10 +1,22 @@
-import { Download, InfoIcon, Landmark } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Download, InfoIcon, Landmark, Trash2 } from "lucide-react";
+import { useDeferredValue, useMemo, useReducer } from "react";
+import { toast } from "sonner";
+import huongDanHocPhiMd from "@/assets/docs/huong_dan_hoc_phi.md?raw";
+import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { _DEFAULT_IGNORE_SUBJECT_DATA, _TUITION_MAJOR_EXCLUDE_PREFIXES } from "@/constants/default";
+import { useConfirm } from "@/hooks/use-confirm";
 import { useTuitionStore } from "@/store/use-tuition-store";
 import type { SemesterTuitionDetail } from "@/types";
+import { shortSemesterName } from "@/utils/calendar-format";
 import { computeTuitionStats } from "@/utils/tuition-compute";
 import { handleExportTuitionData } from "@/utils/tuition-export";
 import { flattenDetails } from "./components/allitemstable";
@@ -54,11 +66,11 @@ function buildCreditCostData(
     if (rates.length === 0) {
       continue;
     }
-    const avgRate = (arr: number[]) => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+    const avg = (arr: number[]) => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
     result.push({
-      name: entry.semesterName.replace("Học kỳ ", "HK").replace(" - Năm học ", " "),
-      avg: avgRate(rates),
-      avgMajor: ratesMajor.length > 0 ? avgRate(ratesMajor) : 0,
+      name: shortSemesterName(entry.semesterName),
+      avg: avg(rates),
+      avgMajor: ratesMajor.length > 0 ? avg(ratesMajor) : 0,
       min: Math.round(Math.min(...rates)),
       max: Math.round(Math.max(...rates))
     });
@@ -66,55 +78,92 @@ function buildCreditCostData(
   return result;
 }
 
+type TableState = {
+  viewMode: "grouped" | "all";
+  categoryFilter: string;
+  showNonCredit: boolean;
+  searchQuery: string;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  guideOpen: boolean;
+};
+
+type TableAction =
+  | { type: "SET_VIEW_MODE"; payload: "grouped" | "all" }
+  | { type: "SET_CATEGORY"; payload: string }
+  | { type: "TOGGLE_NON_CREDIT" }
+  | { type: "SET_SEARCH"; payload: string }
+  | { type: "SET_SORT"; payload: SortKey }
+  | { type: "TOGGLE_GUIDE" };
+
+function tableReducer(state: TableState, action: TableAction): TableState {
+  switch (action.type) {
+    case "SET_VIEW_MODE":
+      return { ...state, viewMode: action.payload };
+    case "SET_CATEGORY":
+      return { ...state, categoryFilter: action.payload };
+    case "TOGGLE_NON_CREDIT":
+      return { ...state, showNonCredit: !state.showNonCredit };
+    case "SET_SEARCH":
+      return { ...state, searchQuery: action.payload };
+    case "SET_SORT":
+      return {
+        ...state,
+        sortKey: action.payload,
+        sortDir: state.sortKey === action.payload && state.sortDir === "asc" ? "desc" : "asc"
+      };
+    case "TOGGLE_GUIDE":
+      return { ...state, guideOpen: !state.guideOpen };
+    default:
+      return state;
+  }
+}
+
 export function TuitionPage() {
   const summary = useTuitionStore((s) => s.summary);
   const details = useTuitionStore((s) => s.details);
   const lastUpdate = useTuitionStore((s) => s.lastUpdate);
 
-  const [viewMode, setViewMode] = useState<"grouped" | "all">("grouped");
-  const [categoryFilter, setCategoryFilter] = useState<string>("tất cả");
-  const [showNonCredit, setShowNonCredit] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("courseCode");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [table, dispatch] = useReducer(tableReducer, {
+    viewMode: "grouped",
+    categoryFilter: "tất cả",
+    showNonCredit: true,
+    searchQuery: "",
+    sortKey: "courseCode" as SortKey,
+    sortDir: "asc" as SortDir,
+    guideOpen: false
+  });
+  const deferredQuery = useDeferredValue(table.searchQuery);
+  const confirm = useConfirm();
 
   const stats = useMemo(() => computeTuitionStats(summary, details), [summary, details]);
   const hasData = summary.length > 0;
 
-  const allItems = useMemo(() => flattenDetails(details, categoryFilter), [details, categoryFilter]);
+  const allItems = useMemo(() => flattenDetails(details, table.categoryFilter), [details, table.categoryFilter]);
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!deferredQuery.trim()) {
       return allItems;
     }
-    const q = searchQuery.toLowerCase();
+    const q = deferredQuery.toLowerCase();
     return allItems.filter((i) => i.courseCode.toLowerCase().includes(q) || i.courseName.toLowerCase().includes(q));
-  }, [allItems, searchQuery]);
+  }, [allItems, deferredQuery]);
 
   const sortedItems = useMemo(() => {
     const sorted = [...filteredItems];
     sorted.sort((a, b) => {
-      const va = a[sortKey];
-      const vb = b[sortKey];
+      const va = a[table.sortKey];
+      const vb = b[table.sortKey];
       if (typeof va === "string" && typeof vb === "string") {
-        return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
+        return table.sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
       }
-      return sortDir === "asc" ? (Number(va) || 0) - (Number(vb) || 0) : (Number(vb) || 0) - (Number(va) || 0);
+      return table.sortDir === "asc" ? (Number(va) || 0) - (Number(vb) || 0) : (Number(vb) || 0) - (Number(va) || 0);
     });
     return sorted;
-  }, [filteredItems, sortKey, sortDir]);
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
-  };
+  }, [filteredItems, table.sortKey, table.sortDir]);
 
   const barData = useMemo(() => {
     return summary.map((entry) => ({
-      name: entry.semesterName.replace("Học kỳ ", "HK").replace(" - Năm học ", " "),
+      name: shortSemesterName(entry.semesterName),
       daThu: entry.collected,
       conNo: entry.debt
     }));
@@ -124,16 +173,24 @@ export function TuitionPage() {
 
   if (!hasData) {
     return (
-      <div className='flex h-full flex-col items-center justify-center gap-4'>
-        <div className='flex h-20 w-20 items-center justify-center rounded-full bg-muted'>
-          <Landmark className='h-10 w-10 text-muted-foreground' />
+      <div className='flex min-h-[60vh] flex-col items-center justify-center space-y-4'>
+        <div className='mb-4 rounded-full bg-muted p-6'>
+          <Landmark className='h-12 w-12 text-muted-foreground' />
         </div>
-        <div className='text-center'>
-          <h2 className='font-semibold text-lg'>Chưa có dữ liệu học phí</h2>
-          <p className='mt-1 max-w-md text-muted-foreground text-sm'>
-            Mở popup extension khi đang ở trang học phí trên cổng tiện ích sinh viên để nhập dữ liệu.
-          </p>
-        </div>
+        <h2 className='font-semibold text-2xl'>Chưa có dữ liệu học phí</h2>
+        <p className='mb-6 max-w-md text-center text-muted-foreground'>
+          Mở popup extension khi đang ở trang học phí trên cổng tiện ích sinh viên để nhập dữ liệu.
+        </p>
+        <Button onClick={() => dispatch({ type: "TOGGLE_GUIDE" })} variant='outline'>
+          <InfoIcon className='mr-2 h-4 w-4' />
+          Hướng dẫn nhập học phí
+        </Button>
+        <MarkdownModal
+          isOpen={table.guideOpen}
+          markdownContent={huongDanHocPhiMd}
+          onClose={() => dispatch({ type: "TOGGLE_GUIDE" })}
+          title='Hướng dẫn nhập học phí'
+        />
       </div>
     );
   }
@@ -156,10 +213,38 @@ export function TuitionPage() {
               </TooltipContent>
             </Tooltip>
           </h1>
-          <Button onClick={() => handleExportTuitionData(summary, details)} size='sm' variant='outline'>
-            <Download className='mr-2 h-4 w-4' />
-            Xuất Excel
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size='sm' variant='outline'>
+                <Download className='mr-2 h-4 w-4' />
+                Thao tác
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuItem onClick={() => handleExportTuitionData(summary, details)}>
+                <Download className='mr-2 h-4 w-4' />
+                Xuất Excel
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  const isConfirmed = await confirm({
+                    title: "Xác nhận xóa dữ liệu",
+                    description: "Bạn có chắc chắn muốn xóa toàn bộ dữ liệu học phí? Hành động này không thể hoàn tác.",
+                    confirmText: "Xóa học phí",
+                    variant: "destructive"
+                  });
+                  if (isConfirmed) {
+                    await useTuitionStore.getState().clearData();
+                    toast.success("Đã xóa dữ liệu học phí");
+                  }
+                }}
+              >
+                <Trash2 className='mr-2 h-4 w-4 text-red-500' />
+                Xóa học phí
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {lastUpdate && (
           <p className='mt-1 text-muted-foreground text-sm'>
@@ -183,20 +268,26 @@ export function TuitionPage() {
       </div>
 
       <DetailSection
-        categoryFilter={categoryFilter}
+        categoryFilter={table.categoryFilter}
         details={details}
-        handleSort={handleSort}
-        searchQuery={searchQuery}
-        setCategoryFilter={setCategoryFilter}
-        setSearchQuery={setSearchQuery}
-        setShowNonCredit={setShowNonCredit}
-        setViewMode={setViewMode}
-        showNonCredit={showNonCredit}
-        sortDir={sortDir}
+        handleSort={(key: SortKey) => dispatch({ type: "SET_SORT", payload: key })}
+        searchQuery={table.searchQuery}
+        setCategoryFilter={(v: string) => dispatch({ type: "SET_CATEGORY", payload: v })}
+        setSearchQuery={(v: string) => dispatch({ type: "SET_SEARCH", payload: v })}
+        setShowNonCredit={() => dispatch({ type: "TOGGLE_NON_CREDIT" })}
+        setViewMode={(v: "grouped" | "all") => dispatch({ type: "SET_VIEW_MODE", payload: v })}
+        showNonCredit={table.showNonCredit}
+        sortDir={table.sortDir}
         sortedItems={sortedItems}
-        sortKey={sortKey}
+        sortKey={table.sortKey}
         summary={summary}
-        viewMode={viewMode}
+        viewMode={table.viewMode}
+      />
+      <MarkdownModal
+        isOpen={table.guideOpen}
+        markdownContent={huongDanHocPhiMd}
+        onClose={() => dispatch({ type: "TOGGLE_GUIDE" })}
+        title='Hướng dẫn nhập học phí'
       />
     </div>
   );

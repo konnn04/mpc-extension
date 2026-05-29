@@ -1,5 +1,5 @@
 import { ArrowUpDown, EditIcon, MoreVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import subjectsData from "@/assets/data/subject.json";
 import { Combobox } from "@/components/custom/combobox";
 import {
@@ -34,8 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GRADE_ORDER } from "@/constants";
-import { _DEFAULT_FORM_DATA } from "@/constants/default";
+import { _DEFAULT_FORM_DATA, _GRADE_TOOLTIP } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import type { ScoreGroupType, ScoreRecordType } from "@/types";
 import { formatFixed, parseScale10ToCharacterAndScale4, removeVietnameseTones } from "@/utils";
@@ -43,6 +42,7 @@ import { computeSummary, getAcademicRank, getTrainingRank } from "@/utils/academ
 
 type SortKey = "code" | "name" | "credit" | "scale10" | "scale4" | "character";
 type SortDir = "asc" | "desc";
+const STANDARD_GRADES = new Set(["F", "D", "D+", "C", "C+", "B", "B+", "A", "A+"]);
 
 type Props = {
   data: ScoreGroupType[];
@@ -50,7 +50,8 @@ type Props = {
   fixedPoint: number;
   groupMode: "semester" | "all";
   searchText: string;
-  filterRange: [number, number];
+  selectedGrades: Set<string>;
+  showNonStandard: boolean;
   handleDeleteSubject: (semesterIdx: number, subjectIdx: number) => void;
   handleAddSubject: (semesterIdx: number, subject: Omit<ScoreRecordType, "isIgnore" | "isHead">) => void;
   handleEditSubject: (
@@ -104,7 +105,8 @@ export function ScoreDataTable({
   fixedPoint,
   groupMode,
   searchText,
-  filterRange,
+  selectedGrades,
+  showNonStandard,
   handleDeleteSubject,
   handleAddSubject,
   handleEditSubject,
@@ -119,6 +121,11 @@ export function ScoreDataTable({
   const [selectedSubjectIdx, setSelectedSubjectIdx] = useState(0);
   const [deletingSemesterIdx, setDeletingSemesterIdx] = useState<number | null>(null);
   const [formData, setFormData] = useState(_DEFAULT_FORM_DATA);
+
+  const idCode = useId();
+  const idName = useId();
+  const idCredit = useId();
+  const idScale10 = useId();
 
   const subjectOptions = subjectsData.map((s) => ({
     value: `${s.code}|${s.name}|${s.credit}`,
@@ -138,8 +145,15 @@ export function ScoreDataTable({
     const q = removeVietnameseTones(searchText.toLowerCase());
     const nameMatch =
       q === "" || removeVietnameseTones(sub.name.toLowerCase()).includes(q) || sub.code.toLowerCase().includes(q);
-    const gradeIdx = sub.point.character ? (GRADE_ORDER as readonly string[]).indexOf(sub.point.character) : -1;
-    const gradeMatch = gradeIdx !== -1 && gradeIdx >= filterRange[0] && gradeIdx <= filterRange[1];
+
+    let gradeMatch = showNonStandard;
+    if (sub.point.character) {
+      if (STANDARD_GRADES.has(sub.point.character)) {
+        gradeMatch = selectedGrades.has(sub.point.character);
+      } else {
+        gradeMatch = showNonStandard;
+      }
+    }
     return nameMatch && gradeMatch;
   };
 
@@ -249,12 +263,18 @@ export function ScoreDataTable({
           <TableCell>
             <div className='flex items-center gap-2'>
               <Tooltip>
-                <TooltipTrigger className='max-w-100 truncate text-left text-sm xl:max-w-none'>
-                  {sub.name}
-                </TooltipTrigger>
+                <TooltipTrigger className='max-w-60 truncate text-left text-sm xl:max-w-100'>{sub.name}</TooltipTrigger>
                 <TooltipContent>{sub.name}</TooltipContent>
               </Tooltip>
-              {sub.isIgnore && (
+              {sub.isImproved && sub.isIgnore && (
+                <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>Được cải thiện</span>
+              )}
+              {sub.isImproved && !sub.isIgnore && (
+                <span className='rounded bg-primary/15 px-1.5 py-0.5 font-medium text-[10px] text-primary'>
+                  Cải thiện
+                </span>
+              )}
+              {!sub.isImproved && sub.isIgnore && (
                 <Tooltip>
                   <TooltipTrigger>
                     <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>Không tính</span>
@@ -285,18 +305,37 @@ export function ScoreDataTable({
             )}
           </TableCell>
           <TableCell className='w-35 text-center'>
-            {isNew ? (
-              <span className='font-bold text-amber-600 dark:text-amber-400'>{sub.point.character ?? "-"}</span>
-            ) : (
-              renderDiff(oldSub?.point.character ?? "-", sub.point.character ?? "-")
-            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {isNew ? (
+                  <span className='font-bold text-amber-600 dark:text-amber-400'>{sub.point.character || "-"}</span>
+                ) : (
+                  renderDiff(oldSub?.point.character ?? "-", sub.point.character ?? "-")
+                )}
+              </TooltipTrigger>
+              <TooltipContent>
+                {(() => {
+                  if (!sub.point.character) {
+                    return "Chưa có điểm / Đang học";
+                  }
+                  if (sub.point.character === "D" && (sub.point.scale10 === 0 || sub.point.scale4 === 0)) {
+                    return _GRADE_TOOLTIP.Đ;
+                  }
+                  return _GRADE_TOOLTIP[sub.point.character] ?? `Xếp loại: ${sub.point.character}`;
+                })()}
+              </TooltipContent>
+            </Tooltip>
           </TableCell>
           <TableCell className='w-25 text-center'>
             <div className='flex items-center justify-center gap-2'>
-              <EditIcon
-                className='h-4 w-4 cursor-pointer text-blue-500 hover:text-blue-700'
-                onClick={() => handleOpenEdit(sub._semIdx, sub._subIdx, sub)}
-              />
+              {sub.isIgnore || sub.point.character === "M" ? (
+                <EditIcon className='h-4 w-4 text-muted-foreground/30' />
+              ) : (
+                <EditIcon
+                  className='h-4 w-4 cursor-pointer text-blue-500 hover:text-blue-700'
+                  onClick={() => handleOpenEdit(sub._semIdx, sub._subIdx, sub)}
+                />
+              )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Trash2Icon className='h-4 w-4 cursor-pointer text-red-500 hover:text-red-700' />
@@ -334,7 +373,7 @@ export function ScoreDataTable({
               <TableRow>
                 {renderSortHeader("Học kỳ", "name", "w-[150px]")}
                 {renderSortHeader("Mã môn", "code", "w-[120px]")}
-                {renderSortHeader("Tên môn", "name")}
+                {renderSortHeader("Tên môn", "name", "max-w-[250px]")}
                 {renderSortHeader("TC", "credit", "w-[80px] text-center")}
                 {renderSortHeader("Hệ 10", "scale10", "w-[140px] text-center")}
                 {renderSortHeader("Hệ 4", "scale4", "w-[140px] text-center")}
@@ -376,34 +415,34 @@ export function ScoreDataTable({
               </div>
               <Separator />
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label className='text-right' htmlFor='d-code'>
+                <Label className='text-right' htmlFor={idCode}>
                   Mã môn
                 </Label>
                 <Input
                   className='col-span-3'
-                  id='d-code'
+                  id={idCode}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                   value={formData.code}
                 />
               </div>
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label className='text-right' htmlFor='d-name'>
+                <Label className='text-right' htmlFor={idName}>
                   Tên môn
                 </Label>
                 <Input
                   className='col-span-3'
-                  id='d-name'
+                  id={idName}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   value={formData.name}
                 />
               </div>
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label className='text-right' htmlFor='d-credit'>
+                <Label className='text-right' htmlFor={idCredit}>
                   Tín chỉ
                 </Label>
                 <Input
                   className='col-span-3'
-                  id='d-credit'
+                  id={idCredit}
                   max='6'
                   min='1'
                   onChange={(e) => setFormData({ ...formData, credit: e.target.value })}
@@ -412,15 +451,22 @@ export function ScoreDataTable({
                 />
               </div>
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label className='text-right' htmlFor='d-scale10'>
+                <Label className='text-right' htmlFor={idScale10}>
                   Điểm hệ 10
                 </Label>
                 <Input
                   className='col-span-3'
-                  id='d-scale10'
+                  id={idScale10}
                   max='10'
                   min='0'
-                  onChange={(e) => setFormData({ ...formData, scale10: e.target.value })}
+                  onChange={(e) => {
+                    const v = Number.parseFloat(e.target.value);
+                    if (e.target.value === "" || Number.isNaN(v)) {
+                      setFormData({ ...formData, scale10: "" });
+                    } else {
+                      setFormData({ ...formData, scale10: String(Math.min(10, Math.max(0, v))) });
+                    }
+                  }}
                   step='0.1'
                   type='number'
                   value={formData.scale10}
@@ -472,9 +518,6 @@ export function ScoreDataTable({
           .map((sub, subIdx) => ({ ...sub, _semIdx: semesterIdx, _subIdx: subIdx }))
           .filter(matchesFilter);
         records = sortRecords(records, sortKey, sortDir);
-        if (semester.data.length > 0 && records.length === 0) {
-          return null;
-        }
 
         return (
           <div className='overflow-hidden rounded-lg border' key={semester.id}>

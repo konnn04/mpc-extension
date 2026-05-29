@@ -20,21 +20,22 @@ export const useCurrentUserStore = create<CurrentUserState>((set, get) => ({
   displayName: "",
   avatar: "",
   viewStudentId: "",
-  get effectiveStudentId() {
-    return get().viewStudentId || get().studentId;
-  },
+  effectiveStudentId: "",
   setCurrentUser: (studentId: string, displayName: string, avatar: string) => {
-    set({ studentId, displayName, avatar, viewStudentId: "" });
+    set({ studentId, displayName, avatar, viewStudentId: "", effectiveStudentId: studentId });
     storage.setItem(_KEY, JSON.stringify({ studentId, displayName }));
     if (avatar) {
       storage.setItem(getAvatarKey(studentId), avatar);
     }
   },
   clearCurrentUser: () => {
-    set({ studentId: "", displayName: "", avatar: "", viewStudentId: "" });
+    set({ studentId: "", displayName: "", avatar: "", viewStudentId: "", effectiveStudentId: "" });
     storage.setItem(_KEY, "{}");
   },
-  setViewStudentId: (id: string) => set({ viewStudentId: id }),
+  setViewStudentId: (id: string) => {
+    const sid = id || get().studentId;
+    set({ viewStudentId: id, effectiveStudentId: sid });
+  },
   load: async () => {
     try {
       const raw = await storage.getItem(_KEY);
@@ -47,7 +48,12 @@ export const useCurrentUserStore = create<CurrentUserState>((set, get) => ({
           } catch {
             /* ignore */
           }
-          set({ studentId: parsed.studentId, displayName: parsed.displayName || "", avatar });
+          set({
+            studentId: parsed.studentId,
+            displayName: parsed.displayName || "",
+            avatar,
+            effectiveStudentId: parsed.studentId
+          });
         }
       }
     } catch {

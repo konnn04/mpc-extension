@@ -117,8 +117,16 @@ export function AboutUsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className='text-xl'>Câu lạc bộ MPC</CardTitle>
-            <CardDescription>Mobile Programming Club</CardDescription>
+            {/* Ảnh logo nửa trái, title và des nửa phải */}
+            <div className='flex items-center gap-4'>
+              <div className='flex h-16 w-16 items-center justify-center'>
+                <img alt='MPC Logo' className='h-full w-full object-cover' height={64} src='/icon/128.png' width={64} />
+              </div>
+              <div>
+                <CardTitle className='text-lg'>Mobile Programming Club</CardTitle>
+                <CardDescription>Câu lạc bộ lập trình trên thiết bị di động (MPC)</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className='space-y-4 text-sm'>
             <p>

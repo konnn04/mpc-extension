@@ -1,4 +1,6 @@
-// biome-ignore lint/performance/noBarrelFile: type-only barrel avoids deep import paths
+export type CategoryType = "COURSE" | "LAB" | "EXAM" | "HOLIDAY" | "LESSON" | "OTHER";
+
+// biome-ignore lint/performance/noBarrelFile: barrel file is necessary for public API
 export * from "./calendar";
 export * from "./point";
 export * from "./site";

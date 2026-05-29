@@ -23,8 +23,12 @@ const getPointData = () => {
     const character = columns[11].innerText as PointCharacterType;
     const scale10Raw = columns[9].innerText.trim();
     const scale4Raw = columns[10].innerText.trim();
+    const code = columns[1].innerText;
+    if (code.startsWith("_")) {
+      return;
+    }
     data.at(-1)?.data.push({
-      code: columns[1].innerText,
+      code,
       name: columns[3].innerText,
       credit: Number.parseFloat(columns[4].innerText) || 0,
       point: {

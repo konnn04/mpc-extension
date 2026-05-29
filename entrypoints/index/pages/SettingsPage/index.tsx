@@ -1,16 +1,19 @@
-import { HardDrive, Monitor, Moon, RefreshCw, Save, Settings, Sun, UserCog } from "lucide-react";
+import { CircleHelp, HardDrive, Monitor, Moon, RefreshCw, Save, Settings, Sun, UserCog } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { _DEFAULT_SITE_URL_MAPPING } from "@/constants/default";
 import { useConfirm } from "@/hooks/use-confirm";
 import { type ThemeMode } from "@/lib/theme";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useUserSettingsStore } from "@/store/use-user-settings-store";
+import { formatFileSize } from "@/utils/file";
 import { PersonalSettings } from "./components/personal-settings";
 import { SchoolParams } from "./components/school-params";
 import { UrlConfig } from "./components/url-config";
@@ -45,16 +48,6 @@ function SectionHeader({
   );
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) {
-    return "0 KB";
-  }
-  const k = 1024;
-  const sizes = ["B", "KB", "MB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${Number.parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`;
-}
-
 export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
   const {
     fixedPoint,
@@ -66,6 +59,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
     maxCreditsWarning,
     maxCreditsSummer,
     drlWarningThreshold,
+    matchSubjectByName,
     setFixedPoint,
     setIgnoreList,
     setSiteURLMapping,
@@ -75,6 +69,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
     setMaxCreditsWarning,
     setMaxCreditsSummer,
     setDrlWarningThreshold,
+    setMatchSubjectByName,
     saveData,
     getData
   } = useGlobalStore();
@@ -98,6 +93,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
   const [localMaxCreditsWarn, setLocalMaxCreditsWarn] = useState(maxCreditsWarning);
   const [localMaxCreditsSum, setLocalMaxCreditsSum] = useState(maxCreditsSummer);
   const [localDrlThreshold, setLocalDrlThreshold] = useState(drlWarningThreshold);
+  const [localMatchByName, setLocalMatchByName] = useState(matchSubjectByName);
 
   const [storageUsage, setStorageUsage] = useState({ localBytes: 0, syncBytes: 0 });
 
@@ -136,6 +132,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
     setMaxCreditsWarning(localMaxCreditsWarn);
     setMaxCreditsSummer(localMaxCreditsSum);
     setDrlWarningThreshold(localDrlThreshold);
+    setMatchSubjectByName(localMatchByName);
     setUserSettings({ trainingSemesters, totalProgramCredits });
     await Promise.all([saveData(), saveUserSettings()]);
     toast.success("Đã lưu cài đặt!");
@@ -245,6 +242,28 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
             />
           </div>
 
+          <div className='flex items-center gap-3'>
+            <Checkbox
+              checked={localMatchByName}
+              id='match-by-name'
+              onCheckedChange={(v) => setLocalMatchByName(v === true)}
+            />
+            <div className='flex items-center gap-1.5'>
+              <Label className='cursor-pointer font-medium' htmlFor='match-by-name'>
+                So sánh cải thiện bằng tên môn
+              </Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <CircleHelp className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                </TooltipTrigger>
+                <TooltipContent className='max-w-64' side='right'>
+                  Một số trường đổi mã môn qua các năm (VD: "Cơ sở lập trình" năm 2022 có mã khác 2026). Bật để nhận
+                  diện môn cải thiện qua tên + số tín chỉ thay vì chỉ mã môn.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+
           <div className='space-y-1.5'>
             <Label className='font-medium'>Danh sách môn học loại khỏi GPA</Label>
             <p className='text-[10px] text-muted-foreground'>
@@ -350,7 +369,7 @@ function StorageBar({
       <div className='mb-0.5 flex justify-between text-xs'>
         <span className='text-muted-foreground'>{label}</span>
         <span className='font-mono'>
-          {formatBytes(bytes)} / {maxLabel}
+          {formatFileSize(bytes)} / {maxLabel}
         </span>
       </div>
       <div className='h-2 w-full overflow-hidden rounded-full bg-muted'>

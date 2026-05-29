@@ -1,11 +1,19 @@
 import { _DEFAULT_IGNORE_SUBJECT_DATA } from "@/constants/default";
 import type { SemesterTuitionDetail, TuitionStatsType, TuitionSummaryEntry } from "@/types";
 
+const SEMESTER_RE = /Học kỳ\s+(\d+)\s+(?:-\s*)?Năm học\s+(\d{4})\s*[-–]\s*(\d{4})/;
+
 function isIgnoredSubject(code: string): boolean {
   return code.startsWith("_") || _DEFAULT_IGNORE_SUBJECT_DATA.some((p) => code.includes(p));
 }
 
-type CreditStats = { totalCredits: number; avgPerCredit: number; minPerCredit: number; maxPerCredit: number };
+type CreditStats = {
+  totalCredits: number;
+  totalCreditsWithOther: number;
+  avgPerCredit: number;
+  minPerCredit: number;
+  maxPerCredit: number;
+};
 
 function collectRates(groups: SemesterTuitionDetail["receiptGroups"]): { credits: number; rates: number[] } {
   let credits = 0;
@@ -29,6 +37,7 @@ function collectRates(groups: SemesterTuitionDetail["receiptGroups"]): { credits
 
 function computeCreditStats(details: Record<string, SemesterTuitionDetail>): CreditStats {
   let totalCredits = 0;
+  let totalCreditsWithOther = 0;
   const allRates: number[] = [];
 
   for (const detail of Object.values(details)) {
@@ -37,9 +46,17 @@ function computeCreditStats(details: Record<string, SemesterTuitionDetail>): Cre
     for (const r of rates) {
       allRates.push(r);
     }
+    for (const group of detail.receiptGroups) {
+      for (const item of group.items) {
+        if (item.credits > 0) {
+          totalCreditsWithOther += item.credits;
+        }
+      }
+    }
   }
   return {
     totalCredits,
+    totalCreditsWithOther,
     avgPerCredit: allRates.length > 0 ? Math.round(allRates.reduce((a, b) => a + b, 0) / allRates.length) : 0,
     minPerCredit: allRates.length > 0 ? Math.round(Math.min(...allRates)) : 0,
     maxPerCredit: allRates.length > 0 ? Math.round(Math.max(...allRates)) : 0
@@ -52,7 +69,7 @@ export function computeTuitionStats(
 ): TuitionStatsType {
   const totalSpent = summary.reduce((acc, e) => acc + e.collected, 0);
   const totalDebt = summary.reduce((acc, e) => acc + e.debt, 0);
-  const { totalCredits, avgPerCredit, minPerCredit, maxPerCredit } = computeCreditStats(details);
+  const { totalCredits, totalCreditsWithOther, avgPerCredit, minPerCredit, maxPerCredit } = computeCreditStats(details);
   const semesterCount = summary.length;
   const avgPerSemester = semesterCount > 0 ? Math.round(totalSpent / semesterCount) : 0;
 
@@ -80,9 +97,15 @@ export function computeTuitionStats(
     minPerCredit,
     maxPerCredit,
     totalCredits,
+    totalCreditsWithOther,
     mostExpensiveSemester: mostExpensive,
     cheapestSemester: cheapest
   };
+}
+
+/** Items whose code starts with "_" are non-credit (BHYT, uniforms, etc.). */
+export function isNonCreditItem(code: string): boolean {
+  return code.startsWith("_");
 }
 
 export function formatVND(amount: number): string {
@@ -107,25 +130,33 @@ export function getLatestAvgCreditCost(
   if (summary.length === 0) {
     return null;
   }
-  const latest = summary[0];
+
+  let latest: TuitionSummaryEntry | null = null;
+  let latestNum = 0;
+  let latestStartYear = 0;
+
+  for (const entry of summary) {
+    const m = entry.semesterName.match(SEMESTER_RE);
+    if (!m) {
+      continue;
+    }
+    const num = Number.parseInt(m[1], 10);
+    const startYear = Number.parseInt(m[2], 10);
+    if (startYear > latestStartYear || (startYear === latestStartYear && num > latestNum)) {
+      latestStartYear = startYear;
+      latestNum = num;
+      latest = entry;
+    }
+  }
+
+  if (!latest) {
+    return null;
+  }
   const detail = details[latest.semesterName];
   if (!detail) {
     return null;
   }
 
-  let totalCredits = 0;
-  let totalAmount = 0;
-  for (const group of detail.receiptGroups) {
-    if (group.receiptType === "B") {
-      continue;
-    }
-    for (const item of group.items) {
-      if (isIgnoredSubject(item.courseCode) || item.credits <= 0 || item.amount <= 0) {
-        continue;
-      }
-      totalCredits += item.credits;
-      totalAmount += item.amount;
-    }
-  }
-  return totalCredits > 0 ? Math.round(totalAmount / totalCredits) : null;
+  const { rates } = collectRates(detail.receiptGroups);
+  return rates.length > 0 ? Math.round(rates.reduce((a, b) => a + b, 0) / rates.length) : null;
 }

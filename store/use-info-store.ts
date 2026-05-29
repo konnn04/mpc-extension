@@ -19,6 +19,7 @@ type InfoState = {
   setLastUpdate: (date: Date | null) => void;
   getData: () => Promise<void>;
   saveData: (studentId?: string) => Promise<void>;
+  clearData: () => Promise<void>;
 };
 
 export const useInfoStore = create<InfoState>((set, get) => ({
@@ -31,7 +32,7 @@ export const useInfoStore = create<InfoState>((set, get) => ({
   setLastUpdate: (date: Date | null) => set({ lastUpdate: date }),
 
   getData: async () => {
-    const sid = useCurrentUserStore.getState().studentId;
+    const sid = useCurrentUserStore.getState().effectiveStudentId;
     if (!sid) {
       return;
     }
@@ -50,7 +51,7 @@ export const useInfoStore = create<InfoState>((set, get) => ({
   },
 
   saveData: async (studentIdParam?: string) => {
-    const key = getUserInfoKey(studentIdParam || useCurrentUserStore.getState().studentId);
+    const key = getUserInfoKey(studentIdParam || useCurrentUserStore.getState().effectiveStudentId);
     const data: InfoStorageType = {
       userData: get().userData,
       courseData: get().courseData,
@@ -59,5 +60,11 @@ export const useInfoStore = create<InfoState>((set, get) => ({
 
     await storage.setItem(key, data);
     set({ lastUpdate: new Date() });
+  },
+
+  clearData: async () => {
+    const key = getUserInfoKey(useCurrentUserStore.getState().effectiveStudentId);
+    await storage.removeItem(key);
+    set({ userData: _DEFAULT_USER_DATA, courseData: _DEFAULT_COURSE_DATA, lastUpdate: null });
   }
 }));

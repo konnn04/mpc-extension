@@ -3,10 +3,9 @@ import { useMemo, useState } from "react";
 import { _TUITION_MAJOR_EXCLUDE_PREFIXES, _TUITION_SERVICE_CODES } from "@/constants/default";
 import { cn } from "@/lib/utils";
 import type { PairedReceiptGroup, SemesterTuitionDetail } from "@/types";
-import { formatVND } from "@/utils/tuition-compute";
+import { formatVND, isNonCreditItem } from "@/utils/tuition-compute";
 
 const isServiceItem = (code: string) => _TUITION_SERVICE_CODES.includes(code);
-const isNonCreditItem = (code: string) => code.startsWith("_");
 
 function ReceiptGroupBlock({ group, showNonCredit }: { group: PairedReceiptGroup; showNonCredit: boolean }) {
   const displayItems = showNonCredit ? group.items : group.items.filter((i) => !isNonCreditItem(i.courseCode));

@@ -287,7 +287,6 @@ const getCalendars = async (
     };
 
     const savedCurrent = getCurrentSelected();
-    console.log("📌 Học kỳ hiện tại:", savedCurrent);
 
     const semesterSelect = document.querySelector(
       CONFIG.selectors.semesterSelect,
@@ -411,9 +410,6 @@ const getCalendars = async (
 
     // Already showing the requested semester — still wait for any pending render
     if (currentLabel === semesterText) {
-      console.log(
-        `Đang ở học kỳ "${semesterText}", đợi render nếu đang load dở.`,
-      );
       await waitForSpinnerThenSettle();
       return;
     }
@@ -876,7 +872,6 @@ const getCalendars = async (
 
   // ==================== MAIN EXECUTION ====================
   try {
-    console.log("🚀 Bắt đầu lấy dữ liệu lịch học (TKB Học Kỳ)...");
 
     if (!window.location.hash.includes("/tkb-hocky")) {
       throw new Error(
@@ -910,7 +905,6 @@ const getCalendars = async (
 
       await selectSemester(semester);
 
-      console.log(`📋 Crawl học kỳ: ${semester}`);
       const weeks = scrapeScheduleTable();
       allData.push({ semester, weeks });
     }
@@ -1112,7 +1106,6 @@ export const getExamCalendars = async (
     };
 
     const savedCurrent = getCurrentSelected();
-    console.log("📌 Học kỳ hiện tại:", savedCurrent);
 
     const inputDiv =
       document.querySelector(
@@ -1198,9 +1191,6 @@ export const getExamCalendars = async (
         ?.textContent?.trim() ||
       document.querySelector("ng-select .ng-value-label")?.textContent?.trim();
     if (currentLabel === semesterName) {
-      console.log(
-        `Đang ở học kỳ "${semesterName}", đợi render nếu đang load dở.`,
-      );
       const spinnerSelector = "ngx-spinner .ngx-spinner-overlay";
       const maxWait = CONFIG.timeouts.tableUpdateLong;
       const p1Start = Date.now();
@@ -1293,7 +1283,6 @@ export const getExamCalendars = async (
       return;
     }
 
-    console.log(`🔍 Tìm thấy "${semesterName}", đang click...`);
     (targetItem as HTMLElement).scrollIntoView({ block: "nearest" });
     await wait(CONFIG.timeouts.scrollWait);
     (targetItem as HTMLElement).dispatchEvent(
@@ -1502,7 +1491,6 @@ export const getExamCalendars = async (
 
   // ==================== MAIN EXECUTION ====================
   try {
-    console.log("🚀 Bắt đầu lấy dữ liệu lịch thi (TKB Cá Nhân)...");
 
     if (!window.location.hash.includes("/lichthi")) {
       throw new Error(
@@ -1536,7 +1524,6 @@ export const getExamCalendars = async (
 
       await selectSemester(semester, semesterIndex);
 
-      console.log(`📋 Crawl lịch thi: ${semester}`);
       const weeks = scrapeScheduleTable();
       allData.push({ semester, weeks });
     }

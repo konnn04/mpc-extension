@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
@@ -69,7 +70,7 @@ export function ScoreToolbar({
         <DropdownMenuTrigger asChild>
           <Button size='sm' variant='outline'>
             <FileOutputIcon className='mr-2 h-4 w-4' />
-            Xuất dữ liệu
+            Thao tác
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -81,13 +82,13 @@ export function ScoreToolbar({
             <ClipboardCopyIcon className='mr-2 h-4 w-4 text-blue-500' />
             Sao chép dữ liệu
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onClearData}>
+            <Trash2 className='mr-2 h-4 w-4 text-red-500' />
+            Xóa dữ liệu
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <Button onClick={onClearData} size='sm' variant='destructive'>
-        <Trash2 className='mr-2 h-4 w-4' />
-        Xóa dữ liệu
-      </Button>
     </div>
   );
 }

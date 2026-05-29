@@ -28,6 +28,25 @@ export type SemesterData = {
 
 export type ProgressCallback = (progress: number, message: string) => void;
 
+export type PeriodTimeSlot = {
+  label: string;
+  start: string;
+  end: string;
+  isBreak?: boolean;
+};
+
+export type PeriodSession = {
+  sessionName: string;
+  slots: PeriodTimeSlot[];
+};
+
+export type PeriodTimeTable = {
+  groupName: string;
+  campuses: string;
+  normalSchedule: PeriodSession[];
+  labGroupSchedule?: PeriodSession[];
+};
+
 export type DaySchedule = {
   date: Date;
   schedule: CalendarEntry[];

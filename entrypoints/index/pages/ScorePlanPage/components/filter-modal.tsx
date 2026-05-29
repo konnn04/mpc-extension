@@ -1,67 +1,54 @@
-import { useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { _DEFAULT_GRADE_COLORS } from "@/constants/default";
+import { cn } from "@/lib/utils";
 
-const GRADE_STOPS = [
-  { value: 0, label: "F", range: "Dưới 4.0" },
-  { value: 1, label: "D", range: "4.0–4.9" },
-  { value: 2, label: "D+", range: "5.0–5.4" },
-  { value: 3, label: "C", range: "5.5–6.4" },
-  { value: 4, label: "C+", range: "6.5–6.9" },
-  { value: 5, label: "B", range: "7.0–7.9" },
-  { value: 6, label: "B+", range: "8.0–8.4" },
-  { value: 7, label: "A", range: "8.5–8.9" },
-  { value: 8, label: "A+", range: "9.0–10.0" }
+const GRADE_SEGMENTS = [
+  { label: "F", scale4: "0.0", min10: 0, max10: 4 },
+  { label: "D", scale4: "1.0", min10: 4, max10: 5 },
+  { label: "D+", scale4: "1.5", min10: 5, max10: 5.5 },
+  { label: "C", scale4: "2.0", min10: 5.5, max10: 6.5 },
+  { label: "C+", scale4: "2.5", min10: 6.5, max10: 7 },
+  { label: "B", scale4: "3.0", min10: 7, max10: 8 },
+  { label: "B+", scale4: "3.5", min10: 8, max10: 8.5 },
+  { label: "A", scale4: "4.0", min10: 8.5, max10: 9 },
+  { label: "A+", scale4: "4.0", min10: 9, max10: 10 }
 ] as const;
 
-const STEP = 1;
-const MIN = 0;
-const MAX = GRADE_STOPS.length - 1;
+const ALL_GRADES = new Set(GRADE_SEGMENTS.map((s) => s.label));
+const MIN10 = 0;
+const MAX10 = 10;
 
 type FilterModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  filterRange: [number, number];
-  onFilterChange: (range: [number, number]) => void;
+  selectedGrades: Set<string>;
+  onFilterChange: (grades: Set<string>) => void;
+  showNonStandard: boolean;
+  onToggleShowNonStandard: (v: boolean) => void;
 };
 
-export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }: FilterModalProps) {
-  const minValRef = useRef<HTMLInputElement>(null);
-  const maxValRef = useRef<HTMLInputElement>(null);
-
-  const clampMin = useCallback(
-    (v: number) => {
-      const clamped = Math.min(v, filterRange[1] - STEP);
-      return Math.max(MIN, clamped);
-    },
-    [filterRange]
-  );
-
-  const clampMax = useCallback(
-    (v: number) => {
-      const clamped = Math.max(v, filterRange[0] + STEP);
-      return Math.min(MAX, clamped);
-    },
-    [filterRange]
-  );
-
-  const handleMinChange = (raw: number) => {
-    const val = clampMin(raw);
-    onFilterChange([val, filterRange[1]]);
+export function FilterModal({
+  open,
+  onOpenChange,
+  selectedGrades,
+  onFilterChange,
+  showNonStandard,
+  onToggleShowNonStandard
+}: FilterModalProps) {
+  const handleToggle = (label: string) => {
+    const next = new Set(selectedGrades);
+    if (next.has(label)) {
+      next.delete(label);
+    } else {
+      next.add(label);
+    }
+    onFilterChange(next);
   };
 
-  const handleMaxChange = (raw: number) => {
-    const val = clampMax(raw);
-    onFilterChange([filterRange[0], val]);
-  };
-
-  const rangePercent = ((filterRange[1] - filterRange[0]) / (MAX - MIN)) * 100;
-  const minPercent = ((filterRange[0] - MIN) / (MAX - MIN)) * 100;
-
-  const currentMinLabel = GRADE_STOPS[filterRange[0]]?.label ?? "";
-  const currentMaxLabel = GRADE_STOPS[filterRange[1]]?.label ?? "";
-  const currentMinRange = GRADE_STOPS[filterRange[0]]?.range ?? "";
-  const currentMaxRange = GRADE_STOPS[filterRange[1]]?.range ?? "";
+  const handleSelectAll = () => onFilterChange(new Set(ALL_GRADES));
+  const handleClearAll = () => onFilterChange(new Set());
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -71,76 +58,70 @@ export function FilterModal({ open, onOpenChange, filterRange, onFilterChange }:
         </DialogHeader>
 
         <div className='space-y-6 py-4'>
-          <div className='flex items-center justify-center gap-3'>
-            <div className='text-center'>
-              <span className='rounded-full bg-primary/10 px-3 py-1 font-medium text-primary text-sm'>
-                {currentMinLabel}
-              </span>
-              <p className='mt-1 text-[10px] text-muted-foreground'>{currentMinRange}</p>
+          <div className='mx-auto w-full max-w-md space-y-1.5'>
+            <div className='relative flex h-12 overflow-hidden rounded-lg'>
+              {GRADE_SEGMENTS.map((seg) => {
+                const isSelected = selectedGrades.has(seg.label);
+                return (
+                  <button
+                    className={cn(
+                      "flex cursor-pointer flex-col items-center justify-center transition-all duration-150",
+                      isSelected ? "ring-1 ring-white/30 ring-inset" : "opacity-30 grayscale-[70%] hover:opacity-50"
+                    )}
+                    key={seg.label}
+                    onClick={() => handleToggle(seg.label)}
+                    style={{
+                      backgroundColor: _DEFAULT_GRADE_COLORS[seg.label],
+                      width: `${((seg.max10 - seg.min10) / (MAX10 - MIN10)) * 100}%`
+                    }}
+                    type='button'
+                  >
+                    <span className='font-bold text-white text-xs leading-tight drop-shadow-sm'>{seg.label}</span>
+                    <span className='text-[10px] text-white/75 leading-tight'>({seg.scale4})</span>
+                  </button>
+                );
+              })}
             </div>
-            <span className='text-muted-foreground'>→</span>
-            <div className='text-center'>
-              <span className='rounded-full bg-primary/10 px-3 py-1 font-medium text-primary text-sm'>
-                {currentMaxLabel}
-              </span>
-              <p className='mt-1 text-[10px] text-muted-foreground'>{currentMaxRange}</p>
-            </div>
-          </div>
-
-          <div className='relative mx-auto w-full max-w-md'>
-            <div className='relative h-2 rounded-full bg-muted'>
-              <div
-                className='absolute h-full rounded-full bg-primary'
-                style={{
-                  left: `${minPercent}%`,
-                  width: `${rangePercent}%`
-                }}
-              />
-            </div>
-
-            <div className='relative h-0'>
-              <input
-                aria-label='Điểm thấp nhất'
-                className='range-thumb pointer-events-none absolute top-0 left-0 h-2 w-full appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background [&::-moz-range-thumb]:shadow-sm [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:active:scale-110'
-                max={MAX}
-                min={MIN}
-                onChange={(e) => handleMinChange(Number(e.target.value))}
-                ref={minValRef}
-                step={STEP}
-                type='range'
-                value={filterRange[0]}
-              />
-              <input
-                aria-label='Điểm cao nhất'
-                className='range-thumb pointer-events-none absolute top-0 left-0 h-2 w-full appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background [&::-moz-range-thumb]:shadow-sm [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:active:scale-110'
-                max={MAX}
-                min={MIN}
-                onChange={(e) => handleMaxChange(Number(e.target.value))}
-                ref={maxValRef}
-                step={STEP}
-                type='range'
-                value={filterRange[1]}
-              />
-            </div>
-
-            <div className='relative mt-3 flex justify-between'>
-              {GRADE_STOPS.map((stop) => (
-                <span
-                  className='text-center font-medium text-[10px] text-muted-foreground leading-tight'
-                  key={stop.value}
-                  style={{ width: `${100 / GRADE_STOPS.length}%`, marginLeft: stop.value === 0 ? 0 : undefined }}
+            <div className='relative flex h-5'>
+              {GRADE_SEGMENTS.map((seg, i) => (
+                <div
+                  className='relative'
+                  key={`tick-${seg.label}`}
+                  style={{ width: `${((seg.max10 - seg.min10) / (MAX10 - MIN10)) * 100}%` }}
                 >
-                  {stop.label}
-                </span>
+                  <span className='-left-1 absolute text-[10px] text-muted-foreground leading-none'>{seg.min10}</span>
+                  {i === GRADE_SEGMENTS.length - 1 && (
+                    <span className='-right-1 absolute text-[10px] text-muted-foreground leading-none'>
+                      {seg.max10}
+                    </span>
+                  )}
+                </div>
               ))}
             </div>
           </div>
         </div>
 
-        <DialogFooter className='flex w-full justify-between sm:justify-between'>
-          <Button onClick={() => onFilterChange([MIN, MAX])} size='sm' variant='ghost'>
-            Bỏ lọc
-          </Button>
+        <DialogFooter className='flex w-full items-center justify-between sm:justify-between'>
+          <div className='flex items-center gap-3'>
+            <div className='flex gap-2'>
+              <Button onClick={handleSelectAll} size='sm' variant='ghost'>
+                Chọn hết
+              </Button>
+              <Button onClick={handleClearAll} size='sm' variant='ghost'>
+                Bỏ hết
+              </Button>
+            </div>
+            <div className='flex cursor-pointer items-center gap-1.5 text-muted-foreground text-sm'>
+              <Checkbox
+                checked={showNonStandard}
+                id='show-non-standard'
+                onCheckedChange={(v) => onToggleShowNonStandard(!!v)}
+              />
+              <label className='cursor-pointer' htmlFor='show-non-standard'>
+                Môn không theo thang GPA
+              </label>
+            </div>
+          </div>
           <Button onClick={() => onOpenChange(false)} size='sm' variant='secondary'>
             Đóng
           </Button>

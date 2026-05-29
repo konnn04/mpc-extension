@@ -24,4 +24,11 @@ Bạn có thể:
 - Xem ghi chú (không tính GPA)
 - Tự thêm học kỳ ảo, điểm ảo để lên kế hoạch học
 
+### So sánh cải thiện bằng tên môn
+Mặc định, hệ thống sẽ nhận diện các môn học cải thiện bằng mã môn (ID). Tuy nhiên, một số trường thường xuyên thay đổi mã môn học qua các năm dù nội dung và số tín chỉ không đổi (ví dụ: cùng môn *Cơ sở lập trình* nhưng khóa 2022 và khóa 2026 có hai mã khác nhau).
+
+Để khắc phục điều này, bạn có thể bật cài đặt **"So sánh cải thiện bằng tên môn"** trong trang **Cài đặt**. Khi cài đặt này được bật:
+- Hệ thống sẽ so khớp các môn cải thiện dựa trên **tên môn (đã chuẩn hóa)** và **số tín chỉ** khi mã môn không trùng nhau.
+- Phù hợp khi tính toán GPA dự kiến/thực tế chính xác khi môn học bị đổi mã.
+
 *(Chú ý: Dữ liệu hoàn toàn được giữ trên máy của bạn và không được gửi đi bất cứ đâu).*

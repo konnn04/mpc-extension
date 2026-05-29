@@ -3,12 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  PERIOD_TIME_TABLES,
-  type PeriodSession,
-  type PeriodTimeSlot,
-  type PeriodTimeTable
-} from "@/constants/period-time";
+import { PERIOD_TIME_TABLES } from "@/constants/period-time";
+import type { PeriodSession, PeriodTimeSlot, PeriodTimeTable } from "@/types";
 
 function SessionTable({ session, showLab }: { session: PeriodSession; showLab: boolean }) {
   return (

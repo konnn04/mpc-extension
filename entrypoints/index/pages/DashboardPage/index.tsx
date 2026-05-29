@@ -46,7 +46,7 @@ function DashboardPage() {
   const originalScores = useScoreStore((s) => s.originalScores);
   const savedScoresHash = useScoreStore((s) => s.savedScoresHash);
   const tuitionSummary = useTuitionStore((s) => s.summary);
-  const calendarData = useCalendarStore((s) => s.calendarData);
+  const studyCalendarData = useCalendarStore((s) => s.studyCalendarData);
   const scheduleMap = useCalendarStore((s) => s.scheduleMap);
   const fixedPoint = useGlobalStore((s) => s.fixedPoint);
   const { settings: userSettings } = useUserSettingsStore();
@@ -126,7 +126,7 @@ function DashboardPage() {
       .filter(Boolean) as { term: string; tuition: number }[];
   }, [chartDataTerm, tuitionSummary]);
 
-  const classStats = useMemo(() => computeClassStats(calendarData), [calendarData]);
+  const classStats = useMemo(() => computeClassStats(studyCalendarData), [studyCalendarData]);
 
   const totalSpent = useMemo(() => {
     if (tuitionSummary.length === 0) {

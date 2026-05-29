@@ -100,10 +100,11 @@ export function ScoreOverviewCards({
           <CardTitle className='font-medium text-muted-foreground text-sm'>Tổng tín chỉ</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className='font-bold text-3xl'>{summary.totalCredit}</div>
-          {investedCredits > 0 && (
-            <p className='mt-1 font-medium text-amber-500 text-xs'>+{investedCredits} TC đầu tư</p>
-          )}
+          <div className='font-bold text-3xl'>
+            {summary.totalCredit}{" "}
+            {investedCredits > 0 && <span className='mt-1 font-medium text-amber-500'>+{investedCredits}</span>}
+          </div>
+          <p className='mt-1 text-muted-foreground text-xs'>{summary.totalSubject} môn học</p>
         </CardContent>
       </Card>
       <Card className='relative gap-2 overflow-hidden py-4'>

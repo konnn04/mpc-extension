@@ -1,3 +1,5 @@
+export type TuitionCategory = "tất cả" | "học phí" | "dịch vụ";
+
 export type TuitionSummaryEntry = {
   semesterName: string;
   grossAmount: number;
@@ -52,6 +54,7 @@ export type TuitionStatsType = {
   minPerCredit: number;
   maxPerCredit: number;
   totalCredits: number;
+  totalCreditsWithOther: number;
   mostExpensiveSemester: { name: string; amount: number };
   cheapestSemester: { name: string; amount: number };
 };

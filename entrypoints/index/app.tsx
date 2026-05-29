@@ -5,6 +5,7 @@ import { OnboardingDialog } from "@/components/custom/onboarding-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConfirmDialogProvider } from "@/hooks/use-confirm";
 import { useTheme } from "@/lib/theme";
+import packageJson from "@/package.json";
 import { useCalendarStore } from "@/store/use-calendar-store";
 import { useCurrentUserStore } from "@/store/use-current-user-store";
 import { useGlobalStore } from "@/store/use-global-store";
@@ -39,6 +40,7 @@ function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [storageReady, setStorageReady] = useState(false);
   const { theme, changeTheme } = useTheme();
 
   useEffect(() => {
@@ -48,6 +50,7 @@ function App() {
     ]).then(([collapsed, onboarding]) => {
       setSidebarCollapsed(collapsed === "1");
       setShowOnboarding(onboarding !== "1");
+      setStorageReady(true);
     });
   }, []);
 
@@ -99,6 +102,22 @@ function App() {
       return;
     }
     Promise.all([getScoreData(), getInfoData(), getCalendarData(), getTuitionData(), getUserSettingsData()]);
+  }, [effectiveStudentId, getScoreData, getInfoData, getCalendarData, getTuitionData, getUserSettingsData]);
+
+  useEffect(() => {
+    let lastFetch = 0;
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || !effectiveStudentId) {
+        return;
+      }
+      if (Date.now() - lastFetch < 2000) {
+        return;
+      }
+      lastFetch = Date.now();
+      Promise.all([getScoreData(), getInfoData(), getCalendarData(), getTuitionData(), getUserSettingsData()]);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [effectiveStudentId, getScoreData, getInfoData, getCalendarData, getTuitionData, getUserSettingsData]);
 
   const handleNavigate = useCallback((key: string) => {
@@ -167,7 +186,9 @@ function App() {
           activeKey={route}
           collapsed={isMobile ? !mobileOpen : sidebarCollapsed}
           footer={
-            <p className='text-center text-muted-foreground text-xs'>© 2025, 2026 MPC · Trường Đại học Mở TP.HCM</p>
+            <p className='text-center text-muted-foreground text-xs'>
+              MPC Extension v{packageJson.version} <br />© 2025, 2026 MPClub - Trường Đại học Mở TP.HCM
+            </p>
           }
           isMobile={isMobile}
           logo={
@@ -199,7 +220,9 @@ function App() {
         </div>
       </div>
       <ConfirmDialogProvider />
-      <OnboardingDialog onComplete={handleOnboardingComplete} onSkip={handleOnboardingSkip} open={showOnboarding} />
+      {storageReady && (
+        <OnboardingDialog onComplete={handleOnboardingComplete} onSkip={handleOnboardingSkip} open={showOnboarding} />
+      )}
     </TooltipProvider>
   );
 }

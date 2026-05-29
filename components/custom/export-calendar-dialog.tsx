@@ -1,5 +1,5 @@
 import { CalendarPlusIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -25,6 +25,8 @@ export function ExportCalendarDialog({ open, onOpenChange, calendarData, onExpor
   const [selectedSemesters, setSelectedSemesters] = useState<Set<string>>(new Set());
   const [includeClass, setIncludeClass] = useState(true);
   const [includeExam, setIncludeExam] = useState(true);
+  const classId = useId();
+  const examId = useId();
 
   useEffect(() => {
     if (open && calendarData.length > 0) {
@@ -100,14 +102,14 @@ export function ExportCalendarDialog({ open, onOpenChange, calendarData, onExpor
 
         <div className='flex gap-4 border-b pt-2 pb-4 text-sm'>
           <div className='flex items-center space-x-2'>
-            <Checkbox checked={includeClass} id='includeClass' onCheckedChange={(c) => setIncludeClass(!!c)} />
-            <Label className='cursor-pointer font-medium' htmlFor='includeClass'>
+            <Checkbox checked={includeClass} id={classId} onCheckedChange={(c) => setIncludeClass(!!c)} />
+            <Label className='cursor-pointer font-medium' htmlFor={classId}>
               Lịch học
             </Label>
           </div>
           <div className='flex items-center space-x-2'>
-            <Checkbox checked={includeExam} id='includeExam' onCheckedChange={(c) => setIncludeExam(!!c)} />
-            <Label className='cursor-pointer font-medium' htmlFor='includeExam'>
+            <Checkbox checked={includeExam} id={examId} onCheckedChange={(c) => setIncludeExam(!!c)} />
+            <Label className='cursor-pointer font-medium' htmlFor={examId}>
               Lịch thi
             </Label>
           </div>

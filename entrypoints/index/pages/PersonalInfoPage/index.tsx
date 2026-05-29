@@ -1,18 +1,27 @@
-import { GraduationCap, InfoIcon, Mail, MapPin, Phone, User } from "lucide-react";
+import { GraduationCap, InfoIcon, Mail, MapPin, Phone, Trash2, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import thongTinMd from "@/assets/docs/thong_tin.md?raw";
 import { CopyableField } from "@/components/custom/copyable-field";
 import { MarkdownModal } from "@/components/custom/markdown-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { _COURSE_LABEL_MAPPING, _USER_LABEL_MAPPING } from "@/constants/default";
+import { useConfirm } from "@/hooks/use-confirm";
 import { useInfoStore } from "@/store/use-info-store";
 
 export function PersonalInfoPage() {
   const { userData, courseData, getData } = useInfoStore();
   const [guideOpen, setGuideOpen] = useState(false);
+  const confirm = useConfirm();
 
   useEffect(() => {
     getData();
@@ -28,7 +37,7 @@ export function PersonalInfoPage() {
         <p className='mb-6 max-w-md text-center text-muted-foreground'>
           Hệ thống chưa tìm thấy dữ liệu sinh viên của bạn. Vui lòng cập nhật để xem thông tin.
         </p>
-        <Button onClick={() => setGuideOpen(true)}>
+        <Button onClick={() => setGuideOpen(true)} variant='outline'>
           <InfoIcon className='mr-2 h-4 w-4' />
           Hướng dẫn đồng bộ
         </Button>
@@ -44,11 +53,38 @@ export function PersonalInfoPage() {
 
   return (
     <div className='space-y-6'>
-      <div className='flex justify-end'>
+      <div className='flex justify-end gap-2'>
         <Button onClick={() => setGuideOpen(true)} variant='outline'>
           <InfoIcon className='mr-2 h-4 w-4' />
           Hướng dẫn đồng bộ
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline'>
+              <Trash2 className='mr-2 h-4 w-4' />
+              Thao tác
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            <DropdownMenuItem
+              onClick={async () => {
+                const isConfirmed = await confirm({
+                  title: "Xác nhận xóa dữ liệu",
+                  description: "Bạn có chắc chắn muốn xóa toàn bộ thông tin cá nhân? Hành động này không thể hoàn tác.",
+                  confirmText: "Xóa thông tin",
+                  variant: "destructive"
+                });
+                if (isConfirmed) {
+                  await useInfoStore.getState().clearData();
+                  toast.success("Đã xóa thông tin cá nhân");
+                }
+              }}
+            >
+              <Trash2 className='mr-2 h-4 w-4 text-red-500' />
+              Xóa thông tin
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className='flex flex-col gap-6 md:flex-row'>
         <Card className='w-full md:w-1/3'>

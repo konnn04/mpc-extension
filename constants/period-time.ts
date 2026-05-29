@@ -1,7 +1,9 @@
+import type { PeriodSession, PeriodTimeTable } from "@/types";
+
 /**
  * Period time maps for different campus groups.
- * Group 1: Võ Văn Tần (VVT), Mai Thị Lựu (MLA), Gia Phú (GP)
- * Group 2: Nhơn Đức/Nhà Bè (NB), Long Bình Tân/Long Hưng (LB), Bình Dương
+ * Group 1: Võ Văn Tần (VVT), Mai Thị Lựu (MLA)
+ * Group 2: Nhơn Đức/Nhà Bè (NB), Long Bình Tân/Long Hưng (LB), Bình Dương, Gia Phú (GP)
  *
  * ── Structure mirrors the official OU time allocation tables,
  *     including break periods and lab-group split variants. ──
@@ -48,25 +50,6 @@ export const PERIOD_TIME_MAP_GROUP_2: Record<number, { start: string; end: strin
 };
 
 // ── Detailed time slots with breaks (for display) ──
-
-export type PeriodTimeSlot = {
-  label: string; // e.g. "Tiết 1", "Giải lao", "Chuyển nhóm"
-  start: string;
-  end: string;
-  isBreak?: boolean;
-};
-
-export type PeriodSession = {
-  sessionName: string; // "Sáng", "Chiều", "Tối"
-  slots: PeriodTimeSlot[];
-};
-
-export type PeriodTimeTable = {
-  groupName: string;
-  campuses: string;
-  normalSchedule: PeriodSession[];
-  labGroupSchedule?: PeriodSession[];
-};
 
 // ── Group 1: VVT, MLA, GP ──
 
@@ -207,13 +190,13 @@ const GROUP2_LAB: PeriodSession[] = [
 export const PERIOD_TIME_TABLES: PeriodTimeTable[] = [
   {
     groupName: "Nhóm 1",
-    campuses: "97 Võ Văn Tần, 02 Mai Thị Lựu, Gia Phú (VVT, MLA, GP)",
+    campuses: "97 Võ Văn Tần, 02 Mai Thị Lựu (VVT, MLA)",
     normalSchedule: GROUP1_NORMAL,
     labGroupSchedule: GROUP1_LAB
   },
   {
     groupName: "Nhóm 2",
-    campuses: "Nhơn Đức (Nhà Bè), Long Bình Tân (Long Hưng), Bình Dương (NB, LB)",
+    campuses: "Nhơn Đức (Nhà Bè), Long Bình Tân (Long Hưng), Bình Dương, Gia Phú  (NB, LB, GP)",
     normalSchedule: GROUP2_NORMAL,
     labGroupSchedule: GROUP2_LAB
   }
@@ -223,7 +206,7 @@ export const PERIOD_TIME_TABLES: PeriodTimeTable[] = [
 export const LOCATION_PERIOD_GROUP: Record<string, number> = {
   VVT: 1,
   MLA: 1,
-  GP: 1,
+  GP: 2,
   NB: 2,
   LB: 2
 };

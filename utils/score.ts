@@ -10,6 +10,27 @@ import {
 } from "@/constants/default";
 import type { ScoreGroupType, ScoreRecordType, ScoreSummaryType } from "@/types";
 import { computeSummary as computeAcademicSummary } from "./academic-compute";
+import { removeVietnameseTones } from "./index";
+
+/** Fallback match key for subjects with different codes but same name+credit. */
+export function normalizeSubjectName(name: string): string {
+  return removeVietnameseTones(name.trim()).replace(/\s+/g, "-").replace(/-+/g, "-");
+}
+
+/** Match two subjects by code+name first, then optionally by normalized name + credit. */
+export function isSameSubject(
+  a: { code: string; name: string; credit: number },
+  b: { code: string; name: string; credit: number },
+  matchByName = true
+): boolean {
+  if (a.code === b.code && a.name === b.name) {
+    return true;
+  }
+  if (!matchByName) {
+    return false;
+  }
+  return normalizeSubjectName(a.name) === normalizeSubjectName(b.name) && a.credit === b.credit;
+}
 
 const checkImproveSubject = (d: ScoreGroupType, map: Record<string, ScoreRecordType[]>) => {
   for (const item of d.data) {
@@ -53,7 +74,6 @@ const updateIgnoreSubject = (data: ScoreGroupType[], ignoreList: string[]) => {
       return item;
     });
 
-    // TODO: improve algorithm
     checkImproveSubject(d, codeMap);
     return d;
   });
@@ -72,6 +92,44 @@ const updateIgnoreSubject = (data: ScoreGroupType[], ignoreList: string[]) => {
 
   return newData;
 };
+
+/** Mark improved/superseded subjects across all semesters by matching normalized name + credit. */
+function markImprovedSubjects(data: ScoreGroupType[]): ScoreGroupType[] {
+  const allSubs: { semIdx: number; subIdx: number; sub: ScoreRecordType }[] = [];
+  for (let si = 0; si < data.length; si++) {
+    for (let sbi = 0; sbi < data[si].data.length; sbi++) {
+      const sub = data[si].data[sbi];
+      if ((!sub.isIgnore || sub.isImproved) && sub.point.character !== "M") {
+        allSubs.push({ semIdx: si, subIdx: sbi, sub });
+      }
+    }
+  }
+
+  const groups = new Map<string, typeof allSubs>();
+  for (const entry of allSubs) {
+    const key = `${normalizeSubjectName(entry.sub.name)}|${entry.sub.credit}`;
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key)?.push(entry);
+  }
+
+  for (const entries of groups.values()) {
+    if (entries.length < 2) {
+      continue;
+    }
+    entries.sort((a, b) => (b.sub.point.scale10 ?? 0) - (a.sub.point.scale10 ?? 0));
+    const best = entries[0];
+    best.sub.isImproved = true;
+    best.sub.isIgnore = false;
+    for (let i = 1; i < entries.length; i++) {
+      entries[i].sub.isImproved = true;
+      entries[i].sub.isIgnore = true;
+    }
+  }
+
+  return data;
+}
 
 const updateScoreAvg = (data: ScoreGroupType[]) => {
   const newData = data.map((d) => {
@@ -209,6 +267,7 @@ export {
   getNextSemesterName,
   GRADE_COLORS,
   handleExportScoreData,
+  markImprovedSubjects,
   updateIgnoreSubject,
   updateScoreAvg
 };

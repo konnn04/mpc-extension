@@ -19,6 +19,18 @@ import { updateIgnoreSubject, updateScoreAvg } from "@/utils/score";
 import { getLatestAvgCreditCost } from "@/utils/tuition-compute";
 
 const LATEST_AVG_CREDIT_KEY = "latestAvgCreditCost";
+const SCRAPE_TIMEOUT_MS = 65_000;
+
+/** Gửi message với timeout 5s — nếu quá hạn, throw lỗi mạng. */
+async function sendWithTimeout<T>(type: string): Promise<T> {
+  const result = await Promise.race([
+    browser.runtime.sendMessage({ type }) as Promise<T>,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Mạng của bạn không ổn định, vui lòng thử lại")), SCRAPE_TIMEOUT_MS)
+    )
+  ]);
+  return result;
+}
 
 export function useImportActions() {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,14 +39,20 @@ export function useImportActions() {
 
   const { userData } = useInfoStore();
   const { originalScores } = useScoreStore();
-  const { calendarData, examData, setCalendarData, setExamData, saveData: saveCalendarData } = useCalendarStore();
+  const {
+    studyCalendarData,
+    examCalendarData,
+    setStudyCalendarData,
+    setExamCalendarData,
+    saveData: saveCalendarData
+  } = useCalendarStore();
   const { summary } = useTuitionStore();
   const ignoreList = useGlobalStore((s) => s.ignoreList);
 
   const hasInfo = userData.userId !== "";
   const hasScore = originalScores.length > 0;
-  const hasCalendar = calendarData.length > 0;
-  const hasExam = examData.length > 0;
+  const hasStudyCalendar = studyCalendarData.length > 0;
+  const hasExamCalendar = examCalendarData.length > 0;
   const hasTuition = summary.length > 0;
 
   const handleImportInfo = async () => {
@@ -53,7 +71,8 @@ export function useImportActions() {
     setIsLoading(true);
     toast.info("Đang lấy thông tin...");
     try {
-      const data = await browser.runtime.sendMessage({ type: _GET_USER_DATA });
+      // biome-ignore lint/suspicious/noExplicitAny: API response is a dynamic message payload
+      const data = await sendWithTimeout<any>(_GET_USER_DATA);
       if (data && !data.error) {
         useInfoStore.getState().setUserData(data.userData);
         useInfoStore.getState().setCourseData(data.courseData);
@@ -63,7 +82,7 @@ export function useImportActions() {
         toast.error(`Lỗi: ${data?.error || "Không thể lấy dữ liệu"}`);
       }
     } catch (e) {
-      toast.error("Lỗi khi lấy thông tin");
+      toast.error(e instanceof Error ? e.message : "Lỗi khi lấy thông tin");
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +124,7 @@ export function useImportActions() {
   };
 
   const confirmCalendarOverwrite = async (isExam: boolean) => {
-    if (isExam ? !hasExam : !hasCalendar) {
+    if (isExam ? !hasExamCalendar : !hasStudyCalendar) {
       return true;
     }
     const confirmMsg = isExam
@@ -129,21 +148,22 @@ export function useImportActions() {
     toast.info("Đang lấy lịch...");
     try {
       const type = isExam ? _GET_EXAM_CALENDAR_DATA : _GET_CLASS_CALENDAR_DATA;
-      const data = await browser.runtime.sendMessage({ type });
+      // biome-ignore lint/suspicious/noExplicitAny: API response is a dynamic message payload
+      const data = await sendWithTimeout<any>(type);
 
       if (!data || data.error) {
         toast.error(`Lỗi: ${data?.error || "Không thể lấy dữ liệu"}`);
         return;
       }
       if (isExam) {
-        setExamData(data);
+        setExamCalendarData(data);
       } else {
-        setCalendarData(data);
+        setStudyCalendarData(data);
       }
       await saveCalendarData(studentId);
       toast.success(`Lấy lịch thành công ${data.length || 0} học kỳ!`);
     } catch (e) {
-      toast.error("Lỗi khi lấy lịch");
+      toast.error(e instanceof Error ? e.message : "Lỗi khi lấy lịch");
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +200,8 @@ export function useImportActions() {
     setIsLoading(true);
     toast.info("Đang lấy học phí...");
     try {
-      const data = await browser.runtime.sendMessage({ type: _GET_TUITION_DATA });
+      // biome-ignore lint/suspicious/noExplicitAny: API response is a dynamic message payload
+      const data = await sendWithTimeout<any>(_GET_TUITION_DATA);
       if (data && !data.error) {
         await saveTuitionData(data);
         toast.success("Lấy học phí thành công!");
@@ -188,7 +209,7 @@ export function useImportActions() {
         toast.error(`Lỗi: ${data?.error || "Không thể lấy dữ liệu"}`);
       }
     } catch (e) {
-      toast.error("Lỗi khi lấy học phí");
+      toast.error(e instanceof Error ? e.message : "Lỗi khi lấy học phí");
     } finally {
       setIsLoading(false);
     }
@@ -198,8 +219,8 @@ export function useImportActions() {
     isLoading,
     hasInfo,
     hasScore,
-    hasCalendar,
-    hasExam,
+    hasStudyCalendar,
+    hasExamCalendar,
     hasTuition,
     handleImportInfo,
     handleImportScore,

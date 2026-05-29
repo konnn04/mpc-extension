@@ -2,12 +2,12 @@ import { FilterIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { GRADE_ORDER } from "@/constants";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type GroupMode = "semester" | "all";
 
 export function ScoreFiltersBar({
-  filterRange,
+  selectedGrades,
   groupMode,
   hideNonGPA,
   onAddSemester,
@@ -17,7 +17,7 @@ export function ScoreFiltersBar({
   onToggleHideNonGPA,
   searchText
 }: {
-  filterRange: [number, number];
+  selectedGrades: Set<string>;
   groupMode: GroupMode;
   hideNonGPA: boolean;
   onAddSemester: () => void;
@@ -27,7 +27,8 @@ export function ScoreFiltersBar({
   onToggleHideNonGPA: (v: boolean) => void;
   searchText: string;
 }) {
-  const isFilterActive = filterRange[0] !== 0 || filterRange[1] !== GRADE_ORDER.length - 1;
+  const ALL_GRADES_COUNT = 9;
+  const isFilterActive = selectedGrades.size < ALL_GRADES_COUNT;
 
   return (
     <div className='flex flex-wrap items-center gap-2'>
@@ -40,20 +41,22 @@ export function ScoreFiltersBar({
           value={searchText}
         />
       </div>
-      <select
-        className='h-9 rounded-md border bg-background px-3 text-sm'
-        onChange={(e) => onGroupModeChange(e.target.value as GroupMode)}
-        value={groupMode}
-      >
-        <option value='semester'>Nhóm theo học kỳ</option>
-        <option value='all'>Tất cả</option>
-      </select>
+      <Tabs onValueChange={(v) => onGroupModeChange(v as GroupMode)} value={groupMode}>
+        <TabsList className='h-9'>
+          <TabsTrigger className='text-xs' value='semester'>
+            Theo kỳ
+          </TabsTrigger>
+          <TabsTrigger className='text-xs' value='all'>
+            Tất cả
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
       <Button onClick={onFilterOpen} size='sm' variant='outline'>
         <FilterIcon className='mr-2 h-4 w-4' />
         Lọc
         {isFilterActive && (
           <span className='ml-1 rounded-full bg-primary px-1.5 text-primary-foreground text-xs'>
-            {GRADE_ORDER[filterRange[0]]}–{GRADE_ORDER[filterRange[1]]}
+            {selectedGrades.size}/{ALL_GRADES_COUNT} loại
           </span>
         )}
       </Button>

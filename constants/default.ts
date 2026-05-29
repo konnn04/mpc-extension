@@ -107,11 +107,25 @@ export const _DEFAULT_GRADE_COLORS: Record<string, string> = {
 /** Course codes classified as dịch vụ (BHYT, etc.) rather than học phí học tập. */
 export const _TUITION_SERVICE_CODES = ["_BHYTTN1", "_BHYT12T", "_BHYT6T", "_BHYT12"];
 
+/** Tooltip mô tả cho từng xếp loại khi hover trên bảng điểm. */
+export const _GRADE_TOOLTIP: Record<string, string> = {
+  "A+": "Điểm hệ 10 từ 9.0 – 10.0",
+  A: "Điểm hệ 10 từ 8.5 – 9.0",
+  "B+": "Điểm hệ 10 từ 8.0 – 8.5",
+  B: "Điểm hệ 10 từ 7.0 – 8.0",
+  "C+": "Điểm hệ 10 từ 6.5 – 7.0",
+  C: "Điểm hệ 10 từ 5.5 – 6.5",
+  "D+": "Điểm hệ 10 từ 5.0 – 5.5",
+  D: "Điểm hệ 10 từ 4.0 – 5.0",
+  F: "Điểm hệ 10 dưới 4.0",
+  M: "Môn này bạn được miễn học, không tính vào GPA",
+  Đ: "Bạn đạt điểm Đạt của môn này, không tính trong GPA"
+};
+
 /** Mã môn bị loại khỏi tính đơn giá trung bình chuyên ngành (GENG, DEDU, PEDU). */
 export const _TUITION_MAJOR_EXCLUDE_PREFIXES = ["GENG", "DEDU", "PEDU"] as const;
 
 export const _TUITION_CATEGORIES = ["tất cả", "học phí", "dịch vụ"] as const;
-export type TuitionCategory = (typeof _TUITION_CATEGORIES)[number];
 
 export const _DEFAULT_ACADEMIC_RANKS: { minGpa4: number; rank: AcademicRankType }[] = [
   {

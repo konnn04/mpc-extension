@@ -225,7 +225,7 @@ async function getTuitionData(): Promise<{
     return found;
   };
 
-  const waitTable = (ms = 1000): Promise<void> =>
+  const waitTable = (ms = 1500): Promise<void> =>
     new Promise((resolve) => {
       const container = document.querySelector("app-hocphi");
       if (!container) {

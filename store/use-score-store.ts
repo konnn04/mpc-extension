@@ -35,7 +35,7 @@ export const useScoreStore = create<ScoreState>((set, get) => ({
   },
   setLastUpdate: (date: Date | null) => set({ lastUpdate: date }),
   getData: async () => {
-    const sid = useCurrentUserStore.getState().studentId;
+    const sid = useCurrentUserStore.getState().effectiveStudentId;
     if (!sid) {
       return;
     }
@@ -76,7 +76,7 @@ export const useScoreStore = create<ScoreState>((set, get) => ({
     set({ savedScoresHash: computeScoreHash(allScores) });
   },
   clearData: async () => {
-    const key = getPointKey(useCurrentUserStore.getState().studentId);
+    const key = getPointKey(useCurrentUserStore.getState().effectiveStudentId);
     await storage.removeItem(key);
     set({
       scores: [],

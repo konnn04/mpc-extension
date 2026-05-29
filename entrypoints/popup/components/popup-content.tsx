@@ -1,4 +1,13 @@
-import { Banknote, BookOpen, CalendarClock, CheckCircle2, GraduationCap, InfoIcon, User } from "lucide-react";
+import {
+  Banknote,
+  BookOpen,
+  CalendarClock,
+  CheckCircle2,
+  GraduationCap,
+  InfoIcon,
+  TriangleAlert,
+  User
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SharedSectionProps = {
@@ -39,13 +48,17 @@ function UserInfoSection({
   openDashboard,
   handleImportInfo,
   hasInfo
-}: SharedSectionProps & { handleImportInfo: () => Promise<void>; hasInfo: boolean }) {
+}: SharedSectionProps & {
+  handleImportInfo: () => Promise<void>;
+  hasInfo: boolean;
+}) {
   return (
-    <div className='flex flex-col space-y-4 p-6'>
+    <div className='flex flex-col space-y-4 px-6 py-4'>
       <div className='mb-2 flex items-center gap-2'>
         <User className='h-5 w-5 text-primary' />
         <h3 className='font-semibold'>Thông tin cá nhân</h3>
       </div>
+
       <Button className='w-full' disabled={isLoading} onClick={handleImportInfo} variant='default'>
         {isLoading ? "Đang xử lý..." : "Nhập Thông tin cá nhân"}
       </Button>
@@ -57,6 +70,10 @@ function UserInfoSection({
       >
         {hasInfo ? "Xem thông tin đã nhập" : "Chưa có thông tin"}
       </Button>
+      <p className='text-muted-foreground text-xs'>
+        * Vui lòng chờ trang tải đầy đủ thông tin trước khi nhập dữ liệu. Nếu có lỗi xảy ra, thử tải lại trang và nhập
+        lại nhé.
+      </p>
     </div>
   );
 }
@@ -65,10 +82,15 @@ function ClassCalendarSection({
   isLoading,
   openDashboard,
   handleImportCalendar,
-  hasCalendar
-}: SharedSectionProps & { handleImportCalendar: (isExam: boolean) => Promise<void>; hasCalendar: boolean }) {
+  hasStudyCalendar,
+  hasExamCalendar
+}: SharedSectionProps & {
+  handleImportCalendar: (isExam: boolean) => Promise<void>;
+  hasStudyCalendar: boolean;
+  hasExamCalendar: boolean;
+}) {
   return (
-    <div className='flex flex-col space-y-4 p-6'>
+    <div className='flex flex-col space-y-4 px-6 py-4'>
       <div className='mb-2 flex items-center gap-2'>
         <BookOpen className='h-5 w-5 text-primary' />
         <h3 className='font-semibold'>Lịch học</h3>
@@ -78,12 +100,31 @@ function ClassCalendarSection({
       </Button>
       <Button
         className='w-full'
-        disabled={!hasCalendar}
+        disabled={!(hasStudyCalendar || hasExamCalendar)}
         onClick={() => openDashboard("calendar")}
-        variant={hasCalendar ? "outline" : "secondary"}
+        variant={hasStudyCalendar || hasExamCalendar ? "outline" : "secondary"}
       >
-        {hasCalendar ? "Xem lịch đã nhập" : "Chưa có lịch học"}
+        {hasStudyCalendar || hasExamCalendar ? "Xem lịch đã nhập" : "Chưa có lịch"}
       </Button>
+      <p className='text-muted-foreground text-xs leading-relaxed'>
+        Lịch học:{" "}
+        {hasStudyCalendar ? (
+          <span className='font-medium text-green-600 dark:text-green-400'>Đã có</span>
+        ) : (
+          <span className='font-medium text-amber-600 dark:text-amber-400'>Chưa có</span>
+        )}
+        {" · "}
+        Lịch thi:{" "}
+        {hasExamCalendar ? (
+          <span className='font-medium text-green-600 dark:text-green-400'>Đã có</span>
+        ) : (
+          <span className='font-medium text-amber-600 dark:text-amber-400'>Chưa có</span>
+        )}
+      </p>
+      <p className='text-muted-foreground text-xs'>
+        * Vui lòng chờ trang tải đầy đủ thông tin trước khi nhập dữ liệu. Nếu có lỗi xảy ra, thử tải lại trang và nhập
+        lại nhé.
+      </p>
     </div>
   );
 }
@@ -92,10 +133,15 @@ function ExamCalendarSection({
   isLoading,
   openDashboard,
   handleImportCalendar,
-  hasExam
-}: SharedSectionProps & { handleImportCalendar: (isExam: boolean) => Promise<void>; hasExam: boolean }) {
+  hasStudyCalendar,
+  hasExamCalendar
+}: SharedSectionProps & {
+  handleImportCalendar: (isExam: boolean) => Promise<void>;
+  hasStudyCalendar: boolean;
+  hasExamCalendar: boolean;
+}) {
   return (
-    <div className='flex flex-col space-y-4 p-6'>
+    <div className='flex flex-col space-y-4 px-6 py-4'>
       <div className='mb-2 flex items-center gap-2'>
         <CalendarClock className='h-5 w-5 text-primary' />
         <h3 className='font-semibold'>Lịch thi</h3>
@@ -105,12 +151,31 @@ function ExamCalendarSection({
       </Button>
       <Button
         className='w-full'
-        disabled={!hasExam}
+        disabled={!(hasStudyCalendar || hasExamCalendar)}
         onClick={() => openDashboard("calendar")}
-        variant={hasExam ? "outline" : "secondary"}
+        variant={hasStudyCalendar || hasExamCalendar ? "outline" : "secondary"}
       >
-        {hasExam ? "Xem lịch đã nhập" : "Chưa có lịch thi"}
+        {hasStudyCalendar || hasExamCalendar ? "Xem lịch đã nhập" : "Chưa có lịch"}
       </Button>
+      <p className='text-muted-foreground text-xs leading-relaxed'>
+        Lịch học:{" "}
+        {hasStudyCalendar ? (
+          <span className='font-medium text-green-600 dark:text-green-400'>Đã có</span>
+        ) : (
+          <span className='font-medium text-amber-600 dark:text-amber-400'>Chưa có</span>
+        )}
+        {" · "}
+        Lịch thi:{" "}
+        {hasExamCalendar ? (
+          <span className='font-medium text-green-600 dark:text-green-400'>Đã có</span>
+        ) : (
+          <span className='font-medium text-amber-600 dark:text-amber-400'>Chưa có</span>
+        )}
+      </p>
+      <p className='text-muted-foreground text-xs'>
+        * Vui lòng chờ trang tải đầy đủ thông tin trước khi nhập dữ liệu. Nếu có lỗi xảy ra, thử tải lại trang và nhập
+        lại nhé.
+      </p>
     </div>
   );
 }
@@ -127,7 +192,7 @@ function ScoreSection({
   hasScore: boolean;
 }) {
   return (
-    <div className='flex flex-col space-y-4 p-6'>
+    <div className='flex flex-col space-y-4 px-6 py-4'>
       <div className='mb-2 flex items-center gap-2'>
         <CheckCircle2 className='h-5 w-5 text-primary' />
         <h3 className='font-semibold'>Kế hoạch điểm số</h3>
@@ -143,6 +208,10 @@ function ScoreSection({
       >
         {hasScore ? "Xem điểm đã nhập" : "Chưa có điểm"}
       </Button>
+      <p className='text-muted-foreground text-xs'>
+        * Vui lòng chờ trang tải đầy đủ thông tin trước khi nhập dữ liệu. Nếu có lỗi xảy ra, thử tải lại trang và nhập
+        lại nhé.
+      </p>
     </div>
   );
 }
@@ -159,7 +228,7 @@ function TuitionSection({
   hasTuition: boolean;
 }) {
   return (
-    <div className='flex flex-col space-y-4 p-6'>
+    <div className='flex flex-col space-y-4 px-6 py-4'>
       <div className='mb-2 flex items-center gap-2'>
         <Banknote className='h-5 w-5 text-primary' />
         <h3 className='font-semibold'>Học phí</h3>
@@ -175,6 +244,11 @@ function TuitionSection({
       >
         {hasTuition ? "Xem học phí đã nhập" : "Chưa có học phí"}
       </Button>
+
+      <p className='text-muted-foreground text-xs'>
+        * Vui lòng chờ trang tải đầy đủ thông tin trước khi nhập dữ liệu. Nếu có lỗi xảy ra, thử tải lại trang và nhập
+        lại nhé.
+      </p>
     </div>
   );
 }
@@ -185,8 +259,8 @@ type PopupContentProps = {
   isLoading: boolean;
   hasInfo: boolean;
   hasScore: boolean;
-  hasCalendar: boolean;
-  hasExam: boolean;
+  hasStudyCalendar: boolean;
+  hasExamCalendar: boolean;
   hasTuition: boolean;
   navTo: (url: string) => void;
   openDashboard: (tab?: string) => void;
@@ -205,8 +279,8 @@ export function PopupContent(props: PopupContentProps) {
     isLoading,
     hasInfo,
     hasScore,
-    hasCalendar,
-    hasExam,
+    hasStudyCalendar,
+    hasExamCalendar,
     hasTuition,
     navTo,
     openDashboard,
@@ -221,58 +295,83 @@ export function PopupContent(props: PopupContentProps) {
   if (!siteCurr) {
     return <NoSiteSection kcqHomepage={kcqHomepage} navTo={navTo} svHomepage={svHomepage} />;
   }
+
+  const warningBanner = isLoading ? (
+    <div className='mx-6 mt-4 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-700 text-xs dark:text-amber-400'>
+      <TriangleAlert className='h-4 w-4 shrink-0' />
+      <span>Đang lấy dữ liệu, vui lòng không tắt popup để tránh mất dữ liệu.</span>
+    </div>
+  ) : null;
+
   if (currURL.includes("mode=userinfo")) {
     return (
-      <UserInfoSection
-        handleImportInfo={handleImportInfo}
-        hasInfo={hasInfo}
-        isLoading={isLoading}
-        openDashboard={openDashboard}
-      />
+      <>
+        {warningBanner}
+        <UserInfoSection
+          handleImportInfo={handleImportInfo}
+          hasInfo={hasInfo}
+          isLoading={isLoading}
+          openDashboard={openDashboard}
+        />
+      </>
     );
   }
   if (currURL.includes("#/tkb-hocky")) {
     return (
-      <ClassCalendarSection
-        handleImportCalendar={handleImportCalendar}
-        hasCalendar={hasCalendar}
-        isLoading={isLoading}
-        openDashboard={openDashboard}
-      />
+      <>
+        {warningBanner}
+        <ClassCalendarSection
+          handleImportCalendar={handleImportCalendar}
+          hasExamCalendar={hasExamCalendar}
+          hasStudyCalendar={hasStudyCalendar}
+          isLoading={isLoading}
+          openDashboard={openDashboard}
+        />
+      </>
     );
   }
   if (currURL.includes("#/lichthi")) {
     return (
-      <ExamCalendarSection
-        handleImportCalendar={handleImportCalendar}
-        hasExam={hasExam}
-        isLoading={isLoading}
-        openDashboard={openDashboard}
-      />
+      <>
+        {warningBanner}
+        <ExamCalendarSection
+          handleImportCalendar={handleImportCalendar}
+          hasExamCalendar={hasExamCalendar}
+          hasStudyCalendar={hasStudyCalendar}
+          isLoading={isLoading}
+          openDashboard={openDashboard}
+        />
+      </>
     );
   }
   if (currURL.includes("#/diem")) {
     return (
-      <ScoreSection
-        handleImportScore={handleImportScore}
-        hasScore={hasScore}
-        isLoading={isLoading}
-        openDashboard={openDashboard}
-      />
+      <>
+        {warningBanner}
+        <ScoreSection
+          handleImportScore={handleImportScore}
+          hasScore={hasScore}
+          isLoading={isLoading}
+          openDashboard={openDashboard}
+        />
+      </>
     );
   }
   if (currURL.includes("#/hocphi")) {
     return (
-      <TuitionSection
-        handleImportTuition={handleImportTuition}
-        hasTuition={hasTuition}
-        isLoading={isLoading}
-        openDashboard={openDashboard}
-      />
+      <>
+        {warningBanner}
+        <TuitionSection
+          handleImportTuition={handleImportTuition}
+          hasTuition={hasTuition}
+          isLoading={isLoading}
+          openDashboard={openDashboard}
+        />
+      </>
     );
   }
   return (
-    <div className='flex flex-col items-center p-6 text-center'>
+    <div className='flex flex-col items-center px-6 py-2 text-center'>
       <InfoIcon className='mb-4 h-10 w-10 text-muted-foreground' />
       <h3 className='mb-2 font-semibold text-lg'>Tính năng chưa khả dụng</h3>
       <p className='mb-4 text-muted-foreground text-sm'>

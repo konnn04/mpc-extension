@@ -16,17 +16,32 @@ import { getPointData } from "@/entrypoints/popup/scrapers/score-scraper";
 import { getTuitionData } from "@/entrypoints/popup/scrapers/tuition-scraper";
 
 async function executeScraper<T>(scraperFn: () => T | Promise<T>, sendResponse: (data: unknown) => void) {
+  const TIMEOUT_MS = 60_000;
+  let settled = false;
+  const done = (data: unknown) => {
+    if (!settled) {
+      settled = true;
+      sendResponse(data);
+    }
+  };
+
+  const timer = setTimeout(() => {
+    done({ error: "Mạng của bạn không ổn định, vui lòng thử lại" });
+  }, TIMEOUT_MS);
+
   try {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab.id) {
-      sendResponse({ error: "Không tìm thấy tab hiện tại" });
+      clearTimeout(timer);
+      done({ error: "Không tìm thấy tab hiện tại" });
       return;
     }
     const results = await browser.scripting.executeScript({ target: { tabId: tab.id }, func: scraperFn });
-    sendResponse(results[0].result);
+    clearTimeout(timer);
+    done(results[0].result);
   } catch (error) {
-    console.error("executeScraper error:", error);
-    sendResponse({ error: error instanceof Error ? error.message : "Lỗi không xác định" });
+    clearTimeout(timer);
+    done({ error: error instanceof Error ? error.message : "Lỗi không xác định" });
   }
 }
 

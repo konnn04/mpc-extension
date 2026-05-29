@@ -1,4 +1,4 @@
-import { CalendarPlus, Download, FileSpreadsheet, FileText, LayoutList, Trash2 } from "lucide-react";
+import { CalendarPlus, Download, FileSpreadsheet, FileText, InfoIcon, LayoutList, Trash2 } from "lucide-react";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import lichHocLichThiMd from "@/assets/docs/lich_hoc_lich_thi.md?raw";
@@ -9,12 +9,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useCalendarStore } from "@/store/use-calendar-store";
 import type { CalendarEntry, SemesterData } from "@/types";
+import { formatSemesterLabel, normalizeSemesterName, parseSemesterName } from "@/utils/calendar-format";
 import { convertToCSV, convertToExcel } from "@/utils/excel-utils";
 import { downloadICS } from "@/utils/ics-utils";
 import { MonthViewCalendar } from "./components/month-view-calendar";
@@ -22,16 +24,16 @@ import { PeriodTimeView } from "./components/period-time-view";
 import { UpcomingEvents } from "./components/upcoming-events";
 
 export function CalendarPage() {
-  const { calendarData, examData, lastUpdate, scheduleMap, getData, clearData } = useCalendarStore();
+  const { studyCalendarData, examCalendarData, lastUpdate, scheduleMap, getData, clearData } = useCalendarStore();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>("ALL");
   const confirm = useConfirm();
 
   const mergedExportData = useMemo(() => {
-    const merged = [...calendarData];
-    for (const sem of examData) {
-      const existingSem = merged.find((s) => s.semester === sem.semester);
+    const merged = [...studyCalendarData];
+    for (const sem of examCalendarData) {
+      const existingSem = merged.find((s) => normalizeSemesterName(s.semester) === normalizeSemesterName(sem.semester));
       if (existingSem) {
         const existingSemCopy = { ...existingSem, weeks: [...existingSem.weeks] };
         for (const week of sem.weeks) {
@@ -44,11 +46,25 @@ export function CalendarPage() {
         }
         merged[merged.indexOf(existingSem)] = existingSemCopy;
       } else {
-        merged.push({ ...sem });
+        const p = parseSemesterName(sem.semester);
+        merged.push({ ...sem, semester: p ? formatSemesterLabel(p) : sem.semester });
       }
     }
+
+    merged.sort((a, b) => {
+      const pa = parseSemesterName(a.semester);
+      const pb = parseSemesterName(b.semester);
+      if (pa && pb) {
+        if (pa.startYear !== pb.startYear) {
+          return pb.startYear - pa.startYear;
+        }
+        return pa.num - pb.num;
+      }
+      return 0;
+    });
+
     return merged;
-  }, [calendarData, examData]);
+  }, [studyCalendarData, examCalendarData]);
 
   useLayoutEffect(() => {
     getData();
@@ -147,6 +163,30 @@ export function CalendarPage() {
     }
   };
 
+  if (studyCalendarData.length === 0 && examCalendarData.length === 0) {
+    return (
+      <div className='flex min-h-[60vh] flex-col items-center justify-center space-y-4'>
+        <div className='mb-4 rounded-full bg-muted p-6'>
+          <CalendarPlus className='h-12 w-12 text-muted-foreground' />
+        </div>
+        <h2 className='font-semibold text-2xl'>Chưa có dữ liệu lịch</h2>
+        <p className='mb-6 max-w-md text-center text-muted-foreground'>
+          Mở popup extension khi đang ở trang lịch học hoặc lịch thi trên cổng tiện ích sinh viên để nhập dữ liệu.
+        </p>
+        <Button onClick={() => setIsImportModalOpen(true)} variant='outline'>
+          <InfoIcon className='mr-2 h-4 w-4' />
+          Hướng dẫn nhập lịch
+        </Button>
+        <MarkdownModal
+          isOpen={isImportModalOpen}
+          markdownContent={lichHocLichThiMd}
+          onClose={() => setIsImportModalOpen(false)}
+          title='Hướng dẫn nhập lịch'
+        />
+      </div>
+    );
+  }
+
   return (
     <div className='flex h-auto flex-col space-y-4 lg:h-full'>
       <div className='flex flex-col items-start justify-between gap-4 md:flex-row md:items-center'>
@@ -191,9 +231,9 @@ export function CalendarPage() {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button disabled={calendarData.length === 0} variant='outline'>
+              <Button disabled={studyCalendarData.length === 0 && examCalendarData.length === 0} variant='outline'>
                 <CalendarPlus className='mr-2 h-4 w-4' />
-                Xuất lịch
+                Thao tác
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
@@ -209,12 +249,13 @@ export function CalendarPage() {
                 <FileText className='mr-2 h-4 w-4' />
                 Xuất CSV
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleClearConfirm}>
+                <Trash2 className='mr-2 h-4 w-4 text-red-500' />
+                Xóa lịch
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button disabled={calendarData.length === 0} onClick={handleClearConfirm} variant='destructive'>
-            <Trash2 className='mr-2 h-4 w-4' />
-            Xóa lịch
-          </Button>
         </div>
       </div>
 

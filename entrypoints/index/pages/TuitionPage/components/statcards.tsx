@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Wallet
 } from "lucide-react";
+import { memo } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { TuitionStatsType } from "@/types";
@@ -16,7 +17,7 @@ import { formatVND } from "@/utils/tuition-compute";
 
 const BASE = "rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md";
 
-function StatCard({
+const StatCard = memo(function StatCard({
   icon: Icon,
   label,
   value,
@@ -57,9 +58,9 @@ function StatCard({
       </div>
     </div>
   );
-}
+});
 
-export function TuitionStatCards({ stats }: { stats: TuitionStatsType }) {
+export const TuitionStatCards = memo(function TuitionStatCards({ stats }: { stats: TuitionStatsType }) {
   return (
     <>
       <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
@@ -114,6 +115,7 @@ export function TuitionStatCards({ stats }: { stats: TuitionStatsType }) {
           hint='Tính cả các môn quốc phòng, tiếng Anh, thi đầu ra và các loại phí khác'
           icon={GraduationCap}
           label='Tổng tín chỉ'
+          sub={`${stats.totalCreditsWithOther} nếu tính cả các môn khác`}
           value={`${stats.totalCredits}`}
         />
         <StatCard
@@ -125,4 +127,4 @@ export function TuitionStatCards({ stats }: { stats: TuitionStatsType }) {
       </div>
     </>
   );
-}
+});

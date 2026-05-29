@@ -2,7 +2,10 @@ import { AwardType, CourseType, UserType } from "@/types";
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: table parsing is complex
 const getUserData = () => {
-  const appUserElement = document.querySelector("app-thongtin-user") as HTMLElement;
+  const appUserElement = document.querySelector("app-thongtin-user");
+  if (!appUserElement) {
+    return { userData: null, courseData: null };
+  }
 
   const userInfoElement = appUserElement.querySelector(
     "app-thongtin-user > div:first-child > div.card-body"

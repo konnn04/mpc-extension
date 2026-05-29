@@ -31,8 +31,6 @@ export const _CATEGORY_TYPES = {
   OTHER: "OTHER"
 } as const;
 
-export type CategoryType = (typeof _CATEGORY_TYPES)[keyof typeof _CATEGORY_TYPES];
-
 // ==================== CATEGORY LABELS ====================
 
 /** Vietnamese labels for calendar entry categories */
