@@ -58,7 +58,6 @@ export function ImportScoreModal({ open, onOpenChange, onImportSuccess }: Import
   };
 
   const handleFile = (selectedFile: File) => {
-    // csv, xlsx , xls
     if (
       !(selectedFile.name.endsWith(".csv") || selectedFile.name.endsWith(".xlsx") || selectedFile.name.endsWith(".xls"))
     ) {

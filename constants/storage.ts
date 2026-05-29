@@ -4,10 +4,8 @@ const _SYNC = "sync";
 const _key = (prefix: string, studentId: string, suffix: string) =>
   studentId ? `${prefix}:${studentId}:${suffix}` : `${prefix}:${suffix}`;
 
-// ── Sync keys (global settings, shared across devices) ──
 export const _SYNC_GLOBAL_KEY = `${_SYNC}:global` as const;
 
-// ── Legacy local keys (fallback) ──
 export const _CHROME_STORAGE_INFO_KEY = `${_LOCAL}:userData` as const;
 export const _CHROME_STORAGE_POINT_KEY = `${_LOCAL}:pointData` as const;
 export const _CHROME_STORAGE_CALENDAR_KEY = `${_LOCAL}:studyCalendarData` as const;

@@ -9,8 +9,6 @@ import type { PeriodSession, PeriodTimeTable } from "@/types";
  *     including break periods and lab-group split variants. ──
  */
 
-// ── Simple period → {start, end} maps (used by scraper & quick reference) ──
-
 export const PERIOD_TIME_MAP_GROUP_1: Record<number, { start: string; end: string }> = {
   1: { start: "07:00", end: "07:50" },
   2: { start: "07:50", end: "08:40" },
@@ -48,8 +46,6 @@ export const PERIOD_TIME_MAP_GROUP_2: Record<number, { start: string; end: strin
   15: { start: "20:00", end: "20:50" },
   16: { start: "20:50", end: "21:40" }
 };
-
-// ── Detailed time slots with breaks (for display) ──
 
 // ── Group 1: VVT, MLA, GP ──
 
