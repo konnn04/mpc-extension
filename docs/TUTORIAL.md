@@ -460,3 +460,31 @@ entrypoints/
   index/types.ts          ← Route definitions + nav items
   index/pages/            ← Page components
 ```
+
+---
+
+## Security & Data Packaging (`.mpcext`)
+
+To allow users to seamlessly backup and migrate their academic records across machines without compromising personal data privacy, MPC Extension implements a highly secure, encrypted data container format: `.mpcext`.
+
+### Key Design & Encryption Strategy
+1. **Zero-Dependency Native Web Crypto**: Utilizes the modern browser Web Crypto API (`window.crypto.subtle`) to guarantee top performance and avoid linter or bundle-bloat concerns.
+2. **AES-GCM-256 with PBKDF2**:
+   - Master key is fetched dynamically from `__MPC_KEY__` (configured via Vite).
+   - A unique 16-byte random salt is generated for each export.
+   - The password is derived using `PBKDF2` (SHA-256, 100,000 iterations) to produce a 256-bit symmetric key.
+   - Plaintext data is encrypted using `AES-GCM` with a 12-byte cryptographically secure random IV.
+   - The output file structure combines `Salt (16 bytes) | IV (12 bytes) | Encrypted Ciphertext` into a single Base64 encoded payload.
+
+### Environmental Key Configuration (`wxt.config.ts`)
+The `__MPC_KEY__` secret is injected dynamically at compile-time:
+```ts
+// wxt.config.ts
+vite: () => ({
+  define: {
+    __MPC_KEY__: JSON.stringify(process.env.ENV_KEY || process.env.MPC_KEY || "MPC")
+  }
+})
+```
+- **Local Dev**: Loads `MPC_KEY` from the root `.env` file.
+- **CI/CD Build**: The GitHub Actions / release pipeline automatically injects the production `ENV_KEY` secret.

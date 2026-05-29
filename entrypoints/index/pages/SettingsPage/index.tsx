@@ -1,4 +1,16 @@
-import { CircleHelp, HardDrive, Monitor, Moon, RefreshCw, Save, Settings, Sun, UserCog } from "lucide-react";
+import {
+  CircleHelp,
+  Download,
+  HardDrive,
+  Monitor,
+  Moon,
+  RefreshCw,
+  Save,
+  Settings,
+  Sun,
+  Upload,
+  UserCog
+} from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,6 +25,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import { type ThemeMode } from "@/lib/theme";
 import { useGlobalStore } from "@/store/use-global-store";
 import { useUserSettingsStore } from "@/store/use-user-settings-store";
+import { decryptData, encryptData } from "@/utils/encryption";
 import { formatFileSize } from "@/utils/file";
 import { PersonalSettings } from "./components/personal-settings";
 import { SchoolParams } from "./components/school-params";
@@ -46,6 +59,39 @@ function SectionHeader({
       </div>
     </div>
   );
+}
+
+async function performImport(file: File, confirm: ReturnType<typeof useConfirm>): Promise<boolean> {
+  const text = await file.text();
+  const decrypted = await decryptData(text);
+  const parsed = JSON.parse(decrypted);
+
+  if (!parsed || typeof parsed !== "object" || !(parsed.local || parsed.sync)) {
+    toast.error("Tệp tin sao lưu không đúng định dạng!");
+    return false;
+  }
+
+  const ok = await confirm({
+    title: "Khôi phục dữ liệu",
+    description:
+      "Thao tác này sẽ ghi đè toàn bộ dữ liệu hiện tại bằng dữ liệu trong file sao lưu. Bạn có muốn tiếp tục?",
+    confirmText: "Khôi phục",
+    cancelText: "Hủy"
+  });
+
+  if (ok) {
+    await browser.storage.local.clear();
+    await browser.storage.sync.clear();
+
+    if (parsed.local) {
+      await browser.storage.local.set(parsed.local);
+    }
+    if (parsed.sync) {
+      await browser.storage.sync.set(parsed.sync);
+    }
+    return true;
+  }
+  return false;
 }
 
 export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
@@ -115,6 +161,9 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
     setURLMapping(siteURLMapping);
   }, [siteURLMapping]);
   useEffect(() => {
+    setLocalMatchByName(matchSubjectByName);
+  }, [matchSubjectByName]);
+  useEffect(() => {
     setTrainingSemesters(userSettings.trainingSemesters);
     setTotalProgramCredits(userSettings.totalProgramCredits);
   }, [userSettings]);
@@ -136,6 +185,78 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
     setUserSettings({ trainingSemesters, totalProgramCredits });
     await Promise.all([saveData(), saveUserSettings()]);
     toast.success("Đã lưu cài đặt!");
+  };
+
+  const handleExportBackup = async () => {
+    try {
+      const localData = await browser.storage.local.get(null);
+      const syncData = await browser.storage.sync.get(null);
+
+      const payload = {
+        version: "1.0",
+        timestamp: new Date().toISOString(),
+        local: localData,
+        sync: syncData
+      };
+
+      const encrypted = await encryptData(JSON.stringify(payload));
+
+      let studentIdStr = "backup";
+      try {
+        const userRaw = await storage.getItem<string>("local:currentUser");
+        if (userRaw) {
+          const parsed = JSON.parse(userRaw);
+          if (parsed.studentId) {
+            studentIdStr = parsed.studentId;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      const fileName = `mpc_backup_${studentIdStr}_${dateStr}.mpcext`;
+
+      const blob = new Blob([encrypted], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("Xuất dữ liệu thành công!");
+    } catch (e) {
+      console.error("Backup export error:", e);
+      toast.error("Không thể xuất file sao lưu!");
+    }
+  };
+
+  const handleImportBackup = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".mpcext";
+    input.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      try {
+        const success = await performImport(file, confirm);
+        if (success) {
+          toast.success("Khôi phục dữ liệu thành công! Đang tải lại...");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        }
+      } catch (err) {
+        console.error("Import backup error:", err);
+        toast.error("Giải mã thất bại! Vui lòng kiểm tra lại file sao lưu (.mpcext) hoặc khóa bí mật.");
+      }
+    };
+    input.click();
   };
 
   const handleURLChange = (siteKey: _SITE_CATE, path: string[], value: string) => {
@@ -318,6 +439,28 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
               maxBytes={100 * 1024}
               maxLabel='100 KB'
             />
+          </div>
+
+          <div className='space-y-2 rounded-lg border p-3'>
+            <div className='flex items-center gap-2'>
+              <Save className='h-4 w-4 text-muted-foreground' />
+              <span className='font-medium text-sm'>Đóng gói & Sao lưu dữ liệu (.mpcext)</span>
+            </div>
+            <p className='font-light text-[10px] text-muted-foreground leading-relaxed'>
+              Đóng gói và mã hóa toàn bộ dữ liệu MPC Extension của bạn (bao gồm nhiều tài khoản học sinh, thông tin điểm
+              số, lịch học/thi, các thiết lập tùy chỉnh) thành một tệp tin <code>.mpcext</code> bảo mật cao để lưu trữ
+              hoặc chuyển đổi thiết bị.
+            </p>
+            <div className='grid grid-cols-2 gap-2 pt-1'>
+              <Button className='h-8 gap-1.5 text-xs' onClick={handleExportBackup} variant='outline'>
+                <Download className='h-3.5 w-3.5' />
+                Xuất file .mpcext
+              </Button>
+              <Button className='h-8 gap-1.5 text-xs' onClick={handleImportBackup} variant='outline'>
+                <Upload className='h-3.5 w-3.5' />
+                Nhập file .mpcext
+              </Button>
+            </div>
           </div>
 
           <div className='rounded-lg border border-destructive/50 p-3'>
