@@ -1,38 +1,85 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+name: 🐛 Bug Report
+description: Report a technical bug in the system
+title: "[BUG] - "
+labels: ["bug"]
+body:
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please read the classification guide to identify the bug accurately.
+      options:
+        - label: I have read the document about [Writing a report](https://notebook.konnn04.dev/docs/kiem-thu-phan-mem/02-viet-bao-cao-loi/01-yeu-cau-bao-cao-loi)
+          required: true
+        - label: I have read the document about [Preparing attachments](https://notebook.konnn04.dev/docs/kiem-thu-phan-mem/02-viet-bao-cao-loi/02-tep-dinh-kem)
+          required: true
+        - label: I have read the document about [Functional bugs](https://notebook.konnn04.dev/docs/kiem-thu-phan-mem/03-phan-loai-bug/01-loi-chuc-nang)
+          required: true
+        - label: I have read the document about [Content bugs](https://notebook.konnn04.dev/docs/kiem-thu-phan-mem/03-phan-loai-bug/02-loi-noi-dung)
+          required: true
+        - label: I have read the document about [Display bugs](https://notebook.konnn04.dev/docs/kiem-thu-phan-mem/03-phan-loai-bug/03-loi-hien-thi)
+          required: true
 
----
+  - type: dropdown
+    id: bug_type
+    attributes:
+      label: Bug Type
+      description: Choose the appropriate classification based on the documents you have read
+      options:
+        - Visual
+        - Content
+        - Function
+    validations:
+      required: true
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+  - type: input
+    id: error_link
+    attributes:
+      label: Link to the error (if app, version number)
+      placeholder: "https://example.com"
+    validations:
+      required: true
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to https://example.com/...
+        2. Click the button...
+        3. See the error appear...
+    validations:
+      required: true
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected
+      placeholder: How should the system behave?
+    validations:
+      required: true
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual
+      placeholder: What is the system doing wrong?
+    validations:
+      required: true
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+  - type: textarea
+    id: environment
+    attributes:
+      label: Device, browser, environment
+      placeholder: |
+        - Device: ...
+        - Browser: ...
+        - Environment: (e.g., Staging / Production)
+    validations:
+      required: true
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Attachments
+      placeholder: Drag and drop images or videos illustrating the issue here
