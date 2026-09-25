@@ -1,23 +1,23 @@
-## Mô tả
+## Description
 
-<!-- Tóm tắt ngắn gọn thay đổi -->
+<!-- Brief summary of the changes -->
 
-## Loại thay đổi
+## Type of change
 
-- [ ] Sửa lỗi (bug fix)
-- [ ] Tính năng mới (feature)
-- [ ] Thay đổi lớn (breaking change)
-- [ ] Cải tiến hiệu năng
-- [ ] Tài liệu
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Performance improvement
+- [ ] Documentation
 
 ## Checklist
 
-- [ ] Đã test trên Chrome (`pnpm dev`)
-- [ ] Đã test trên Firefox (`pnpm dev:firefox`)
-- [ ] `pnpm ultracite:check` pass
-- [ ] `pnpm compile` pass
-- [ ] Commit theo Conventional Commits
+- [ ] Tested on Chrome (`pnpm dev`)
+- [ ] Tested on Firefox (`pnpm dev:firefox`)
+- [ ] `pnpm ultracite:check` passes
+- [ ] `pnpm compile` passes
+- [ ] Commits follow Conventional Commits
 
-## Ghi chú thêm
+## Additional notes
 
-<!-- Ảnh chụp màn hình, log, hoặc thông tin bổ sung -->
+<!-- Screenshots, logs, or additional information -->
