@@ -3,6 +3,10 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
+    // WXT 0.21's generated base config turned these two on by default; the codebase
+    // predates them and isn't written to satisfy them, so keep the prior (0.20) strictness.
+    "noUncheckedIndexedAccess": false,
+    "verbatimModuleSyntax": false,
     "paths": {
       "@/*": ["./*"]
     }
